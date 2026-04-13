@@ -1,5 +1,6 @@
 import { Metadata } from "next"
 
+import { CartProvider } from "../../../context/cart-context";
 import { listCartOptions, retrieveCart } from "@lib/data/cart"
 import { retrieveCustomer } from "@lib/data/customer"
 import { getBaseURL } from "@lib/util/env"
@@ -21,17 +22,25 @@ export default async function PageLayout(props: { children: React.ReactNode }) {
 
   if (cart) {
     const { shipping_options } = await listCartOptions()
-
     shippingOptions = shipping_options
   }
 
   return (
-    <>
+    <CartProvider>
+      {/* 1. NAVBAR - Kita aktifkan lagi bos! */}
+      <Nav />
       
+      {/* 2. BANNER MISMATCH (Pindahkan ke dalam Provider biar aman) */}
       {customer && cart && (
         <CartMismatchBanner customer={customer} cart={cart} />
       )}
 
+      {/* 3. KONTEN HALAMAN UTAMA */}
+      <main className="relative">
+        {props.children}
+      </main>
+
+      {/* 4. FITUR TAMBAHAN MEDUSA */}
       {cart && (
         <FreeShippingPriceNudge
           variant="popup"
@@ -39,8 +48,9 @@ export default async function PageLayout(props: { children: React.ReactNode }) {
           shippingOptions={shippingOptions}
         />
       )}
-      {props.children}
+
+      {/* 5. FOOTER */}
       <Footer />
-    </>
+    </CartProvider>
   )
 }

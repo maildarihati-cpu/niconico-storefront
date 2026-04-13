@@ -79,15 +79,16 @@ const Footer = () => {
             <div className="flex flex-col gap-y-5 text-[15px] text-gray-200">
               <Link href="/shop" className="hover:text-white transition-colors">Shop</Link>
               <Link href="/collections" className="hover:text-white transition-colors">Collections</Link>
-              <Link href="/make-your-own-brand" className="hover:text-white transition-colors">Make Your Own Brand</Link>
+              <Link href="/make-your-own-brand" className="hover:text-white transition-colors">Make Your <br />Own Brand</Link>
               <Link href="/stores" className="hover:text-white transition-colors">Stores</Link>
             </div>
 
-            <div className="flex flex-col gap-y-5 text-[15px] text-gray-200">
+            <div className="flex flex-col gap-y-4 text-[15px] text-gray-200">
               <Link href="/faq" className="hover:text-white transition-colors">FAQ</Link>
               <Link href="/shipping" className="hover:text-white transition-colors">Shipping</Link>
               <Link href="/returns" className="hover:text-white transition-colors">Returns</Link>
               <Link href="/contact" className="hover:text-white transition-colors">Contact</Link>
+              <Link href="/contact" className="hover:text-white transition-colors">Journal</Link>
             </div>
           </div>
         </div>
