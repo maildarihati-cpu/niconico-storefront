@@ -15,7 +15,7 @@ export default function HeroSection() {
   useEffect(() => {
     const fetchHeroData = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/hero-section`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/hero`, {
           cache: "no-store",
           next: { revalidate: 0 }
         });
