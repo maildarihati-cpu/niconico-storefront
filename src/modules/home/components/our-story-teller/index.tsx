@@ -15,7 +15,7 @@ const StoryTeller = () => {
   useEffect(() => {
     const fetchStories = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/reviews`)
+        const res = await fetch(`${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/our-story`)
         const data = await res.json()
         setReviews(data.reviews || [])
       } catch (err) {
