@@ -26,6 +26,8 @@ const StoryTeller = () => {
     fetchStories()
   }, [])
 
+  console.log("🔥 KOMPONEN REVIEWS BERHASIL DI-RENDER!");
+
   if (reviews.length === 0) return null
 
   return (
