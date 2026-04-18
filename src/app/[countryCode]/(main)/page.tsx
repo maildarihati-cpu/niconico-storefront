@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 import React, { useState, useEffect, useRef } from "react"; 
 import Image from "next/image";
 import { Menu, Search, ShoppingBag, User, Eye, ArrowRight, Heart } from "lucide-react";
