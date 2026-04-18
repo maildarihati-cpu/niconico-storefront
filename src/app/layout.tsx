@@ -1,6 +1,6 @@
 import { getBaseURL } from "@lib/util/env"
 import { Metadata } from "next"
-import "styles/globals.css"
+import "@/styles/globals.css"
 import { Inter } from "next/font/google";
 
 // 1. Inisialisasi font Inter

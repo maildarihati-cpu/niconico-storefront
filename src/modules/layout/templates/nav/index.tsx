@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Menu, Search, ShoppingBag, User, X } from "lucide-react";
-import { useCart } from "@../../context/cart-context";
+import { useCart } from "@/context/cart-context";
 import ProfileContent from "../../components/profile-drawer/ProfileContent";
 
 const Navbar = () => {

@@ -26,7 +26,7 @@ export default function StoreSection() {
       try {
         setLoading(true);
         // Nembak ke API publik Medusa anti-CORS
-        const response = await fetch("http://localhost:9000/store-location"); 
+        const response = await fetch(`${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store-location`); 
         
         if (!response.ok) throw new Error("Gagal ambil data API");
         

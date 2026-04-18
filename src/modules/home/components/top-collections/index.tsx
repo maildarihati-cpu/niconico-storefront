@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 // IMPORT COLOKAN KERANJANG GLOBAL
-import { useCart } from "@../../context/cart-context"; 
+import { useCart } from "@/context/cart-context"; 
 
 // --- MOCK DATA (Tetap Sama) ---
 const collectionsData = {

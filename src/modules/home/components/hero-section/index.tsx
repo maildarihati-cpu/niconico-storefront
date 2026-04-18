@@ -15,7 +15,7 @@ export default function HeroSection() {
   useEffect(() => {
     const fetchHeroData = async () => {
       try {
-        const res = await fetch("http://localhost:9000/hero", {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/hero`, {
           cache: "no-store",
           next: { revalidate: 0 }
         });
@@ -84,6 +84,7 @@ export default function HeroSection() {
               fill 
               className="object-cover" 
               priority={index === 0} 
+              unoptimized
             />
           </div>
         ))

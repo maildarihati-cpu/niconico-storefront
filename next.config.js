@@ -48,7 +48,7 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "https://pub-896872d8b86545d9a2f3b83725382887.r2.dev", // <--- PENTING: Ganti dengan URL Cloudflare Anda!
+        hostname: "pub-896872d8b86545d9a2f3b83725382887.r2.dev", // <--- PENTING: Ganti dengan URL Cloudflare Anda!
       },
       {
         protocol: 'https',
