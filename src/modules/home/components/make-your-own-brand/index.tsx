@@ -17,7 +17,7 @@ export default function MakeYourOwnBrandSection() {
   useEffect(() => {
     const fetchContent = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/myob`, { 
+        const res = await fetch(`${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/make-your-own-brand`, { 
           cache: 'no-store',
           next: { revalidate: 0 } 
         });

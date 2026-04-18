@@ -63,7 +63,7 @@ export default function HomePage() {
   const [topColIndex, setTopColIndex] = useState(0);
 
 useEffect(() => {
-    fetch("http://localhost:9000/store/products", {
+    fetch(`${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/products`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
