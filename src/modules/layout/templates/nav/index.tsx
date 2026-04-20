@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Menu, Search, ShoppingBag, User, X } from "lucide-react";
 import { useCart } from "@/context/cart-context";
 import ProfileContent from "../../components/profile-drawer/ProfileContent";
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -37,19 +38,22 @@ const Navbar = () => {
         <div className="flex gap-4 items-center -mr-1">
           {/* Ikon Keranjang dengan Badge & Animasi */}
           <div className="relative">
-            <Link href="/cart" className="p-1 block">
-              <ShoppingBag 
-                className={`w-5 h-5 transition-all duration-300 ${
-                  isCartBouncing ? "scale-125 text-[#ED5725]" : "text-gray-800"
-                }`} 
-              />
-            </Link>
-            {cartCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-[#ED5725] text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center animate-in zoom-in duration-300">
-                {cartCount}
-              </span>
-            )}
-          </div>
+          {/* Ganti Link biasa dengan LocalizedClientLink */}
+          <LocalizedClientLink href="/cart" className="p-1 block">
+            <ShoppingBag 
+              className={`w-5 h-5 transition-all duration-300 ${
+                isCartBouncing ? "scale-125 text-[#ED5725]" : "text-gray-800"
+              }`} 
+            />
+          </LocalizedClientLink>
+
+          {/* Badge jumlah item di keranjang */}
+          {cartCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-[#ED5725] text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center animate-in zoom-in duration-300">
+              {cartCount}
+            </span>
+          )}
+        </div>
           
           <button onClick={() => setIsProfileOpen(true)} className="p-1 hover:opacity-70 transition-opacity">
             <User className="w-5 h-5 text-gray-800" />
