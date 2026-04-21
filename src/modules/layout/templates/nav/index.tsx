@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation"; 
 import { Menu, Search, ShoppingBag, User, X } from "lucide-react";
 import CartPreview from "@modules/cart/templates/preview"
 import { useCart } from "@/context/cart-context";
@@ -13,53 +14,75 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   
+  // Ambil rute URL saat ini
+  const pathname = usePathname(); 
+  
   // Ambil data dari Brankas Global
   const { cart, cartCount, isCartBouncing, showPreview } = useCart();
 
+  // ==========================================
+  // 1. LOGIC HIDE NAVBAR DI HALAMAN CART
+  // ==========================================
+  // Kalau URL-nya mengandung "/cart", Navbar akan mengembalikan "null" (menghilang dari layar)
+  if (pathname?.includes("/cart")) {
+    return null;
+  }
+
+  // 2. LOGIC CEK HALAMAN UNTUK WARNA
+  const isOrangeNav = pathname?.includes("/store") || pathname?.includes("/products");
+
+  // 3. ATUR KELAS CSS & LOGO DINAMIS
+  const navBgClass = isOrangeNav 
+    ? "bg-[#EF7044]/85 backdrop-blur-md border-[#EF7044]/10" 
+    : "bg-white/40 backdrop-blur-md border-gray-100/50";     
+
+  const iconColorClass = isOrangeNav ? "text-white" : "text-gray-800";
+  
+  // Logo dinamis: Putih saat nav orange, Hitam saat nav putih
+  const logoSrc = isOrangeNav ? "/logo-niconico-white.png" : "/logo-niconico-black.png";
+
   return (
     <>
-      <nav className="fixed top-5 left-5 right-5 bg-white/40 backdrop-blur-md z-40 flex items-center justify-between px-6 py-3.5 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100/50">
+      <nav className={`fixed top-5 left-5 right-5 z-40 flex items-center justify-between px-6 py-3.5 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-500 ${navBgClass}`}>
         
         {/* Kiri: Hamburger & Search */}
         <div className="flex items-center gap-4 -ml-1">
           <button onClick={() => setIsMenuOpen(true)} className="p-1 hover:opacity-70 transition-opacity">
-            <Menu className="w-5 h-5 text-gray-800" />
+            <Menu className={`w-5 h-5 transition-colors duration-300 ${iconColorClass}`} />
           </button>
           <Link href="/search" className="p-1 hover:opacity-70 transition-opacity">
-            <Search className="w-5 h-5 text-gray-800" />
+            <Search className={`w-5 h-5 transition-colors duration-300 ${iconColorClass}`} />
           </Link>
         </div>
         
-        {/* Tengah: Logo */}
+        {/* Tengah: Logo Dinamis */}
         <Link href="/" className="relative flex items-center justify-center w-28 h-8 md:w-36 md:h-10 hover:scale-105 transition-transform">
-          <Image src="/logo-niconico-black.png" alt="Niconico Logo" fill className="object-contain" priority sizes="150px" />
+          <Image src={logoSrc} alt="Niconico Logo" fill className="object-contain" priority sizes="150px" />
         </Link>
 
         {/* Kanan: Cart & Profile */}
         <div className="flex gap-4 items-center -mr-1">
-          {/* Ikon Keranjang dengan Badge & Preview */}
           <div className="relative group">
-  <LocalizedClientLink href="/cart" className="p-1 block">
-    <ShoppingBag 
-      className={`w-5 h-5 transition-all duration-300 ${
-        isCartBouncing ? "scale-125 text-[#ED5725]" : "text-gray-800"
-      }`} 
+            <LocalizedClientLink href="/cart" className="p-1 block">
+              <ShoppingBag 
+                className={`w-5 h-5 transition-all duration-300 ${
+                  isCartBouncing 
+                    ? (isOrangeNav ? "scale-125 text-white" : "scale-125 text-[#ED5725]") 
+                    : iconColorClass
+                }`} 
               />
             </LocalizedClientLink>
 
-            {/* Badge jumlah item */}
             {cartCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-[#ED5725] text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center animate-in zoom-in duration-300">
+              <span className={`absolute -top-1 -right-1 text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center animate-in zoom-in duration-300 ${isOrangeNav ? "bg-white text-[#EF7044]" : "bg-[#ED5725] text-white"}`}>
                 {cartCount}
               </span>
             )}
 
             {/* --- CART PREVIEW OTOMATIS --- */}
-            {/* Tambahkan pengecekan 'cart' di sini agar TypeScript tenang */}
             {showPreview && cartCount > 0 && cart && (
               <div className="absolute top-12 -right-2 z-50 w-[300px] md:w-[400px] animate-in fade-in slide-in-from-top-3 duration-300">
                 <div className="bg-white shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-[24px] border border-gray-100 overflow-hidden">
-                  {/* BERIKAN DATA CART ASLI KE KOMPONEN PREVIEW */}
                   <CartPreview cart={cart} />
                 </div>
               </div>
@@ -67,7 +90,7 @@ const Navbar = () => {
           </div>
 
           <button onClick={() => setIsProfileOpen(true)} className="p-1 hover:opacity-70 transition-opacity">
-            <User className="w-5 h-5 text-gray-800" />
+            <User className={`w-5 h-5 transition-colors duration-300 ${iconColorClass}`} />
           </button>
         </div>
       </nav>

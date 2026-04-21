@@ -1,45 +1,53 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { retrieveCart } from "@lib/data/cart";
 
-const CartContext = createContext<any>(null);
+// Gunakan undefined sebagai default biar lebih aman saat pengecekan
+const CartContext = createContext<any>(undefined);
 
 export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const [cart, setCart] = useState<any>(null);
   const [cartCount, setCartCount] = useState(0);
   const [isCartBouncing, setIsCartBouncing] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Pakai mounted state buat cegah error Hydration di Next.js
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // 1. FUNGSI UNTUK REFRESH DATA DARI BACKEND
-  const refreshCart = async () => {
+  const refreshCart = useCallback(async (shouldShowPreview = false) => {
     try {
       const data = await retrieveCart();
-      
-      // Simpan data cart utuh (biar preview gak error)
       setCart(data);
       
       const totalItems = data?.items?.reduce((acc: number, item: any) => acc + item.quantity, 0) || 0;
       setCartCount(totalItems);
 
-      // Trigger Preview muncul otomatis 3 detik
-      if (totalItems > 0) {
+      // Trigger Preview hanya jika dipicu secara manual (saat klik add to cart)
+      if (shouldShowPreview && totalItems > 0) {
         setShowPreview(true);
-        setTimeout(() => {
+        const timer = setTimeout(() => {
           setShowPreview(false);
         }, 3000);
+        return () => clearTimeout(timer);
       }
     } catch (error) {
       console.error("Gagal sinkronisasi keranjang:", error);
       setCartCount(0);
       setCart(null);
     }
-  };
+  }, []);
 
   // 2. JALANKAN SAAT PERTAMA KALI WEB DIBUKA
   useEffect(() => {
-    refreshCart();
-  }, []);
+    if (mounted) {
+      refreshCart(false);
+    }
+  }, [mounted, refreshCart]);
 
   // 3. LOGIKA ANIMASI BOUNCE
   useEffect(() => {
@@ -50,15 +58,19 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [cartCount]);
 
+  // Kalau belum mounted, jangan render apa-apa dulu buat hindari "useState null" error
+  if (!mounted) return null;
+
   return (
     <CartContext.Provider 
       value={{ 
-        cart,            // Data utuh untuk CartPreview
-        cartCount,       // Angka untuk Badge
+        cart,
+        cartCount, 
         isCartBouncing, 
-        showPreview,     // State untuk pop-up
-        setShowPreview, 
-        addToCart: refreshCart 
+        showPreview,
+        setShowPreview,
+        // Trigger manual dengan true agar popup muncul
+        addToCart: () => refreshCart(true) 
       }}
     >
       {children}
@@ -68,13 +80,15 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
 
 export const useCart = () => {
   const context = useContext(CartContext);
-  if (!context) {
+  // Kalau dipanggil di luar provider, kasih nilai default agar gak crash
+  if (context === undefined) {
     return { 
       cart: null,
       cartCount: 0, 
       isCartBouncing: false, 
       showPreview: false, 
-      addToCart: () => {} 
+      addToCart: () => {},
+      setShowPreview: () => {}
     };
   }
   return context;
