@@ -9,27 +9,22 @@ import { retrieveCustomer } from "@lib/data/customer";
 
 type ViewState = "loading" | "menu" | "login" | "signup" | "profile";
 
-interface ProfileContentProps {
-  onClose: () => void;
-}
-
-export default function ProfileContent({ onClose }: ProfileContentProps) {
+export default function ProfileContent({ onClose }: { onClose: () => void }) {
   const [view, setView] = useState<ViewState>("loading");
-  // TAMBAHIN STATE INI BUAT NYIMPEN DATA KUSTOMER
   const [customerData, setCustomerData] = useState<any>(null); 
 
   const checkSession = async () => {
     try {
       const customer = await retrieveCustomer().catch(() => null);
-
       if (customer) {
-        setCustomerData(customer); // Simpan datanya di sini
-        setView("profile");
+        setCustomerData(customer);
+        // Tetap arahkan ke menu dulu agar user bisa lihat pilihan menu lain, 
+        // tapi kita simpan datanya.
+        setView("menu"); 
       } else {
         setView("menu");
       }
     } catch (error) {
-      console.error("Session check error:", error);
       setView("menu");
     }
   };
@@ -46,11 +41,10 @@ export default function ProfileContent({ onClose }: ProfileContentProps) {
     );
   }
 
-  if (view === "menu") return <MenuView onClose={onClose} setView={setView} />;
+  // OPER customerData ke MenuView juga
+  if (view === "menu") return <MenuView onClose={onClose} setView={setView} customer={customerData} />;
   if (view === "login") return <LoginView onClose={onClose} setView={setView} />;
   if (view === "signup") return <SignupView onClose={onClose} setView={setView} />;
-  
-  // OPER DATANYA KE PROFILEVIEW
   if (view === "profile") return <ProfileView onClose={onClose} setView={setView} customer={customerData} />;
   
   return null;

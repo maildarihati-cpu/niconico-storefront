@@ -1,97 +1,51 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { ChevronRight, X } from "lucide-react";
-import Image from "next/image";
-
+import { X, User } from "lucide-react";
 
 interface Props {
   onClose: () => void;
-  // Tambahkan | "profile" di dalam setView supaya TypeScript nggak ngamuk
-  setView: (view: "menu" | "login" | "signup" | "profile") => void; 
+  setView: (view: any) => void;
+  customer: any; // Tambahkan props customer di sini
 }
 
-export default function MenuView({ onClose, setView }: Props) {
-  const router = useRouter();
-
-  // Variabel penentu kustomer udah login atau belum
-  const isLoggedIn = false; // Set true untuk ngetes tampilan profil
-
+export default function MenuView({ onClose, setView, customer }: Props) {
+  
   const handleProfileClick = () => {
-    if (isLoggedIn) {
-      setView("profile"); // Sekarang dia ganti view ke profil di dalam laci
+    if (customer) {
+      // Kalau sudah login, arahkan ke ProfileView
+      setView("profile");
     } else {
+      // Kalau belum, baru ke LoginView
       setView("login");
     }
   };
 
   return (
-    <div className="flex flex-col h-full bg-white relative">
-      {/* --- BAGIAN ATAS (MENU PUTIH) --- */}
-      <div className="bg-white pt-10 pb-8 px-8">
-        
-        {/* Header: Account Details */}
-        <div className="flex justify-between items-center mb-12">
-          {/* Tambahan garis bawah (underline) persis kayak di gambar bos */}
-          <h2 className="text-[#ED5725] text-[17px] font-small underline underline-offset-8 decoration-1">
-            Account Details
-          </h2>
-          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-full transition-colors">
-            <X className="w-5 h-5 text-black" strokeWidth={1.5} />
-          </button>
-        </div>
-
-        {/* List Menu (Jarak / gap diperbesar jadi lebih lega) */}
-        <div className="flex flex-col gap-8">
-          
-          <button onClick={handleProfileClick} className="flex justify-between items-center group w-full">
-            <span className="text-[#ED5725] font-medium text-[17px] group-hover:text-black transition-colors">My Profile</span>
-            <ChevronRight className="w-5 h-5 text-[#ED5725] group-hover:text-black transition-colors" strokeWidth={1.5} />
-          </button>
-
-          <Link href="/account/orders" onClick={onClose} className="flex justify-between items-center group w-full">
-            <span className="text-[#ED5725] font-medium text-[17px] group-hover:text-black transition-colors">Order</span>
-            <ChevronRight className="w-5 h-5 text-[#ED5725] group-hover:text-black transition-colors" strokeWidth={1.5} />
-          </Link>
-          
-          <Link href="/cart" onClick={onClose} className="flex justify-between items-center group w-full">
-            <span className="text-[#ED5725] font-medium text-[17px] group-hover:text-black transition-colors">Cart</span>
-            <ChevronRight className="w-5 h-5 text-[#ED5725] group-hover:text-black transition-colors" strokeWidth={1.5} />
-          </Link>
-          
-          <Link href="/wishlist" onClick={onClose} className="flex justify-between items-center group w-full">
-            <span className="text-[#ED5725] font-medium text-[17px] group-hover:text-black transition-colors">Wishlist</span>
-            <ChevronRight className="w-5 h-5 text-[#ED5725] group-hover:text-black transition-colors" strokeWidth={1.5} />
-          </Link>
-          
-          <Link href="/faq" onClick={onClose} className="flex justify-between items-center group w-full">
-            <span className="text-[#ED5725] font-medium text-[17px] group-hover:text-black transition-colors">FAQ</span>
-            <ChevronRight className="w-5 h-5 text-[#ED5725] group-hover:text-black transition-colors" strokeWidth={1.5} />
-          </Link>
-
-        </div>
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-8">
+        <span className="font-bold uppercase tracking-widest text-sm">Menu</span>
+        <X onClick={onClose} className="w-6 h-6 cursor-pointer text-gray-400" />
       </div>
 
-      {/* --- BAGIAN BAWAH (ORANGE AREA) --- */}
-      <div className="flex-1 bg-[#EF7044] flex flex-col items-center justify-center relative p-6">
-        
-        {/* LOGO AREA */}
-        <div className="text-white text-center flex flex-col items-center opacity-90 hover:scale-105 transition-transform duration-300">
-          
-          <Image 
-            src="/logo-niconico-white.png" 
-            alt="Niconico" 
-            width={140} 
-            height={140} // Kasih angka yang sama dulu nggak apa-apa
-            className="object-contain w-auto h-auto" // Pakai Tailwind buat paksa auto
-            priority // Tambahin ini biar logonya di-load duluan (penting buat branding)
-/>
-        </div>
+      <div className="space-y-6">
+        {/* Tombol My Profile yang sekarang sudah pintar */}
+        <button 
+          onClick={handleProfileClick}
+          className="flex items-center gap-4 w-full text-left group"
+        >
+          <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-[#EF7044] transition-colors">
+            <User className="w-5 h-5 text-gray-400 group-hover:text-white" />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-gray-900">My Profile</p>
+            <p className="text-[11px] text-gray-400">
+              {customer ? `Logged in as ${customer.first_name}` : "Login or Register"}
+            </p>
+          </div>
+        </button>
 
-        
-
+        {/* Menu lainnya... */}
       </div>
     </div>
   );
