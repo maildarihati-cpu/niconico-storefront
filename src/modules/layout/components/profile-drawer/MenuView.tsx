@@ -1,18 +1,19 @@
 "use client";
 
 import React from "react";
-import { X, User, Home, ShoppingBag, Heart, Package, Info, Phone } from "lucide-react";
+import { X, ChevronRight } from "lucide-react";
+import Image from "next/image";
 import LocalizedClientLink from "@modules/common/components/localized-client-link";
 
 interface Props {
   onClose: () => void;
   setView: (view: "menu" | "login" | "signup" | "profile") => void;
-  customer: any; // Menerima data dari ProfileContent
+  customer: any;
 }
 
 export default function MenuView({ onClose, setView, customer }: Props) {
   
-  // Logic pindah halaman: kalau sudah login ke Profile, kalau belum ke Login
+  // Logic Pintu Masuk: Ke Profile kalau sudah login, ke Login kalau belum
   const handleProfileClick = () => {
     if (customer) {
       setView("profile");
@@ -22,74 +23,114 @@ export default function MenuView({ onClose, setView, customer }: Props) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white px-6 pt-8 pb-10 overflow-y-auto scrollbar-hide antialiased">
+    <div className="flex flex-col h-full bg-white antialiased overflow-hidden">
       
-      {/* HEADER */}
-      <div className="flex justify-between items-center mb-10">
-        <span className="font-bold uppercase tracking-[0.2em] text-[11px] text-gray-400">Main Menu</span>
-        <button onClick={onClose} className="p-2 hover:bg-gray-50 rounded-full transition-colors">
-          <X className="w-6 h-6 text-gray-400" />
-        </button>
-      </div>
-
-      {/* USER SECTION (PINTAR) */}
-      <div className="mb-10">
-        <button 
-          onClick={handleProfileClick}
-          className="flex items-center gap-4 w-full text-left p-4 rounded-[24px] border border-gray-100 shadow-sm hover:border-[#EF7044]/30 transition-all group"
-        >
-          <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-[#EF7044] transition-colors shadow-inner">
-            <User className="w-5 h-5 text-gray-400 group-hover:text-white" />
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-bold text-gray-900">
-              {customer ? `Hi, ${customer.first_name}!` : "My Profile"}
-            </p>
-            <p className="text-[11px] text-gray-400">
-              {customer ? "Manage your account" : "Login or Register to start"}
-            </p>
-          </div>
-          <div className="w-2 h-2 rounded-full bg-[#EF7044] opacity-0 group-hover:opacity-100 transition-opacity" />
-        </button>
-      </div>
-
-      {/* NAVIGATION LINKS */}
-      <div className="space-y-2 flex-1">
-        <MenuLink href="/" icon={<Home className="w-5 h-5" />} label="Home" onClick={onClose} />
-        <MenuLink href="/store" icon={<ShoppingBag className="w-5 h-5" />} label="Shop All Products" onClick={onClose} />
-        <MenuLink href="/cart" icon={<Package className="w-5 h-5" />} label="My Shopping Cart" onClick={onClose} />
+      {/* --- BAGIAN ATAS (PUTIH) --- */}
+      <div className="bg-white px-8 pt-10 pb-12 flex-shrink-0">
         
-        {/* Garis Pemisah Tipis */}
-        <div className="h-[1px] bg-gray-50 my-4 mx-4" />
+        {/* Header Drawer */}
+        <div className="flex justify-between items-center mb-10">
+          <div className="relative">
+            <h2 className="text-[#ED5725] text-xl font-medium tracking-wide">Account Details</h2>
+            {/* Garis bawah tipis sesuai desain */}
+            <div className="absolute -bottom-1 left-0 w-full h-[1px] bg-[#ED5725]/30"></div>
+          </div>
+          <button onClick={onClose} className="p-1 hover:opacity-70 transition-opacity">
+            <X className="w-6 h-6 text-gray-800" />
+          </button>
+        </div>
 
-        <p className="px-4 text-[10px] font-bold text-gray-300 uppercase tracking-widest mb-4">Discover</p>
+        {/* Daftar Menu List */}
+        <div className="flex flex-col gap-7">
+          
+          {/* Menu My Profile (Logic Login/Profile) */}
+          <button 
+            onClick={handleProfileClick}
+            className="flex justify-between items-center w-full group transition-all"
+          >
+            <span className="text-[#ED5725] text-lg font-medium tracking-tight group-hover:translate-x-1 transition-transform">
+              My Profile
+            </span>
+            <ChevronRight className="w-5 h-5 text-[#ED5725]" />
+          </button>
+
+          {/* Menu Order */}
+          <LocalizedClientLink 
+            href="/account/orders" 
+            onClick={onClose}
+            className="flex justify-between items-center w-full group transition-all"
+          >
+            <span className="text-[#ED5725] text-lg font-medium tracking-tight group-hover:translate-x-1 transition-transform">
+              Order
+            </span>
+            <ChevronRight className="w-5 h-5 text-[#ED5725]" />
+          </LocalizedClientLink>
+
+          {/* Menu Cart */}
+          <LocalizedClientLink 
+            href="/cart" 
+            onClick={onClose}
+            className="flex justify-between items-center w-full group transition-all"
+          >
+            <span className="text-[#ED5725] text-lg font-medium tracking-tight group-hover:translate-x-1 transition-transform">
+              Cart
+            </span>
+            <ChevronRight className="w-5 h-5 text-[#ED5725]" />
+          </LocalizedClientLink>
+
+          {/* Menu Wishlist */}
+          <LocalizedClientLink 
+            href="/wishlist" 
+            onClick={onClose}
+            className="flex justify-between items-center w-full group transition-all"
+          >
+            <span className="text-[#ED5725] text-lg font-medium tracking-tight group-hover:translate-x-1 transition-transform">
+              Wishlist
+            </span>
+            <ChevronRight className="w-5 h-5 text-[#ED5725]" />
+          </LocalizedClientLink>
+
+          {/* Menu FAQ */}
+          <LocalizedClientLink 
+            href="/faq" 
+            onClick={onClose}
+            className="flex justify-between items-center w-full group transition-all"
+          >
+            <span className="text-[#ED5725] text-lg font-medium tracking-tight group-hover:translate-x-1 transition-transform">
+              FAQ
+            </span>
+            <ChevronRight className="w-5 h-5 text-[#ED5725]" />
+          </LocalizedClientLink>
+
+        </div>
+      </div>
+
+      {/* --- BAGIAN BAWAH (ORANGE SOLID) --- */}
+      <div className="flex-1 bg-[#EF7044] flex flex-col items-center justify-center p-12 relative overflow-hidden">
         
-        <MenuLink href="/collections/new-arrivals" label="New Arrivals" onClick={onClose} />
-        <MenuLink href="/collections/best-seller" label="Best Sellers" onClick={onClose} />
-        <MenuLink href="/about" icon={<Info className="w-5 h-5" />} label="Our Story" onClick={onClose} />
-        <MenuLink href="/contact" icon={<Phone className="w-5 h-5" />} label="Customer Support" onClick={onClose} />
+        {/* Konten Logo Niconico Putih */}
+        <div className="flex flex-col items-center gap-4 animate-in fade-in zoom-in duration-700">
+          <div className="relative w-24 h-24 md:w-32 md:h-32 mb-2">
+            <Image 
+              src="/logo-pineapple-white.png" // Pastikan kamu punya file pineapple putih di folder public
+              alt="Pineapple Logo" 
+              fill 
+              className="object-contain"
+            />
+          </div>
+          
+          <div className="text-white text-center">
+            <h3 className="text-4xl md:text-5xl font-serif tracking-[0.2em] mb-1">niconico</h3>
+            <p className="text-xs md:text-sm tracking-[0.4em] font-light uppercase opacity-90">resort</p>
+          </div>
+        </div>
+
+        {/* Dekorasi tipis agar tidak kaku (Opsional) */}
+        <div className="absolute bottom-10 text-white/20 text-[10px] font-bold tracking-[0.5em] uppercase">
+          Est. 2026
+        </div>
       </div>
 
-      {/* FOOTER DI DALAM DRAWER */}
-      <div className="mt-10 pt-6 border-t border-gray-50 text-center">
-        <p className="text-[10px] text-gray-300 font-medium uppercase tracking-[0.3em]">
-          niconico resort &copy; 2026
-        </p>
-      </div>
     </div>
-  );
-}
-
-// Komponen Kecil buat Link biar rapi
-function MenuLink({ href, icon, label, onClick }: { href: string; icon?: React.ReactNode; label: string; onClick: () => void }) {
-  return (
-    <LocalizedClientLink 
-      href={href} 
-      onClick={onClick}
-      className="flex items-center gap-4 px-4 py-3.5 rounded-2xl hover:bg-gray-50 text-gray-600 hover:text-[#EF7044] transition-all group"
-    >
-      {icon && <span className="text-gray-400 group-hover:text-[#EF7044] transition-colors">{icon}</span>}
-      <span className="text-sm font-bold tracking-wide">{label}</span>
-    </LocalizedClientLink>
   );
 }

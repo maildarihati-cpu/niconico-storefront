@@ -18,7 +18,6 @@ const StoryTeller = () => {
         const res = await fetch(`${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/reviews`)
         const data = await res.json()
         setReviews(data.reviews || [])
-        console.log("HALO DATA REVIEWS:", data.reviews)
       } catch (err) {
         console.error("Gagal narik data:", err)
       }
@@ -26,7 +25,6 @@ const StoryTeller = () => {
     fetchStories()
   }, [])
 
-  console.log("🔥 KOMPONEN REVIEWS BERHASIL DI-RENDER!");
 
   if (reviews.length === 0) return null
 
