@@ -5,7 +5,6 @@ import MenuView from "./MenuView";
 import LoginView from "./LoginView";
 import SignupView from "./SignupView";
 import ProfileView from "./ProfileView";
-// Ganti getCustomer jadi retrieveCustomer
 import { retrieveCustomer } from "@lib/data/customer"; 
 
 type ViewState = "loading" | "menu" | "login" | "signup" | "profile";
@@ -16,17 +15,17 @@ interface ProfileContentProps {
 
 export default function ProfileContent({ onClose }: ProfileContentProps) {
   const [view, setView] = useState<ViewState>("loading");
+  // TAMBAHIN STATE INI BUAT NYIMPEN DATA KUSTOMER
+  const [customerData, setCustomerData] = useState<any>(null); 
 
   const checkSession = async () => {
     try {
-      // Panggil retrieveCustomer, ini fungsi asli bawaan starter-mu
       const customer = await retrieveCustomer().catch(() => null);
 
       if (customer) {
-        // Kalau data customer ada, berarti dia masih login
+        setCustomerData(customer); // Simpan datanya di sini
         setView("profile");
       } else {
-        // Kalau null, berarti session habis atau belum login
         setView("menu");
       }
     } catch (error) {
@@ -50,7 +49,9 @@ export default function ProfileContent({ onClose }: ProfileContentProps) {
   if (view === "menu") return <MenuView onClose={onClose} setView={setView} />;
   if (view === "login") return <LoginView onClose={onClose} setView={setView} />;
   if (view === "signup") return <SignupView onClose={onClose} setView={setView} />;
-  if (view === "profile") return <ProfileView onClose={onClose} setView={setView} />;
+  
+  // OPER DATANYA KE PROFILEVIEW
+  if (view === "profile") return <ProfileView onClose={onClose} setView={setView} customer={customerData} />;
   
   return null;
 }
