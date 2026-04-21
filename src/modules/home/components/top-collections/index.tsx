@@ -34,7 +34,8 @@ export default function TopCollections() {
   const [isAdding, setIsAdding] = useState(false);
 
   // 1. FETCH DATA PRODUK BERDASARKAN KOLEKSI
-  useEffect(() => {
+  // 1. useEffect yang sudah kamu punya (untuk tarik data)
+useEffect(() => {
   const fetchProductsByCollection = async () => {
     setIsLoading(true);
     setProducts([]); 
@@ -42,23 +43,19 @@ export default function TopCollections() {
     try {
       const data = await listProducts({
         queryParams: { 
-          limit: 100, // Ambil lebih banyak biar aman
+          limit: 100,
           order: "-created_at",
-          // PENTING: Minta Medusa buat ngasih data collection-nya juga
           fields: "*collection,*variants,*variants.prices" 
         }, 
         countryCode: countryCode as string,
       }).catch(() => null);
 
       if (data && data.response) {
-        // FILTER MANUAL
         const filtered = data.response.products.filter((p: any) => {
           const productHandle = p.collection?.handle?.toLowerCase();
           const targetHandle = activeConfig.handle.toLowerCase();
-          
           return productHandle === targetHandle;
         });
-
         setProducts(filtered);
       }
     } catch (error) {
@@ -70,6 +67,22 @@ export default function TopCollections() {
 
   fetchProductsByCollection();
 }, [activeTab, countryCode, activeConfig.handle]);
+
+// 2. TAMBAHKAN INI: Untuk mengunci scroll saat popup varian muncul
+useEffect(() => {
+  if (selectedProduct) {
+    // Kunci scroll body
+    document.body.style.overflow = "hidden";
+  } else {
+    // Buka kunci scroll body
+    document.body.style.overflow = "unset";
+  }
+
+  // Bersihkan efek saat komponen hilang
+  return () => {
+    document.body.style.overflow = "unset";
+  };
+}, [selectedProduct]);
 
   // HERO IMAGE: Ambil dari produk pertama (terbaru) di koleksi ini
   const dynamicHeroImage = products.length > 0 ? products[0].thumbnail : null;
