@@ -31,7 +31,7 @@ const nextConfig = {
         hostname: "localhost",
       },
       {
-        protocol: "http",
+        protocol: "https",
         hostname: "dev.niconicoresort.com",
       },
       {
