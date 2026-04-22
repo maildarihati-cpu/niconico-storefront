@@ -2,24 +2,26 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { X, ChevronLeft, Loader2, LogOut, CheckCircle2, ChevronRight } from "lucide-react";
+import Image from "next/image";
+import { X, ChevronLeft, Loader2, LogOut, CheckCircle2, ChevronRight, AlertCircle } from "lucide-react";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000";
 
 interface Props {
   onClose: () => void;
-  setView: (view: "menu" | "login" | "signup" | "profile") => void;
+  setView: (view: "menu" | "login" | "signup" | "profile" | "address") => void;
   customer: any; 
+  onSuccess?: () => Promise<void>; // Tambahin ini biar bisa lapor ke induk
 }
 
-export default function ProfileView({ onClose, setView, customer }: Props) {
+export default function ProfileView({ onClose, setView, customer, onSuccess }: Props) {
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  // === STATE UNTUK EDIT PROFILE DRAWER ===
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
     first_name: customer?.first_name || "",
@@ -28,11 +30,11 @@ export default function ProfileView({ onClose, setView, customer }: Props) {
     phone: customer?.phone || "",
   });
 
-  // 1. LOGIC UPDATE PROFILE (Database Medusa)
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
-    
+    setErrorMessage(null);
+
     try {
       const getCookie = (name: string) => {
         const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
@@ -41,7 +43,7 @@ export default function ProfileView({ onClose, setView, customer }: Props) {
       const token = getCookie('_medusa_jwt');
 
       const response = await fetch(`${BACKEND_URL}/store/customers/me`, {
-        method: "PUT",
+        method: "POST", 
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`,
@@ -50,30 +52,37 @@ export default function ProfileView({ onClose, setView, customer }: Props) {
         body: JSON.stringify({
           first_name: formData.first_name,
           last_name: formData.last_name,
-          email: formData.email,
           phone: formData.phone,
         })
       });
 
-      if (!response.ok) throw new Error("Update failed");
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ message: "Update failed" }));
+        throw new Error(err.message || "Update failed");
+      }
 
-      // Sukses! (Email otomatis dikirim oleh Backend Subscriber kamu)
+      // JURUS ANTI CACHE & ANTI RELOAD
       setShowSuccess(true);
+      
+      // 1. Lapor ke induk buat download data terbaru secara diam-diam (tanpa reload)
+      if (onSuccess) {
+        await onSuccess();
+      }
+
       setTimeout(() => {
         setShowSuccess(false);
-        setIsEditOpen(false);
-        window.location.reload(); // Refresh data customer
+        setIsEditOpen(false); // Balik ke halaman ProfileView (kartu detail)
+        router.refresh(); // Beresin cache server-side Next.js
       }, 2000);
 
-    } catch (error) {
-      console.error(error);
-      alert("Gagal update profil say.");
+    } catch (error: any) {
+      console.error("💥 Error Update:", error);
+      setErrorMessage(error.message || "Gagal simpan perubahan.");
     } finally {
       setIsSaving(false);
     }
   };
 
-  // 2. LOGIC LOGOUT
   const handleLogout = async () => {
     setIsLoggingOut(true);
     document.cookie = "_medusa_jwt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
@@ -81,170 +90,185 @@ export default function ProfileView({ onClose, setView, customer }: Props) {
     window.location.reload(); 
   };
 
-  // 3. NAVIGASI KE PAGE LAIN
   const navigateTo = (path: string) => {
     onClose();
     router.push(path);
   };
 
+  const defaultAddress = customer?.addresses?.[0];
+
   if (!customer) return null;
 
   return (
-    <div className="relative h-full w-full overflow-hidden bg-white flex flex-col">
+    <div className="relative h-full w-full overflow-hidden bg-white flex flex-col font-sans antialiased">
       
       {/* --- VIEW UTAMA PROFILE --- */}
-      <div className="flex flex-col h-full px-6 pt-8 pb-6 overflow-y-auto scrollbar-hide antialiased">
+      <div className="flex flex-col h-full px-6 pt-8 pb-6 overflow-y-auto scrollbar-hide">
         
         {/* HEADER */}
-        <div className="flex justify-between items-center mb-10">
-          <button onClick={() => setView("menu")} className="p-2 bg-gray-50 hover:bg-gray-100 rounded-full border border-gray-100">
-            <ChevronLeft className="w-5 h-5 text-gray-600" />
+        <div className="flex justify-between items-center mb-8">
+          <button onClick={() => setView("menu")} className="p-1.5 bg-gray-50 hover:bg-white hover:border-[#ef7044] border border-gray-100 rounded-full transition-all group">
+            <ChevronLeft className="w-4 h-4 text-gray-500 group-hover:text-[#ef7044]" />
           </button>
           
-          <div className="text-black text-center flex flex-col items-center mt-2">
-            <h1 className="text-2xl font-serif tracking-widest mb-0.5">niconico</h1>
-            <p className="text-[9px] tracking-[0.3em] font-light uppercase">resort</p>
+          <div className="relative w-32 h-10">
+            <Image src="/logo-niconico-black.png" alt="niconico" fill className="object-contain" priority />
           </div>
 
-          <button onClick={onClose} className="p-2 bg-gray-50 hover:bg-gray-100 rounded-full border border-gray-100">
-            <X className="w-5 h-5 text-gray-600" />
+          <button onClick={onClose} className="p-1.5 bg-gray-50 hover:bg-white hover:border-[#ef7044] border border-gray-100 rounded-full transition-all group">
+            <X className="w-4 h-4 text-gray-500 group-hover:text-[#ef7044]" />
           </button>
         </div>
 
         {/* ACCOUNT DETAILS CARD */}
         <div className="mb-6">
-          <h2 className="text-[#ED5725] text-lg font-medium mb-4">Account Details</h2>
+          <h2 className="text-[#ef7044] text-base font-medium mb-3">Account Details</h2>
           
-          <div className="border border-gray-200 rounded-[32px] p-7 shadow-sm bg-white space-y-5">
-            <div>
-              <p className="text-[10px] text-gray-400 italic mb-1">Name</p>
-              <p className="text-sm font-semibold text-gray-900">{customer.first_name} {customer.last_name}</p>
+          <div className="border border-gray-100 rounded-[24px] p-6 shadow-sm bg-white space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+               <div>
+                <p className="text-[9px] text-gray-400 italic mb-0.5 uppercase tracking-wider">Name</p>
+                <p className="text-xs font-semibold text-gray-900 leading-tight">{customer.first_name} {customer.last_name}</p>
+              </div>
+              <div>
+                <p className="text-[9px] text-gray-400 italic mb-0.5 uppercase tracking-wider">Phone</p>
+                <p className="text-xs font-semibold text-gray-900 leading-tight">{customer.phone || "-"}</p>
+              </div>
             </div>
 
             <div>
-              <p className="text-[10px] text-gray-400 italic mb-1">E-Mail</p>
-              <p className="text-sm font-semibold text-gray-900">{customer.email}</p>
+              <p className="text-[9px] text-gray-400 italic mb-0.5 uppercase tracking-wider">E-Mail Address</p>
+              <p className="text-xs font-semibold text-gray-900 leading-tight">{customer.email}</p>
             </div>
 
-            <div>
-              <p className="text-[10px] text-gray-400 italic mb-1">Phone Number</p>
-              <p className="text-sm font-semibold text-gray-900">{customer.phone || "-"}</p>
+            {/* KOLOM ALAMAT */}
+            <div className="pt-1 border-t border-gray-50 mt-2">
+              <p className="text-[9px] text-gray-400 italic mb-1 uppercase tracking-wider">Primary Address</p>
+              {defaultAddress ? (
+                <p className="text-[10px] text-gray-700 leading-relaxed font-medium">
+                  {defaultAddress.address_1}, {defaultAddress.city}, {defaultAddress.province}
+                </p>
+              ) : (
+                <p className="text-[10px] text-gray-300 italic">No address saved yet, say.</p>
+              )}
             </div>
 
             {/* BUTTONS INSIDE CARD */}
-            <div className="flex flex-wrap gap-2 pt-2">
+            <div className="flex flex-row gap-2 pt-2 flex-nowrap overflow-x-auto scrollbar-hide">
               <button 
                 onClick={() => setIsEditOpen(true)}
-                className="bg-[#ED5725] text-white text-[10px] font-bold py-3 px-4 flex-1 rounded-xl hover:bg-[#d64a1d] transition-colors"
+                className="bg-[#ef7044] text-white text-[8px] font-bold py-2 px-3 flex-1 rounded-lg border border-[#ef7044] hover:bg-white hover:text-[#ef7044] transition-all whitespace-nowrap uppercase tracking-widest"
               >
                 Edit Profile
               </button>
               <button 
-                onClick={() => alert("Page ganti alamat sedang disiapkan say!")}
-                className="bg-[#ED5725] text-white text-[10px] font-bold py-3 px-4 flex-1 rounded-xl hover:bg-[#d64a1d] transition-colors"
+                onClick={() => setView("address")} 
+                className="bg-[#ef7044] text-white text-[8px] font-bold py-2 px-3 flex-1 rounded-lg border border-[#ef7044] hover:bg-white hover:text-[#ef7044] transition-all whitespace-nowrap uppercase tracking-widest"
               >
-                Change Address
+                Address
               </button>
               <button 
-                className="bg-[#ED5725] text-white text-[10px] font-bold py-3 px-4 flex-1 rounded-xl hover:bg-[#d64a1d] transition-colors opacity-50 cursor-not-allowed"
+                className="bg-[#ef7044] text-white text-[8px] font-bold py-2 px-3 flex-1 rounded-lg border border-[#ef7044] hover:bg-white hover:text-[#ef7044] transition-all whitespace-nowrap uppercase tracking-widest opacity-40 cursor-not-allowed"
+                disabled
               >
-                Reset Password
+                Password
               </button>
             </div>
           </div>
         </div>
 
         {/* MAIN NAVIGATION BUTTONS */}
-        <div className="flex flex-col gap-3 mb-10 mt-6">
-          <button onClick={() => navigateTo("/cart")} className="w-full bg-[#E58962] text-white py-4 rounded-2xl font-bold tracking-wide hover:bg-[#ED5725] transition-all flex justify-between px-6 items-center">
-            <span>My Cart</span>
-            <ChevronRight className="w-5 h-5 opacity-50" />
-          </button>
-          <button className="w-full bg-[#E58962] text-white py-4 rounded-2xl font-bold tracking-wide hover:bg-[#ED5725] transition-all flex justify-between px-6 items-center opacity-50 cursor-not-allowed">
-            <span>My Order</span>
-            <ChevronRight className="w-5 h-5 opacity-50" />
-          </button>
-          <button onClick={() => navigateTo("/wishlist")} className="w-full bg-[#E58962] text-white py-4 rounded-2xl font-bold tracking-wide hover:bg-[#ED5725] transition-all flex justify-between px-6 items-center">
-            <span>My Wishlist</span>
-            <ChevronRight className="w-5 h-5 opacity-50" />
-          </button>
+        <div className="flex flex-col gap-2.5 mb-10 mt-4">
+          {["My Cart", "My Order", "My Wishlist"].map((item, idx) => (
+            <button 
+              key={item}
+              onClick={() => item === "My Cart" && navigateTo("/cart")}
+              className={`w-full bg-[#ef7044] text-white py-3 rounded-xl font-bold tracking-wide border border-[#ef7044] hover:bg-white hover:text-[#ef7044] transition-all flex justify-between px-6 items-center ${idx === 1 ? 'opacity-40 cursor-not-allowed' : ''}`}
+            >
+              <span className="text-sm">{item}</span>
+              <ChevronRight className="w-4 h-4 opacity-50" />
+            </button>
+          ))}
         </div>
 
         {/* LOGOUT */}
-        <div className="mt-auto pt-6">
+        <div className="mt-auto">
           <button 
             onClick={handleLogout}
             disabled={isLoggingOut}
-            className="w-full border-2 border-[#ED5725] text-[#ED5725] py-4 rounded-2xl font-bold text-sm hover:bg-[#ED5725] hover:text-white transition-all flex items-center justify-center gap-2"
+            className="w-full bg-white border border-[#ef7044] text-[#ef7044] py-3 rounded-xl font-bold text-xs hover:bg-[#ef7044] hover:text-white transition-all flex items-center justify-center gap-2"
           >
-            {isLoggingOut ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}
-            Logout Account
+            {isLoggingOut ? <Loader2 className="w-3 h-3 animate-spin" /> : <LogOut className="w-3 h-3" />}
+            <span className="uppercase tracking-widest">Logout Account</span>
           </button>
         </div>
       </div>
 
-      {/* --- DRAWER EDIT PROFILE (SLIDE FROM RIGHT) --- */}
+      {/* --- DRAWER EDIT PROFILE --- */}
       <div className={`absolute inset-0 z-[60] bg-white transition-transform duration-500 ease-in-out flex flex-col ${isEditOpen ? "translate-x-0" : "translate-x-full"}`}>
         
-        {/* Header Edit */}
         <div className="flex justify-between items-center px-6 pt-10 pb-6 border-b border-gray-50">
-          <button onClick={() => setIsEditOpen(false)} className="p-2 bg-gray-50 rounded-full">
-            <ChevronLeft className="w-5 h-5 text-gray-600" />
+          <button onClick={() => setIsEditOpen(false)} className="p-2 bg-gray-50 rounded-full border border-gray-100">
+            <ChevronLeft className="w-4 h-4 text-gray-600" />
           </button>
-          <h2 className="text-[#ED5725] text-lg font-medium">Edit Your Profile</h2>
-          <div className="w-9"></div>
+          <h2 className="text-[#ef7044] text-base font-medium">Edit Your Profile</h2>
+          <div className="w-8"></div>
         </div>
 
         {showSuccess ? (
-          <div className="flex-1 flex flex-col items-center justify-center px-10 text-center animate-in zoom-in duration-300">
-            <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mb-6">
-              <CheckCircle2 className="w-10 h-10 text-green-500" />
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">Updated!</h3>
-            <p className="text-sm text-gray-400">Data kamu sudah aman di database, say. Cek email juga ya!</p>
+          <div className="flex-1 flex flex-col items-center justify-center px-10 animate-in zoom-in duration-300">
+            <CheckCircle2 className="w-14 h-14 text-green-500 mb-4" />
+            <p className="text-xs text-gray-400 text-center font-medium">Updated! Data sudah aman di database Medusa, say.</p>
           </div>
         ) : (
-          <form onSubmit={handleUpdateProfile} className="flex-1 flex flex-col px-8 pt-8 pb-10 overflow-y-auto">
+          <form onSubmit={handleUpdateProfile} className="flex-1 flex flex-col px-8 pt-6 pb-10 overflow-y-auto">
             <div className="space-y-6 flex-1">
+              
+              {errorMessage && (
+                <div className="bg-red-50 border border-red-100 text-red-600 text-[10px] p-3 rounded-xl flex gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <p>{errorMessage}</p>
+                </div>
+              )}
+
               <div>
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-2 block italic">First Name</label>
+                <label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1 block italic">First Name</label>
                 <input 
                   type="text" 
                   value={formData.first_name}
                   onChange={(e) => setFormData({...formData, first_name: e.target.value})}
-                  className="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-sm focus:ring-2 focus:ring-[#ED5725]/20 transition-all font-medium"
+                  className="w-full bg-gray-50 border-none rounded-xl px-4 py-3 text-sm focus:ring-1 focus:ring-[#ef7044] transition-all"
                   required
                 />
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-2 block italic">Last Name</label>
+                <label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1 block italic">Last Name</label>
                 <input 
                   type="text" 
                   value={formData.last_name}
                   onChange={(e) => setFormData({...formData, last_name: e.target.value})}
-                  className="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-sm focus:ring-2 focus:ring-[#ED5725]/20 transition-all font-medium"
+                  className="w-full bg-gray-50 border-none rounded-xl px-4 py-3 text-sm focus:ring-1 focus:ring-[#ef7044] transition-all"
                 />
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-2 block italic">E-mail Address</label>
-                <input 
-                  type="email" 
-                  value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
-                  className="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-sm focus:ring-2 focus:ring-[#ED5725]/20 transition-all font-medium"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-2 block italic">Phone Number</label>
+                <label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1 block italic">Phone Number</label>
                 <input 
                   type="tel" 
                   value={formData.phone}
                   onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                  className="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-sm focus:ring-2 focus:ring-[#ED5725]/20 transition-all font-medium"
+                  className="w-full bg-gray-50 border-none rounded-xl px-4 py-3 text-sm focus:ring-1 focus:ring-[#ef7044] transition-all"
+                />
+              </div>
+
+              <div className="opacity-50">
+                <label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1 block italic">E-mail (Read Only)</label>
+                <input 
+                  type="email" 
+                  value={formData.email}
+                  disabled
+                  className="w-full bg-gray-100 border-none rounded-xl px-4 py-3 text-sm cursor-not-allowed"
                 />
               </div>
             </div>
@@ -252,9 +276,9 @@ export default function ProfileView({ onClose, setView, customer }: Props) {
             <button 
               type="submit"
               disabled={isSaving}
-              className="mt-10 w-full bg-[#ED5725] text-white py-5 rounded-[24px] font-bold tracking-widest text-sm shadow-xl shadow-[#ED5725]/20 hover:scale-[1.02] active:scale-95 transition-all flex justify-center items-center gap-3"
+              className="mt-8 w-full bg-[#ef7044] text-white py-3.5 rounded-xl font-bold border border-[#ef7044] hover:bg-white hover:text-[#ef7044] transition-all flex justify-center items-center gap-2 uppercase tracking-widest text-xs"
             >
-              {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : "SAVE CHANGES"}
+              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Changes"}
             </button>
           </form>
         )}

@@ -8,9 +8,10 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localh
 interface Props {
   onClose: () => void;
   setView: (view: "menu" | "login" | "signup" | "profile") => void;
+  onSuccess?: () => Promise<void>; // Tambahin ini biar bisa manggil data induk
 }
 
-export default function LoginView({ onClose, setView }: Props) {
+export default function LoginView({ onClose, setView, onSuccess }: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -23,6 +24,7 @@ export default function LoginView({ onClose, setView }: Props) {
     console.log("1. Tombol login diklik! Mengirim email:", email);
 
     try {
+      // FETCH BERSIH (ORIGINAL PUNYAMU) - Gak bakal kena CORS!
       const response = await fetch(`${BACKEND_URL}/auth/customer/emailpass`, {
         method: "POST",
         headers: {
@@ -34,28 +36,28 @@ export default function LoginView({ onClose, setView }: Props) {
         }),
       });
 
-      console.log("2. Backend merespon dengan status code:", response.status);
-
-      // Kalau ditolak server (misal salah password/email)
       if (!response.ok) {
-        // Ambil pesan error aslinya dari server
         const errorText = await response.text(); 
         console.error("❌ Backend nolak karena:", errorText);
         throw new Error("Invalid email or password.");
       }
 
-      // Kalau lolos, baru kita baca datanya
       const data = await response.json();
-      console.log("3. Server kasih balasan sukses:", data);
-
+      
       if (!data.token) {
         throw new Error("Aneh, sukses tapi server nggak ngasih token/tiket.");
       }
 
-      console.log("4. Tiket aman! Masukin ke kantong (Cookie)...");
+      // Simpan Cookie
       document.cookie = `_medusa_jwt=${data.token}; path=/; max-age=2592000;`;
 
-      console.log("5. SEMUA SUKSES! Buka laci Profile sekarang!");
+      // LOGIC TRANSISI PROFESIONAL (TANPA RELOAD)
+      // 1. Tarik data profil di latar belakang
+      if (onSuccess) {
+        await onSuccess(); 
+      }
+      
+      // 2. Transisi mulus ke halaman Profile
       setView("profile");
 
     } catch (err: any) {

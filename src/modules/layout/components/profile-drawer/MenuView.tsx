@@ -110,19 +110,17 @@ export default function MenuView({ onClose, setView, customer }: Props) {
         
         {/* Konten Logo Niconico Putih */}
         <div className="flex flex-col items-center gap-4 animate-in fade-in zoom-in duration-700">
-          <div className="relative w-24 h-24 md:w-32 md:h-32 mb-2">
+          <div className="relative w-40 h-40 md:w-60 md:h-60 mb-4">
             <Image 
-              src="/logo-pineapple-white.png" // Pastikan kamu punya file pineapple putih di folder public
-              alt="Pineapple Logo" 
-              fill 
+              src="/logo-niconico-white.png" // Pastikan kamu punya file pineapple putih di folder public
+              alt="Logo Niconico" 
+              fill
+              unoptimized 
               className="object-contain"
             />
           </div>
           
-          <div className="text-white text-center">
-            <h3 className="text-4xl md:text-5xl font-serif tracking-[0.2em] mb-1">niconico</h3>
-            <p className="text-xs md:text-sm tracking-[0.4em] font-light uppercase opacity-90">resort</p>
-          </div>
+          
         </div>
 
         {/* Dekorasi tipis agar tidak kaku (Opsional) */}
