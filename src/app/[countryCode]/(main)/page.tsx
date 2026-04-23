@@ -11,6 +11,7 @@ import MakeYourOwnBrand from "@modules/home/components/make-your-own-brand";
 import HeroSection from "@modules/home/components/hero-section";
 import OurStoryTeller from "@modules/home/components/our-story-teller";
 import StoreSection from "@modules/home/components/store-location";
+import { Analytics } from "@vercel/analytics/react"
 
 // --- MESIN TRANSISI (DIPERLAMBAT JADI 2 DETIK) ---
 const FadeInSection = ({ children, delay = 0 }: { children: React.ReactNode, delay?: number }) => {
@@ -90,6 +91,8 @@ useEffect(() => {
   return (
     <main className="font-sans pb-20 overflow-x-hidden antialiased">
       
+        <Analytics /> 
+
       <FadeInSection>
         <HeroSection />
       </FadeInSection>
@@ -98,9 +101,9 @@ useEffect(() => {
         <TopCollections />
       </FadeInSection>
 
-      {/* FEATURE PRODUCTS SECTION (Edge-to-Edge) */}
+      
       <FadeInSection>
-        {/* UBAH DI SINI: Pindahkan bg-white ke sini dan hapus pb-10 biar nempel */}
+        
         <section className="w-full bg-white">
           <h2 className="text-center text-2xl font-bold tracking-tight text-gray-900 py-6">
             Feature Products

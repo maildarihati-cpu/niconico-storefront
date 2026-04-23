@@ -30,9 +30,18 @@ const nextConfig = {
         protocol: "http",
         hostname: "localhost",
       },
+      
+      {
+        protocol: "https",
+        hostname: "media.niconicoresort.com",
+      },
       {
         protocol: "https",
         hostname: "dev.niconicoresort.com",
+      },
+      {
+        protocol: "https",
+        hostname: "niconico-backend-production.up.railway.app",
       },
       {
         protocol: "https",
