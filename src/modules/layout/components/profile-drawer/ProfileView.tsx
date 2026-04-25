@@ -9,7 +9,7 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localh
 
 interface Props {
   onClose: () => void;
-  setView: (view: "menu" | "login" | "signup" | "profile" | "address") => void;
+  setView: (view: "menu" | "login" | "signup" | "profile" | "address" | "reset-password") => void;
   customer: any; 
   onSuccess?: () => Promise<void>; // Tambahin ini biar bisa lapor ke induk
 }
@@ -168,8 +168,8 @@ export default function ProfileView({ onClose, setView, customer, onSuccess }: P
                 Address
               </button>
               <button 
-                className="bg-[#ef7044] text-white text-[8px] font-bold py-2 px-3 flex-1 rounded-lg border border-[#ef7044] hover:bg-white hover:text-[#ef7044] transition-all whitespace-nowrap uppercase tracking-widest opacity-40 cursor-not-allowed"
-                disabled
+                onClick={() => setView("reset-password")}
+                className="bg-[#ef7044] text-white text-[8px] font-bold py-2 px-3 flex-1 rounded-lg border border-[#ef7044] hover:bg-white hover:text-[#ef7044] transition-all whitespace-nowrap uppercase tracking-widest"
               >
                 Password
               </button>

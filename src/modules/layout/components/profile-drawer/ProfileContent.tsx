@@ -6,9 +6,10 @@ import LoginView from "./LoginView";
 import SignupView from "./SignupView";
 import ProfileView from "./ProfileView";
 import AddressView from "./AddressView";
+import ResetPasswordView from "./ResetPasswordView";
 import { retrieveCustomer } from "@lib/data/customer"; 
 
-type ViewState = "loading" | "menu" | "login" | "signup" | "profile" | "address";
+type ViewState = "loading" | "menu" | "login" | "signup" | "profile" | "address" | "reset-password";
 
 export default function ProfileContent({ onClose }: { onClose: () => void }) {
   const [view, setView] = useState<ViewState>("loading");
@@ -66,6 +67,13 @@ export default function ProfileContent({ onClose }: { onClose: () => void }) {
     setView={setView} 
     customer={customerData} 
     onSuccess={fetchCustomerData} // INI WAJIB ADA SAY
+  />
+);
+if (view === "reset-password") return (
+  <ResetPasswordView 
+    onClose={onClose} 
+    setView={setView} 
+    customer={customerData} 
   />
 );
   
