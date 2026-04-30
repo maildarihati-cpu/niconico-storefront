@@ -4,6 +4,7 @@ import React, { useState, useMemo, useEffect } from "react"
 import { ShoppingCart, Heart, X, Ruler } from "lucide-react"
 import { addToCart } from "@lib/data/cart" 
 import { useParams } from "next/navigation"
+import { updateCustomerWishlist } from "@lib/data/customer"
 
 // --- TIPE DATA ---
 interface SizeData {
@@ -13,7 +14,7 @@ interface SizeData {
   qty: number
 }
 
-const ProductActions = ({ product, region }: { product: any, region: any }) => {
+const ProductActions = ({ product, region, customer }: { product: any, region: any, customer: any }) => {
   const countryCode = useParams().countryCode as string
 
   // 1. DATA UMUM PRODUK
@@ -150,14 +151,31 @@ const ProductActions = ({ product, region }: { product: any, region: any }) => {
     }
   }, [product.id])
 
-  const toggleWishlist = () => {
-    if (typeof window !== 'undefined') {
-      const savedWishlist = JSON.parse(localStorage.getItem("wishlist") || "[]")
-      let updatedWishlist = isWishlisted ? savedWishlist.filter((id: string) => id !== product.id) : [...savedWishlist, product.id]
-      localStorage.setItem("wishlist", JSON.stringify(updatedWishlist))
-      setIsWishlisted(!isWishlisted)
+  const toggleWishlist = async () => {
+  const localWishlist = JSON.parse(localStorage.getItem("wishlist") || "[]")
+  let updatedWishlist = []
+
+  if (customer) {
+    // MODE CLOUD (LOGIN)
+    const cloudWishlist = customer.metadata?.wishlist || []
+    if (isWishlisted) {
+      updatedWishlist = cloudWishlist.filter((id: string) => id !== product.id)
+    } else {
+      updatedWishlist = [...cloudWishlist, product.id]
     }
+    await updateCustomerWishlist(updatedWishlist)
+  } else {
+    // MODE LOKAL (GUEST)
+    if (isWishlisted) {
+      updatedWishlist = localWishlist.filter((id: string) => id !== product.id)
+    } else {
+      updatedWishlist = [...localWishlist, product.id]
+    }
+    localStorage.setItem("wishlist", JSON.stringify(updatedWishlist))
   }
+  
+  setIsWishlisted(!isWishlisted)
+}
 
   const handleBuyNow = async (isSetBundle = false) => {
     setIsAdding(true)
@@ -165,10 +183,9 @@ const ProductActions = ({ product, region }: { product: any, region: any }) => {
       if (isSetBundle) {
         if (!selectedModalTopVariant || !selectedModalBottomVariant) return alert("Pilih size Top & Bottom dulu say!")
         
-        // 🌟 IDENTITAS BUNDLE (KTP BARANG)
         const uniqueSetId = `BUNDLE-${Date.now()}`
 
-        // Masukin TOP dengan metadata
+        // 1. Masukin TOP dengan metadata Color
         await addToCart({ 
           variantId: selectedModalTopVariant.id, 
           quantity: setQuantity, 
@@ -177,11 +194,12 @@ const ProductActions = ({ product, region }: { product: any, region: any }) => {
             is_bundle: true, 
             bundle_id: uniqueSetId, 
             bundle_type: "TOP",
-            size: topSize // Simpan sizenya di sini
+            size: topSize,
+            color: colorName, // 🌟 Logic Color masuk sini say!
           }
         })
         
-        // Masukin BOTTOM dengan metadata
+        // 2. Masukin BOTTOM dengan metadata Color
         await addToCart({ 
           variantId: selectedModalBottomVariant.id, 
           quantity: setQuantity, 
@@ -190,21 +208,24 @@ const ProductActions = ({ product, region }: { product: any, region: any }) => {
             is_bundle: true, 
             bundle_id: uniqueSetId, 
             bundle_type: "BOTTOM",
-            size: bottomSize 
+            size: bottomSize,
+            color: colorName, // 🌟 Logic Color masuk sini juga!
           }
         })
 
-        alert(`Berhasil masuk keranjang: ${setQuantity} Set (Top ${topSize}, Bottom ${bottomSize})`)
+        alert(`Berhasil masuk keranjang!`)
         setIsSetModalOpen(false)
       } else {
-        // Logic reguler tetep sama
+        // Logic reguler (One-Piece) juga kita kasih metadata color
         if (!selectedRegulerVariant?.id) return alert("Pilih size dulu ya say!")
         await addToCart({ 
           variantId: selectedRegulerVariant.id, 
           quantity: 1, 
-          countryCode: countryCode || "id" 
+          countryCode: countryCode || "id",
+          metadata: {
+            color: colorName // 🌟 Biar admin tau warna apa yang dibeli
+          }
         })
-        alert(`Berhasil masuk keranjang! Size ${selectedSize}`)
       }
     } catch (error) {
       alert("Gagal menambahkan ke keranjang.")

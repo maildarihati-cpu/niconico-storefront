@@ -15,6 +15,20 @@ import {
   setAuthToken,
 } from "./cookies"
 
+export async function updateCustomerWishlist(wishlistIds: string[]) {
+  const headers = {
+    ...(await getAuthHeaders()),
+  }
+
+  return await sdk.store.customer.update(
+    { metadata: { wishlist: wishlistIds } },
+    {},
+    headers
+  ).then(() => {
+    revalidateTag("customer") // Biar datanya fresh
+  })
+}
+
 export const retrieveCustomer =
   async (): Promise<HttpTypes.StoreCustomer | null> => {
     const authHeaders = await getAuthHeaders()

@@ -6,6 +6,7 @@ import RelatedProducts from "@modules/products/components/related-products"
 import ProductInfo from "@modules/products/templates/product-info"
 import StoreSection from "@modules/home/components/store-location"
 import { notFound } from "next/navigation"
+import { retrieveCustomer } from "@lib/data/customer"
 
 type ProductTemplateProps = {
   product: any // Sesuaikan dengan tipe Medusa v2 kamu
@@ -13,6 +14,7 @@ type ProductTemplateProps = {
   countryCode: string
 }
 
+const customer = await retrieveCustomer()
 const ProductTemplate: React.FC<ProductTemplateProps> = ({
   product,
   region,
@@ -37,7 +39,7 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
 
         {/* 3. PRODUCT ACTIONS (Color, Size, Varian Set/Top/Bottom, Add to Cart) */}
         <Suspense fallback={<p>Loading...</p>}>
-          <ProductActions product={product} region={region} />
+          <ProductActions product={product} region={region} customer={customer} />
         </Suspense>
 
         {/* 4. ACCORDION DESCRIPTION & SHIPPING */}
