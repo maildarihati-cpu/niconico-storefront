@@ -1,29 +1,16 @@
-import { Button, Container, Text } from "@medusajs/ui"
-import { cookies as nextCookies } from "next/headers"
+import React from "react"
 
-async function ProductOnboardingCta() {
-  const cookies = await nextCookies()
-
-  const isOnboarding = cookies.get("_medusa_onboarding")?.value === "true"
-
-  if (!isOnboarding) {
-    return null
-  }
-
+const ProductOnboardingCta = ({ onClick, loading, disabled }: { onClick: () => void, loading: boolean, disabled: boolean }) => {
   return (
-    <Container className="max-w-4xl h-full bg-ui-bg-subtle w-full p-8">
-      <div className="flex flex-col gap-y-4 center">
-        <Text className="text-ui-fg-base text-xl">
-          Your demo product was successfully created! 🎉
-        </Text>
-        <Text className="text-ui-fg-subtle text-small-regular">
-          You can now continue setting up your store in the admin.
-        </Text>
-        <a href="http://localhost:7001/a/orders?onboarding_step=create_order_nextjs">
-          <Button className="w-full">Continue setup in admin</Button>
-        </a>
-      </div>
-    </Container>
+    <div className="w-full">
+      <button
+        onClick={onClick}
+        disabled={disabled || loading}
+        className="w-full bg-[#EF7044] text-white py-4 rounded-full font-bold text-lg tracking-wide hover:bg-[#d65f36] active:scale-95 transition-all shadow-lg disabled:bg-gray-300"
+      >
+        {loading ? "ADDING..." : "BUY NOW"}
+      </button>
+    </div>
   )
 }
 

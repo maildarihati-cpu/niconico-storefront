@@ -109,7 +109,7 @@ export default function HeroSection() {
           Resort & Swimwear Est. 2004
         </p>
         
-        <Link href="/collections" className="w-full max-w-[280px] mb-8">
+        <Link href="/store" className="w-full max-w-[280px] mb-8">
           <button className="w-full bg-[#ED5725] text-white py-4 rounded-full font-bold text-xs tracking-widest uppercase transition-all shadow-lg hover:bg-white hover:text-[#ED5725]">
             SHOP NOW
           </button>

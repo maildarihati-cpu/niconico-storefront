@@ -7,11 +7,18 @@ import { usePathname } from "next/navigation";
 import { Menu, Search, ShoppingBag, User, X } from "lucide-react";
 import CartPreview from "@modules/cart/templates/preview"
 import { useCart } from "@/context/cart-context";
+
+// Import Drawer Kanan (Profile) & Drawer Kiri (Nav/Search)
 import ProfileContent from "../../components/profile-drawer/ProfileContent";
+import NavDrawer from "../../components/nav-drawer/NavDrawer"; // 👈 Ini import untuk drawer kiri baru
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 const Navbar = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  // --- STATE BARU UNTUK DRAWER KIRI ---
+  const [isNavOpen, setIsNavOpen] = useState(false);
+  const [navView, setNavView] = useState<"menu" | "search">("menu");
+  
+  // State Profile Drawer (Kanan) tetap aman
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   
   // Ambil rute URL saat ini
@@ -45,14 +52,22 @@ const Navbar = () => {
     <>
       <nav className={`fixed top-5 left-5 right-5 z-40 flex items-center justify-between px-6 py-3.5 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-500 ${navBgClass}`}>
         
-        {/* Kiri: Hamburger & Search */}
+        {/* ==========================================
+            KIRI: HAMBURGER & SEARCH (DIUPDATE)
+            ========================================== */}
         <div className="flex items-center gap-4 -ml-1">
-          <button onClick={() => setIsMenuOpen(true)} className="p-1 hover:opacity-70 transition-opacity">
+          <button 
+            onClick={() => { setNavView("menu"); setIsNavOpen(true); }} 
+            className="p-1 hover:opacity-70 transition-opacity"
+          >
             <Menu className={`w-5 h-5 transition-colors duration-300 ${iconColorClass}`} />
           </button>
-          <Link href="/search" className="p-1 hover:opacity-70 transition-opacity">
+          <button 
+            onClick={() => { setNavView("search"); setIsNavOpen(true); }} 
+            className="p-1 hover:opacity-70 transition-opacity"
+          >
             <Search className={`w-5 h-5 transition-colors duration-300 ${iconColorClass}`} />
-          </Link>
+          </button>
         </div>
         
         {/* Tengah: Logo Dinamis */}
@@ -95,29 +110,29 @@ const Navbar = () => {
         </div>
       </nav>
 
-      {/* --- UI DRAWER (MENU & PROFILE) --- */}
-      {(isMenuOpen || isProfileOpen) && (
+      {/* --- UI DRAWER (PROFILE KANAN) TETAP SAMA --- */}
+      {isProfileOpen && (
         <div 
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity" 
-          onClick={() => { setIsMenuOpen(false); setIsProfileOpen(false); }} 
+          onClick={() => setIsProfileOpen(false)} 
         />
       )}
 
-      {/* Menu Kiri */}
-      <div className={`fixed top-0 left-0 h-full w-[90%] max-w-[480px] bg-white z-50 shadow-2xl transform transition-transform duration-300 ${isMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
-        <div className="p-6 flex justify-between items-center border-b">
-          <span className="font-bold uppercase tracking-widest text-sm">Menu</span>
-          <X onClick={() => setIsMenuOpen(false)} className="w-6 h-6 cursor-pointer text-gray-400" />
-        </div>
-        <div className="p-6">
-           {/* Konten menu bos di sini */}
-        </div>
-      </div>
-
       {/* Profile Kanan */}
-      <div className={`fixed top-0 right-0 h-full w-[90%] max-w-[480px] bg-white z-50 shadow-2xl transform transition-transform duration-300 overflow-hidden ${isProfileOpen ? "translate-x-0" : "translate-x-full"}`}>
+      <div className={`fixed top-0 right-0 h-full w-[90%] max-w-[480px] bg-white z-[60] shadow-2xl transform transition-transform duration-300 overflow-hidden ${isProfileOpen ? "translate-x-0" : "translate-x-full"}`}>
         <ProfileContent onClose={() => setIsProfileOpen(false)} />
       </div>
+
+      {/* ==========================================
+          DRAWER KIRI (MENU & SEARCH BARU)
+          ========================================== */}
+      <NavDrawer 
+        isOpen={isNavOpen} 
+        onClose={() => setIsNavOpen(false)} 
+        view={navView} 
+        setView={setNavView} 
+      />
+      
     </>
   );
 };

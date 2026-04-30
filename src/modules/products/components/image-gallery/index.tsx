@@ -1,39 +1,70 @@
-import { HttpTypes } from "@medusajs/types"
-import { Container } from "@medusajs/ui"
+"use client"
+
+import React, { useState, useRef } from "react"
 import Image from "next/image"
+import { ChevronLeft, Heart } from "lucide-react"
+import { useRouter } from "next/navigation"
 
-type ImageGalleryProps = {
-  images: HttpTypes.StoreProductImage[]
-}
+const ImageGallery = ({ images }: { images: any[] }) => {
+  const [activeIndex, setActiveIndex] = useState(0)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const router = useRouter()
 
-const ImageGallery = ({ images }: ImageGalleryProps) => {
+  const handleScroll = () => {
+    if (!scrollRef.current) return
+    const scrollPosition = scrollRef.current.scrollLeft
+    const width = scrollRef.current.clientWidth
+    const index = Math.round(scrollPosition / width)
+    setActiveIndex(index)
+  }
+
+  if (!images?.length) return null
+
   return (
-    <div className="flex items-start relative">
-      <div className="flex flex-col flex-1 small:mx-16 gap-y-4">
-        {images.map((image, index) => {
-          return (
-            <Container
-              key={image.id}
-              className="relative aspect-[29/34] w-full overflow-hidden bg-ui-bg-subtle"
-              id={image.id}
-            >
-              {!!image.url && (
-                <Image
-                  src={image.url}
-                  priority={index <= 2 ? true : false}
-                  className="absolute inset-0 rounded-rounded"
-                  alt={`Product image ${index + 1}`}
-                  fill
-                  sizes="(max-width: 576px) 280px, (max-width: 768px) 360px, (max-width: 992px) 480px, 800px"
-                  style={{
-                    objectFit: "cover",
-                  }}
-                />
-              )}
-            </Container>
-          )
-        })}
+    // PERHATIKAN BARIS INI SAY: rounded-b-[40px] diganti jadi rounded-[5pt]
+    <div className="relative w-full aspect-[4/5] bg-gray-100 overflow-hidden rounded-[10pt]">
+      
+      {/* FLOATING BUTTONS (BACK & WISHLIST) */}
+      <div className="absolute top-5 left-5 right-5 flex justify-between items-center z-10">
+        <button onClick={() => router.back()} className="w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm text-gray-800 hover:bg-white transition-colors">
+          <ChevronLeft className="w-6 h-6 -ml-0.5" />
+        </button>
+        <button className="w-10 h-10 bg-[#EF7044] rounded-full flex items-center justify-center shadow-md text-white hover:bg-[#d65f36] transition-colors">
+          <Heart className="w-5 h-5 fill-current" />
+        </button>
       </div>
+
+      {/* HORIZONTAL SCROLL CAROUSEL */}
+      <div 
+        ref={scrollRef}
+        onScroll={handleScroll}
+        className="flex w-full h-full overflow-x-auto snap-x snap-mandatory scrollbar-hide"
+        style={{ scrollBehavior: 'smooth' }}
+      >
+        {images.map((image, index) => (
+          <div key={index} className="w-full h-full flex-shrink-0 snap-center relative">
+            <Image 
+              src={image.url} 
+              alt={`Product image ${index + 1}`}
+              fill
+              className="object-cover object-top"
+              priority={index === 0}
+              sizes="(max-width: 768px) 100vw, 50vw"
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* DOTS INDICATOR */}
+      <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-1.5 z-10">
+        {images.map((_, index) => (
+          <div 
+            key={index} 
+            className={`h-2 rounded-full transition-all duration-300 ${index === activeIndex ? "bg-[#EF7044] w-4" : "bg-white/60 w-2"}`}
+          />
+        ))}
+      </div>
+      
     </div>
   )
 }
