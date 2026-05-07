@@ -10,51 +10,42 @@ import { useCart } from "@/context/cart-context";
 
 // Import Drawer Kanan (Profile) & Drawer Kiri (Nav/Search)
 import ProfileContent from "../../components/profile-drawer/ProfileContent";
-import NavDrawer from "../../components/nav-drawer/NavDrawer"; // 👈 Ini import untuk drawer kiri baru
+import NavDrawer from "../../components/nav-drawer/NavDrawer"; 
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 const Navbar = () => {
-  // --- STATE BARU UNTUK DRAWER KIRI ---
   const [isNavOpen, setIsNavOpen] = useState(false);
   const [navView, setNavView] = useState<"menu" | "search">("menu");
-  
-  // State Profile Drawer (Kanan) tetap aman
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   
-  // Ambil rute URL saat ini
   const pathname = usePathname(); 
-  
-  // Ambil data dari Brankas Global
   const { cart, cartCount, isCartBouncing, showPreview } = useCart();
 
-  // ==========================================
-  // 1. LOGIC HIDE NAVBAR DI HALAMAN CART
-  // ==========================================
-  // Kalau URL-nya mengandung "/cart", Navbar akan mengembalikan "null" (menghilang dari layar)
   if (pathname?.includes("/cart")) {
     return null;
   }
 
-  // 2. LOGIC CEK HALAMAN UNTUK WARNA
-  const isOrangeNav = pathname?.includes("/store") || pathname?.includes("/products");
+  // ==========================================
+  // LOGIC CEK HALAMAN UNTUK WARNA (DIUPDATE)
+  // Sekarang termasuk rute /collections agar sinkron dengan UI kamu say!
+  // ==========================================
+  const isOrangeNav = 
+    pathname?.includes("/store") || 
+    pathname?.includes("/products") || 
+    pathname?.includes("/collections"); // 👈 Tambahan rute ini say
 
-  // 3. ATUR KELAS CSS & LOGO DINAMIS
   const navBgClass = isOrangeNav 
     ? "bg-[#EF7044]/85 backdrop-blur-md border-[#EF7044]/10" 
     : "bg-white/40 backdrop-blur-md border-gray-100/50";     
 
   const iconColorClass = isOrangeNav ? "text-white" : "text-gray-800";
-  
-  // Logo dinamis: Putih saat nav orange, Hitam saat nav putih
   const logoSrc = isOrangeNav ? "/logo-niconico-white.png" : "/logo-niconico-black.png";
 
   return (
     <>
       <nav className={`fixed top-5 left-5 right-5 z-40 flex items-center justify-between px-6 py-3.5 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-500 ${navBgClass}`}>
         
-        {/* ==========================================
-            KIRI: HAMBURGER & SEARCH (DIUPDATE)
-            ========================================== */}
+        {/* KIRI: HAMBURGER & SEARCH */}
         <div className="flex items-center gap-4 -ml-1">
           <button 
             onClick={() => { setNavView("menu"); setIsNavOpen(true); }} 
@@ -94,7 +85,6 @@ const Navbar = () => {
               </span>
             )}
 
-            {/* --- CART PREVIEW OTOMATIS --- */}
             {showPreview && cartCount > 0 && cart && (
               <div className="absolute top-12 -right-2 z-50 w-[300px] md:w-[400px] animate-in fade-in slide-in-from-top-3 duration-300">
                 <div className="bg-white shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-[24px] border border-gray-100 overflow-hidden">
@@ -110,29 +100,15 @@ const Navbar = () => {
         </div>
       </nav>
 
-      {/* --- UI DRAWER (PROFILE KANAN) TETAP SAMA --- */}
+      {/* Profile Drawer & Nav Drawer tetap sama */}
       {isProfileOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity" 
-          onClick={() => setIsProfileOpen(false)} 
-        />
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity" onClick={() => setIsProfileOpen(false)} />
       )}
-
-      {/* Profile Kanan */}
       <div className={`fixed top-0 right-0 h-full w-[90%] max-w-[480px] bg-white z-[60] shadow-2xl transform transition-transform duration-300 overflow-hidden ${isProfileOpen ? "translate-x-0" : "translate-x-full"}`}>
         <ProfileContent onClose={() => setIsProfileOpen(false)} />
       </div>
 
-      {/* ==========================================
-          DRAWER KIRI (MENU & SEARCH BARU)
-          ========================================== */}
-      <NavDrawer 
-        isOpen={isNavOpen} 
-        onClose={() => setIsNavOpen(false)} 
-        view={navView} 
-        setView={setNavView} 
-      />
-      
+      <NavDrawer isOpen={isNavOpen} onClose={() => setIsNavOpen(false)} view={navView} setView={setNavView} />
     </>
   );
 };
