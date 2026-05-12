@@ -21,15 +21,15 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
   const router = useRouter() 
   const { cart: mainCart } = useCart() 
 
-  // 🌟 LOGIKA WARNA BARU
+  // 🌟 LOGIKA WARNA
   const colorName = product?.metadata?.color_name || "White"
-  const colorId = product?.metadata?.color_id || "#FFFFFF" // Hex Code
-  const groupId = product?.metadata?.group_id || null // Pengikat saudara
+  const colorId = product?.metadata?.color_id || "#FFFFFF" 
+  const groupId = product?.metadata?.group_id || null 
 
   const [isColorDropdownOpen, setIsColorDropdownOpen] = useState(false)
   const [relatedProducts, setRelatedProducts] = useState<any[]>([])
 
-  // 🌟 FETCH PRODUK SAUDARA BERDASARKAN GROUP_ID (PLUS AMBIL WARNA ASLI)
+  // 🌟 FETCH PRODUK SAUDARA (PAKAI HANDLE LOGIC BYPASS MEDUSA)
   useEffect(() => {
     const fetchRelatedColors = async () => {
       if (!groupId) {
@@ -40,41 +40,26 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
       try {
         const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000";
         const apiKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "";
-        const headers = {
-          "x-publishable-api-key": apiKey,
-          "Content-Type": "application/json"
-        };
 
-        // 1. Tarik 100 produk terbaru (data mentah tanpa metadata)
-        const res = await fetch(`${backendUrl}/store/products?limit=100`, { method: "GET", headers });
+        // Tarik 100 produk terbaru
+        const res = await fetch(`${backendUrl}/store/products?limit=100`, {
+          method: "GET",
+          headers: {
+            "x-publishable-api-key": apiKey,
+            "Content-Type": "application/json"
+          }
+        });
 
         if (res.ok) {
           const data = await res.json();
           
-          // 2. Filter saudara berdasarkan handle
+          // Filter saudara berdasarkan kemiripan 'handle' (karena metadata disembunyikan API)
           const trueSiblings = data.products?.filter((p: any) => {
             return p.handle?.toLowerCase().includes(groupId.toLowerCase());
           }) || [];
 
           if (trueSiblings.length > 0) {
-            // 🌟 JURUS BARU: Ketok pintu satu-satu buat minta data lengkap (termasuk metadata)
-            const detailedSiblings = await Promise.all(
-              trueSiblings.map(async (sibling: any) => {
-                try {
-                  const detailRes = await fetch(`${backendUrl}/store/products/${sibling.id}`, { method: "GET", headers });
-                  if (detailRes.ok) {
-                    const detailData = await detailRes.json();
-                    return detailData.product; // Ini data komplit yang ada metadatanya!
-                  }
-                  return sibling; // Kalau gagal, pakai data mentah aja
-                } catch (e) {
-                  return sibling;
-                }
-              })
-            );
-            
-            console.log("CEK SAUDARA KOMPLIT (ADA WARNANYA):", detailedSiblings);
-            setRelatedProducts(detailedSiblings);
+            setRelatedProducts(trueSiblings);
           } else {
             setRelatedProducts([product]);
           }
@@ -339,27 +324,49 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
             <div className="w-full h-full rounded-full border border-gray-100" style={{ backgroundColor: colorId }}></div>
             
             {/* Pop-up Dropdown Warna Saudara */}
-            {isColorDropdownOpen && (
+            {isColorDropdownOpen && relatedProducts.length > 0 && (
               <div className="absolute top-9 left-0 bg-white border border-gray-100 shadow-[0_10px_30px_rgba(0,0,0,0.1)] rounded-2xl p-3 flex gap-3 z-50 animate-in fade-in zoom-in-95">
                 {relatedProducts.map((relProd: any) => {
-                  const relColorId = relProd.metadata?.color_id || "#eee";
-                  const relColorName = relProd.metadata?.color_name || "Unknown";
                   const isActive = relProd.id === product.id;
                   
+                  // 🌟 JURUS HACKER: Ekstrak warna dari Handle karena Metadata disembunyikan Medusa!
+                  let extractedColor = "#eeeeee"; 
+                  let displayName = "Unknown";
+                  
+                  if (relProd.metadata?.color_id) {
+                     extractedColor = relProd.metadata.color_id;
+                     displayName = relProd.metadata.color_name || "Unknown";
+                  } else if (relProd.handle && groupId) {
+                     const colorFromHandle = relProd.handle.toLowerCase().replace(groupId.toLowerCase(), '').replace(/-/g, '').trim();
+                     
+                     // Kamus warna bantuan jika warna aneh
+                     const colorDictionary: Record<string, string> = {
+                        "black": "#222222", 
+                        "white": "#FFFFFF",
+                        "navy": "#000080",
+                        "nude": "#E3BC9A"
+                     };
+
+                     extractedColor = colorDictionary[colorFromHandle] || colorFromHandle || "#eeeeee";
+                     displayName = colorFromHandle.toUpperCase();
+                  }
+
                   return (
                     <button 
                       key={relProd.id}
-                      title={relColorName}
+                      title={displayName}
                       onClick={() => {
                         if (!isActive) {
-                          // Tutup dropdown dan arahkan ke halaman produk saudara
                           setIsColorDropdownOpen(false);
                           router.push(`/${countryCode}/products/${relProd.handle}`);
                         }
                       }}
                       className={`w-8 h-8 rounded-full p-[2px] transition-all hover:scale-110 ${isActive ? 'border-2 border-[#EF7044] cursor-default' : 'border border-gray-200 hover:border-gray-400'}`}
                     >
-                      <div className="w-full h-full rounded-full shadow-inner border border-gray-100" style={{ backgroundColor: relColorId }}></div>
+                      <div 
+                        className="w-full h-full rounded-full shadow-inner border border-gray-200" 
+                        style={{ backgroundColor: extractedColor }}
+                      ></div>
                     </button>
                   )
                 })}
@@ -519,7 +526,6 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
                 </div>
               </div>
 
-              {/* 🌟 TAMPILAN WARNA DI MODAL (LINK HEX CODE NYALA JUGA) */}
               <div className="flex items-center gap-3 mb-6">
                 <span className="text-[13px] text-gray-500 font-medium">Color : {colorName}</span>
                 <div className="w-8 h-8 rounded-full border border-gray-300 p-[2px] shadow-sm">
