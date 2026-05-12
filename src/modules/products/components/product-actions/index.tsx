@@ -29,7 +29,7 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
   const [isColorDropdownOpen, setIsColorDropdownOpen] = useState(false)
   const [relatedProducts, setRelatedProducts] = useState<any[]>([])
 
-  // 🌟 FETCH PRODUK SAUDARA BERDASARKAN GROUP_ID (BYPASS SEARCH MODULE + DEBUG)
+  // 🌟 FETCH PRODUK SAUDARA BERDASARKAN GROUP_ID (PAKAI HANDLE LOGIC)
   useEffect(() => {
     const fetchRelatedColors = async () => {
       if (!groupId) {
@@ -53,20 +53,14 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
         if (res.ok) {
           const data = await res.json();
           
-          // 🌟 KITA INTIP SEMUA DATA ASLINYA DI SINI
-          console.log("1. GROUP ID YANG DICARI:", groupId);
-          console.log("2. SEMUA PRODUK DARI SERVER:", data.products);
-          
-          // Filter manual: Cari yang group_id-nya sama persis dengan produk ini
+          // 🌟 FILTER MANUAL BARU: Kita akalin pakai Handle!
+          // Karena Medusa pelit menyembunyikan metadata di List API, kita kelompokkan 
+          // saudara-saudaranya berdasarkan kemiripan 'handle' (link URL-nya)
           const trueSiblings = data.products?.filter((p: any) => {
-            // Kita log juga metadatanya biar kelihatan
-            if (p.title?.toLowerCase().includes("ruth")) {
-               console.log(`Cek produk ${p.title} metadatanya:`, p.metadata);
-            }
-            return p.metadata?.group_id === groupId;
+            return p.handle?.toLowerCase().includes(groupId.toLowerCase());
           }) || [];
 
-          console.log("3. CEK SAUDARA YANG KETEMU (BYPASS):", trueSiblings);
+          console.log("CEK SAUDARA YANG KETEMU (PAKAI HANDLE):", trueSiblings);
 
           if (trueSiblings.length > 0) {
             setRelatedProducts(trueSiblings);
