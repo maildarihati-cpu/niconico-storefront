@@ -29,7 +29,7 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
   const [isColorDropdownOpen, setIsColorDropdownOpen] = useState(false)
   const [relatedProducts, setRelatedProducts] = useState<any[]>([])
 
-  // 🌟 FETCH PRODUK SAUDARA BERDASARKAN GROUP_ID (PAKAI HANDLE LOGIC)
+  // 🌟 FETCH PRODUK SAUDARA BERDASARKAN GROUP_ID (PLUS AMBIL WARNA ASLI)
   useEffect(() => {
     const fetchRelatedColors = async () => {
       if (!groupId) {
@@ -40,30 +40,41 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
       try {
         const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000";
         const apiKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "";
+        const headers = {
+          "x-publishable-api-key": apiKey,
+          "Content-Type": "application/json"
+        };
 
-        // Tarik 100 produk terbaru
-        const res = await fetch(`${backendUrl}/store/products?limit=100`, {
-          method: "GET",
-          headers: {
-            "x-publishable-api-key": apiKey,
-            "Content-Type": "application/json"
-          }
-        });
+        // 1. Tarik 100 produk terbaru (data mentah tanpa metadata)
+        const res = await fetch(`${backendUrl}/store/products?limit=100`, { method: "GET", headers });
 
         if (res.ok) {
           const data = await res.json();
           
-          // 🌟 FILTER MANUAL BARU: Kita akalin pakai Handle!
-          // Karena Medusa pelit menyembunyikan metadata di List API, kita kelompokkan 
-          // saudara-saudaranya berdasarkan kemiripan 'handle' (link URL-nya)
+          // 2. Filter saudara berdasarkan handle
           const trueSiblings = data.products?.filter((p: any) => {
             return p.handle?.toLowerCase().includes(groupId.toLowerCase());
           }) || [];
 
-          console.log("CEK SAUDARA YANG KETEMU (PAKAI HANDLE):", trueSiblings);
-
           if (trueSiblings.length > 0) {
-            setRelatedProducts(trueSiblings);
+            // 🌟 JURUS BARU: Ketok pintu satu-satu buat minta data lengkap (termasuk metadata)
+            const detailedSiblings = await Promise.all(
+              trueSiblings.map(async (sibling: any) => {
+                try {
+                  const detailRes = await fetch(`${backendUrl}/store/products/${sibling.id}`, { method: "GET", headers });
+                  if (detailRes.ok) {
+                    const detailData = await detailRes.json();
+                    return detailData.product; // Ini data komplit yang ada metadatanya!
+                  }
+                  return sibling; // Kalau gagal, pakai data mentah aja
+                } catch (e) {
+                  return sibling;
+                }
+              })
+            );
+            
+            console.log("CEK SAUDARA KOMPLIT (ADA WARNANYA):", detailedSiblings);
+            setRelatedProducts(detailedSiblings);
           } else {
             setRelatedProducts([product]);
           }
