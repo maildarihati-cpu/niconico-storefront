@@ -1,274 +1,193 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { sdk } from "@lib/config" 
-import { ChevronLeft, MapPin, ChevronRight, Loader2, Tag, CheckCircle2 } from "lucide-react"
+import { isManual, isStripeLike } from "@lib/constants"
+import { placeOrder } from "@lib/data/cart"
+import { HttpTypes } from "@medusajs/types"
+import { Button } from "@medusajs/ui"
+import { useElements, useStripe } from "@stripe/react-stripe-js"
+import React, { useState } from "react"
+import ErrorMessage from "../error-message"
 
-interface CheckoutFormProps {
-  cart: any;
-  customer: any;
+type PaymentButtonProps = {
+  cart: HttpTypes.StoreCart
+  "data-testid": string
 }
 
-export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFormProps) {
-  const router = useRouter()
-  const [cart, setCart] = useState(initialCart)
-  const [promoCode, setPromoCode] = useState("")
-  const [isApplyingPromo, setIsApplyingPromo] = useState(false)
-  const [isPaying, setIsPaying] = useState(false)
-  const [shippingMethods, setShippingMethods] = useState<any[]>([])
-  const [isLoadingShipping, setIsLoadingShipping] = useState(true)
-  const [showAddressList, setShowAddressList] = useState(false)
+const PaymentButton: React.FC<PaymentButtonProps> = ({
+  cart,
+  "data-testid": dataTestId,
+}) => {
+  const notReady =
+    !cart ||
+    !cart.shipping_address ||
+    !cart.billing_address ||
+    !cart.email ||
+    (cart.shipping_methods?.length ?? 0) < 1
 
-  // 1. AMBIL SHIPPING METHOD DARI ADMIN
-  useEffect(() => {
-    const fetchShippingMethods = async () => {
-      try {
-        const { shipping_options } = await sdk.store.fulfillment.listCartOptions({
-          cart_id: cart.id
-        })
-        setShippingMethods(shipping_options)
-        
-        // Auto-select kurir pertama jika belum ada
-        if (shipping_options.length > 0 && !cart.shipping_methods?.length) {
-          handleSelectShipping(shipping_options[0].id)
-        }
-      } catch (error) {
-        console.error("Gagal ambil shipping:", error)
-      } finally {
-        setIsLoadingShipping(false)
-      }
-    }
-    fetchShippingMethods()
-  }, [cart.id])
+  const paymentSession = cart.payment_collection?.payment_sessions?.[0]
 
-  const handleSelectShipping = async (optionId: string) => {
-    try {
-      const { cart: updatedCart } = await sdk.store.cart.addShippingMethod(cart.id, {
-        option_id: optionId
+  switch (true) {
+    case isStripeLike(paymentSession?.provider_id):
+      return (
+        <StripePaymentButton
+          notReady={notReady}
+          cart={cart}
+          data-testid={dataTestId}
+        />
+      )
+    case isManual(paymentSession?.provider_id):
+      return (
+        <ManualTestPaymentButton notReady={notReady} data-testid={dataTestId} />
+      )
+    default:
+      return <Button disabled>Select a payment method</Button>
+  }
+}
+
+const StripePaymentButton = ({
+  cart,
+  notReady,
+  "data-testid": dataTestId,
+}: {
+  cart: HttpTypes.StoreCart
+  notReady: boolean
+  "data-testid"?: string
+}) => {
+  const [submitting, setSubmitting] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  const onPaymentCompleted = async () => {
+    await placeOrder()
+      .catch((err) => {
+        setErrorMessage(err.message)
       })
-      setCart(updatedCart)
-    } catch (error) {
-      console.error("Gagal set shipping:", error)
-    }
+      .finally(() => {
+        setSubmitting(false)
+      })
   }
 
-  // 2. FUNGSI GANTI ALAMAT (DIPERBAIKI)
-  const handleUpdateAddress = async (address: any) => {
-    try {
-      // Kita kirim data alamat yang dipilih ke backend Medusa
-      const { cart: updatedCart } = await sdk.store.cart.update(cart.id, {
-        shipping_address: {
-          first_name: address.first_name,
-          last_name: address.last_name,
-          address_1: address.address_1,
-          city: address.city,
-          country_code: address.country_code || "id", // Pastikan ada country code
-          postal_code: address.postal_code,
-          province: address.province,
-          phone: address.phone
-        }
-      })
-      setCart(updatedCart)
-      setShowAddressList(false) // Tutup list setelah pilih
-    } catch (error) {
-      console.error("Gagal ganti alamat:", error)
-      alert("Gagal mengganti alamat, coba lagi ya say.")
-    }
-  }
+  const stripe = useStripe()
+  const elements = useElements()
+  const card = elements?.getElement("card")
 
-  const handleApplyPromo = async () => {
-    if (!promoCode) return
-    setIsApplyingPromo(true)
-    try {
-      const { cart: updatedCart } = await sdk.store.cart.update(cart.id, {
-        promo_codes: [promoCode]
-      })
-      setCart(updatedCart)
-      setPromoCode("")
-      alert("Voucher berhasil dipasang!")
-    } catch (error) {
-      alert("Yah, kode vouchernya gak valid nih.")
-    } finally {
-      setIsApplyingPromo(false)
+  const session = cart.payment_collection?.payment_sessions?.find(
+    (s) => s.status === "pending"
+  )
+
+  const disabled = !stripe || !elements ? true : false
+
+  const handlePayment = async () => {
+    setSubmitting(true)
+
+    if (!stripe || !elements || !card || !cart) {
+      setSubmitting(false)
+      return
     }
+
+    await stripe
+      .confirmCardPayment(session?.data.client_secret as string, {
+        payment_method: {
+          card: card,
+          billing_details: {
+            name:
+              cart.billing_address?.first_name +
+              " " +
+              cart.billing_address?.last_name,
+            address: {
+              city: cart.billing_address?.city ?? undefined,
+              country: cart.billing_address?.country_code ?? undefined,
+              line1: cart.billing_address?.address_1 ?? undefined,
+              line2: cart.billing_address?.address_2 ?? undefined,
+              postal_code: cart.billing_address?.postal_code ?? undefined,
+              state: cart.billing_address?.province ?? undefined,
+            },
+            email: cart.email,
+            phone: cart.billing_address?.phone ?? undefined,
+          },
+        },
+      })
+      .then(({ error, paymentIntent }) => {
+        if (error) {
+          const pi = error.payment_intent
+
+          if (
+            (pi && pi.status === "requires_capture") ||
+            (pi && pi.status === "succeeded")
+          ) {
+            onPaymentCompleted()
+          }
+
+          setErrorMessage(error.message || null)
+          return
+        }
+
+        if (
+          (paymentIntent && paymentIntent.status === "requires_capture") ||
+          paymentIntent.status === "succeeded"
+        ) {
+          return onPaymentCompleted()
+        }
+
+        return
+      })
   }
 
   return (
-    <div className="flex flex-col h-full bg-white relative font-sans">
-      
-      {/* HEADER (PASTIKAN TIDAK ADA MEDUSA STORE DI SINI) */}
-      <div className="flex items-center px-6 pt-12 pb-4 border-b border-gray-100 sticky top-0 bg-white/80 backdrop-blur-md z-20">
-        <button onClick={() => router.back()} className="p-2 -ml-2">
-          <ChevronLeft className="w-6 h-6 text-gray-800" />
-        </button>
-        <h1 className="flex-1 text-center text-lg font-bold text-gray-900 pr-6 uppercase tracking-widest">
-          Check Out
-        </h1>
-      </div>
-
-      <div className="px-5 py-6 space-y-6 pb-32">
-        
-        {/* SHIPPING ADDRESS */}
-        <div className="space-y-3">
-          <div className="flex justify-between items-end px-1">
-            <h3 className="text-[10px] font-black text-[#DF714B] uppercase tracking-[0.2em]">Shipping Address</h3>
-            <button 
-              onClick={() => setShowAddressList(!showAddressList)}
-              className="text-[10px] font-bold text-gray-400 hover:text-[#DF714B] underline uppercase italic"
-            >
-              {showAddressList ? "Cancel" : "Change Address"}
-            </button>
-          </div>
-
-          {showAddressList ? (
-            <div className="grid gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
-              {customer?.addresses?.map((addr: any) => (
-                <div 
-                  key={addr.id}
-                  onClick={() => handleUpdateAddress(addr)}
-                  className={`p-4 rounded-3xl border-2 transition-all cursor-pointer ${
-                    cart.shipping_address?.address_1 === addr.address_1 
-                    ? "border-[#DF714B] bg-[#DF714B]/5 shadow-sm" 
-                    : "border-gray-50 hover:border-gray-200"
-                  }`}
-                >
-                  <div className="flex justify-between items-center mb-1">
-                    <p className="text-[11px] font-black text-gray-800 uppercase italic">
-                      {addr.first_name} {addr.last_name}
-                    </p>
-                    {cart.shipping_address?.address_1 === addr.address_1 && (
-                      <CheckCircle2 className="w-4 h-4 text-[#DF714B]" />
-                    )}
-                  </div>
-                  <p className="text-[10px] text-gray-400 uppercase leading-relaxed font-medium">
-                    {addr.address_1}, {addr.city}, {addr.province}
-                  </p>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="bg-gray-50 rounded-3xl p-5 border border-gray-100 flex items-center gap-4">
-              <div className="bg-white p-2.5 rounded-2xl shadow-sm">
-                <MapPin className="w-5 h-5 text-[#DF714B]" />
-              </div>
-              <div className="flex-1">
-                {cart.shipping_address ? (
-                  <p className="text-[11px] text-gray-600 leading-relaxed uppercase font-medium">
-                    <span className="font-black text-gray-900 italic">{cart.shipping_address.first_name} {cart.shipping_address.last_name}</span><br/>
-                    {cart.shipping_address.address_1}, {cart.shipping_address.city}
-                  </p>
-                ) : <p className="text-[11px] italic text-gray-400 font-bold">Pilih alamat pengirimanmu...</p>}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* ITEMS (QTY LOCKED) */}
-        <div className="space-y-4 pt-2">
-          {cart.items?.map((item: any) => (
-            <div key={item.id} className="flex gap-4 items-center">
-              <div className="w-20 h-24 rounded-2xl overflow-hidden bg-gray-50 flex-shrink-0 border border-gray-100 shadow-sm">
-                <img src={item.thumbnail} className="w-full h-full object-cover" alt="" />
-              </div>
-              <div className="flex-1">
-                <div className="flex justify-between items-start">
-                  <h4 className="text-[12px] font-black text-gray-900 uppercase italic leading-tight">{item.title}</h4>
-                  <span className="text-[10px] font-black text-[#DF714B] bg-[#DF714B]/10 px-2 py-1 rounded-lg">x{item.quantity}</span>
-                </div>
-                <p className="text-[14px] font-black mt-2 tracking-tight">Rp {item.unit_price.toLocaleString("id-ID")}</p>
-                <p className="text-[9px] text-gray-400 mt-1 uppercase font-black tracking-widest">{item.variant?.title}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* PROMO */}
-        <div className="flex gap-2 pt-2">
-          <div className="relative flex-1">
-            <Tag className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
-            <input 
-              type="text" 
-              placeholder="HAVE A PROMO CODE?" 
-              value={promoCode}
-              onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-              className="w-full bg-gray-50 border border-gray-200 rounded-2xl pl-11 pr-4 py-4 text-[10px] font-black focus:border-[#DF714B] outline-none transition-all tracking-[0.2em]"
-            />
-          </div>
-          <button 
-            onClick={handleApplyPromo}
-            disabled={isApplyingPromo || !promoCode}
-            className="bg-black text-white px-8 rounded-2xl text-[10px] font-black uppercase disabled:opacity-30 tracking-widest"
-          >
-            {isApplyingPromo ? "..." : "APPLY"}
-          </button>
-        </div>
-
-        {/* SHIPPING & GATEWAY */}
-        <div className="bg-[#DF714B] rounded-[40px] p-7 text-white shadow-xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
-          
-          <h4 className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80 mb-5">Delivery Method</h4>
-          {isLoadingShipping ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
-          ) : (
-            <div className="space-y-3">
-              {shippingMethods.map((method) => (
-                <div 
-                  key={method.id} 
-                  onClick={() => handleSelectShipping(method.id)}
-                  className={`flex justify-between items-center p-4 rounded-2xl border transition-all cursor-pointer ${
-                    cart.shipping_methods?.some((m: any) => m.shipping_option_id === method.id)
-                    ? "bg-white text-[#DF714B] border-white shadow-md font-black"
-                    : "border-white/20 hover:bg-white/10"
-                  }`}
-                >
-                  <span className="text-[10px] uppercase font-black tracking-wider">{method.name}</span>
-                  <span className="text-[12px] font-black">Rp {method.amount?.toLocaleString("id-ID") || 0}</span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="pt-7 mt-7 border-t border-white/20">
-            <div className="flex justify-between items-center">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80">Payment Gateway</h4>
-              <span className="text-[9px] font-black bg-white/20 px-3 py-1 rounded-full border border-white/30 uppercase tracking-tighter">XENDIT SECURE</span>
-            </div>
-            <p className="text-[10px] opacity-70 mt-3 leading-relaxed italic font-medium">Click "Pay Now" to choose your bank, QRIS, or Card via Xendit.</p>
-          </div>
-        </div>
-
-        {/* SUMMARY */}
-        <div className="pt-6 space-y-4 border-t border-gray-100">
-          <div className="flex justify-between text-[11px] text-gray-400 font-black uppercase tracking-widest">
-            <span>Subtotal</span>
-            <span className="text-gray-900">Rp {cart.subtotal.toLocaleString("id-ID")}</span>
-          </div>
-          <div className="flex justify-between text-[11px] text-gray-400 font-black uppercase tracking-widest">
-            <span>Shipping</span>
-            <span className="text-gray-900">Rp {cart.shipping_total.toLocaleString("id-ID")}</span>
-          </div>
-          {cart.discount_total > 0 && (
-            <div className="flex justify-between text-[11px] text-green-600 font-black uppercase tracking-widest">
-              <span>Promo applied</span>
-              <span>-Rp {cart.discount_total.toLocaleString("id-ID")}</span>
-            </div>
-          )}
-          <div className="flex justify-between items-center pt-4">
-            <span className="text-[15px] font-black uppercase italic tracking-tighter text-gray-400">Total amount</span>
-            <span className="text-2xl font-black text-[#DF714B] tracking-tighter">Rp {cart.total.toLocaleString("id-ID")}</span>
-          </div>
-        </div>
-
-        <button 
-          onClick={() => setIsPaying(true)}
-          disabled={isPaying}
-          className="w-full bg-[#DF714B] text-white py-5 rounded-full font-black text-[15px] shadow-2xl active:scale-95 transition-all flex items-center justify-center gap-3 uppercase tracking-[0.2em]"
-        >
-          {isPaying ? <Loader2 className="w-5 h-5 animate-spin" /> : "Pay Now"}
-        </button>
-      </div>
-    </div>
+    <>
+      <Button
+        disabled={disabled || notReady}
+        onClick={handlePayment}
+        size="large"
+        isLoading={submitting}
+        data-testid={dataTestId}
+      >
+        Place order
+      </Button>
+      <ErrorMessage
+        error={errorMessage}
+        data-testid="stripe-payment-error-message"
+      />
+    </>
   )
 }
+
+const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
+  const [submitting, setSubmitting] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  const onPaymentCompleted = async () => {
+    await placeOrder()
+      .catch((err) => {
+        setErrorMessage(err.message)
+      })
+      .finally(() => {
+        setSubmitting(false)
+      })
+  }
+
+  const handlePayment = () => {
+    setSubmitting(true)
+
+    onPaymentCompleted()
+  }
+
+  return (
+    <>
+      <Button
+        disabled={notReady}
+        isLoading={submitting}
+        onClick={handlePayment}
+        size="large"
+        data-testid="submit-order-button"
+      >
+        Place order
+      </Button>
+      <ErrorMessage
+        error={errorMessage}
+        data-testid="manual-payment-error-message"
+      />
+    </>
+  )
+}
+
+export default PaymentButton
