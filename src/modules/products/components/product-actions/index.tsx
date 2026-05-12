@@ -29,7 +29,7 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
   const [isColorDropdownOpen, setIsColorDropdownOpen] = useState(false)
   const [relatedProducts, setRelatedProducts] = useState<any[]>([])
 
-  // 🌟 FETCH PRODUK SAUDARA BERDASARKAN GROUP_ID (JURUS PAMUNGKAS)
+  // 🌟 FETCH PRODUK SAUDARA BERDASARKAN GROUP_ID (BYPASS SEARCH MODULE)
   useEffect(() => {
     const fetchRelatedColors = async () => {
       if (!groupId) {
@@ -41,12 +41,8 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
         const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000";
         const apiKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "";
 
-        // Ambil kata pertama dari judul produk (misal "Ruth Cover Up" -> "Ruth")
-        // Biar pencariannya lebih luas dan nggak gagal gara-gara tanda strip
-        const searchKeyword = product.title ? product.title.split(' ')[0] : "";
-
-        // Tarik data pakai kata kunci luas, ambil sampai 50 produk biar aman
-        const res = await fetch(`${backendUrl}/store/products?q=${searchKeyword}&limit=50`, {
+        // 🌟 FIX: Jangan pakai '?q=', langsung tarik 100 produk terbaru!
+        const res = await fetch(`${backendUrl}/store/products?limit=100`, {
           method: "GET",
           headers: {
             "x-publishable-api-key": apiKey,
@@ -57,12 +53,12 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
         if (res.ok) {
           const data = await res.json();
           
-          // 🌟 FILTER MANUAL: Dari semua produk "Ruth", cari yang group_id-nya sama persis!
+          // Filter manual: Cari yang group_id-nya sama persis dengan produk ini
           const trueSiblings = data.products?.filter((p: any) => 
             p.metadata?.group_id === groupId
           ) || [];
 
-          console.log("CEK SAUDARA YANG KETEMU:", trueSiblings);
+          console.log("CEK SAUDARA YANG KETEMU (BYPASS):", trueSiblings);
 
           if (trueSiblings.length > 0) {
             setRelatedProducts(trueSiblings);
