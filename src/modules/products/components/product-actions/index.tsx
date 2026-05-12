@@ -65,8 +65,14 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
 
     const sizes = variantsToUse.map((v: any) => {
       const sizeOpt = v.options?.find((o: any) => !["top", "bottom"].includes(o.value?.toLowerCase().trim()))
-      // 🌟 LOGIC: Ganti OS jadi All Size jika size option tidak ditemukan
-      const sizeVal = sizeOpt?.value || v.title?.replace(/top|bottom/i, '').trim() || "All Size"
+      
+      let sizeVal = sizeOpt?.value || v.title?.replace(/top|bottom/i, '').trim() || "All Size"
+      
+      // 🌟 FIX: Cegat tulisan default dari Medusa
+      if (sizeVal.toLowerCase().includes("default option")) {
+        sizeVal = "All Size"
+      }
+
       const qty = v.inventory_quantity || 0
       const inStock = v.manage_inventory === false || v.allow_backorder === true || qty > 0
       return { label: sizeVal, inStock, variant: v, qty }
@@ -95,9 +101,17 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
 
   const getModalSizes = (variants: any[]) => {
     return variants.map((v: any) => {
-      const sizeVal = v.options?.find((o: any) => !["top", "bottom"].includes(o.value?.toLowerCase().trim()))?.value || "All Size"
+      // Cari nilai sizenya
+      let sizeVal = v.options?.find((o: any) => !["top", "bottom"].includes(o.value?.toLowerCase().trim()))?.value || "All Size"
+      
+      // 🌟 FIX: Cegat tulisan default dari Medusa
+      if (sizeVal.toLowerCase().includes("default option")) {
+        sizeVal = "All Size"
+      }
+
       const qty = v.inventory_quantity || 0
       const inStock = v.manage_inventory === false || v.allow_backorder === true || qty > 0
+      
       return { label: sizeVal, inStock, variant: v, qty }
     })
   }
@@ -286,18 +300,21 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
                 })()}
               </div>
 
-              <div className="flex flex-row flex-wrap gap-1.5 mb-4">
-                {sizesForType.map((size: SizeData) => (
-                  <button key={size.label} disabled={!size.inStock} onClick={() => setSelectedSize(size.label)}
-                    className={`relative h-8 shrink-0 rounded-full border flex items-center justify-center text-[10px] font-bold transition-all
-                      ${size.label === "All Size" ? "w-max px-3" : "w-8"}
-                      ${!size.inStock ? 'border-gray-200 text-gray-300 cursor-not-allowed' : selectedSize === size.label ? 'bg-[#EF7044] border-[#EF7044] text-white shadow-md' : 'border-gray-300 text-gray-700 hover:border-[#EF7044]'}
-                    `}>
-                    {size.label}
-                    {!size.inStock && <div className="absolute w-full h-[1px] bg-gray-300 rotate-45"></div>}
-                  </button>
-                ))}
-              </div>
+              {/* 🌟 FIX: Sembunyikan tombol jika ukurannya cuma 1 dan itu All Size */}
+              {!(sizesForType.length === 1 && sizesForType[0].label === "All Size") && (
+                <div className="flex flex-row flex-wrap gap-1.5 mb-4">
+                  {sizesForType.map((size: SizeData) => (
+                    <button key={size.label} disabled={!size.inStock} onClick={() => setSelectedSize(size.label)}
+                      className={`relative h-8 shrink-0 rounded-full border flex items-center justify-center text-[10px] font-bold transition-all
+                        ${size.label === "All Size" ? "w-max px-3" : "w-8"}
+                        ${!size.inStock ? 'border-gray-200 text-gray-300 cursor-not-allowed' : selectedSize === size.label ? 'bg-[#EF7044] border-[#EF7044] text-white shadow-md' : 'border-gray-300 text-gray-700 hover:border-[#EF7044]'}
+                      `}>
+                      {size.label}
+                      {!size.inStock && <div className="absolute w-full h-[1px] bg-gray-300 rotate-45"></div>}
+                    </button>
+                  ))}
+                </div>
+              )}
             </>
           )}
 
@@ -420,16 +437,19 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
                     <Ruler className="w-3 h-3" /> Size Guide <span className="ml-1">›</span>
                   </button>
                 </div>
-                <div className="flex gap-2">
-                  {modalTopSizes.map((size: SizeData) => (
-                    <button key={size.label} disabled={!size.inStock} onClick={() => setTopSize(size.label)}
-                      className={`relative h-10 shrink-0 rounded-full border flex items-center justify-center text-xs font-bold transition-all 
-                        ${size.label === "All Size" ? "w-max px-4" : "w-10"}
-                        ${!size.inStock ? 'border-gray-200 text-gray-300 cursor-not-allowed' : topSize === size.label ? 'bg-[#EF7044] border-[#EF7044] text-white shadow-md' : 'border-gray-300 text-gray-700'}`}>
-                      {size.label} {!size.inStock && <div className="absolute w-full h-[1px] bg-gray-300 rotate-45"></div>}
-                    </button>
-                  ))}
-                </div>
+                {/* 🌟 FIX: Sembunyikan tombol modal top jika cuma 1 All Size */}
+                {!(modalTopSizes.length === 1 && modalTopSizes[0].label === "All Size") && (
+                  <div className="flex gap-2">
+                    {modalTopSizes.map((size: SizeData) => (
+                      <button key={size.label} disabled={!size.inStock} onClick={() => setTopSize(size.label)}
+                        className={`relative h-10 shrink-0 rounded-full border flex items-center justify-center text-xs font-bold transition-all 
+                          ${size.label === "All Size" ? "w-max px-4" : "w-10"}
+                          ${!size.inStock ? 'border-gray-200 text-gray-300 cursor-not-allowed' : topSize === size.label ? 'bg-[#EF7044] border-[#EF7044] text-white shadow-md' : 'border-gray-300 text-gray-700'}`}>
+                        {size.label} {!size.inStock && <div className="absolute w-full h-[1px] bg-gray-300 rotate-45"></div>}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="mb-6">
@@ -443,16 +463,19 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
                     return null;
                   })()}
                 </div>
-                <div className="flex gap-2">
-                  {modalBottomSizes.map((size: SizeData) => (
-                    <button key={size.label} disabled={!size.inStock} onClick={() => setBottomSize(size.label)}
-                      className={`relative h-10 shrink-0 rounded-full border flex items-center justify-center text-xs font-bold transition-all 
-                        ${size.label === "All Size" ? "w-max px-4" : "w-10"}
-                        ${!size.inStock ? 'border-gray-200 text-gray-300 cursor-not-allowed' : bottomSize === size.label ? 'bg-[#EF7044] border-[#EF7044] text-white shadow-md' : 'border-gray-300 text-gray-700'}`}>
-                      {size.label} {!size.inStock && <div className="absolute w-full h-[1px] bg-gray-300 rotate-45"></div>}
-                    </button>
-                  ))}
-                </div>
+                {/* 🌟 FIX: Sembunyikan tombol modal bottom jika cuma 1 All Size */}
+                {!(modalBottomSizes.length === 1 && modalBottomSizes[0].label === "All Size") && (
+                  <div className="flex gap-2">
+                    {modalBottomSizes.map((size: SizeData) => (
+                      <button key={size.label} disabled={!size.inStock} onClick={() => setBottomSize(size.label)}
+                        className={`relative h-10 shrink-0 rounded-full border flex items-center justify-center text-xs font-bold transition-all 
+                          ${size.label === "All Size" ? "w-max px-4" : "w-10"}
+                          ${!size.inStock ? 'border-gray-200 text-gray-300 cursor-not-allowed' : bottomSize === size.label ? 'bg-[#EF7044] border-[#EF7044] text-white shadow-md' : 'border-gray-300 text-gray-700'}`}>
+                        {size.label} {!size.inStock && <div className="absolute w-full h-[1px] bg-gray-300 rotate-45"></div>}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center justify-between py-4 border-t border-gray-100">
