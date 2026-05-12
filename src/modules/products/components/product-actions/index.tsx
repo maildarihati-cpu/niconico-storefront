@@ -21,7 +21,41 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
   const router = useRouter() 
   const { cart: mainCart } = useCart() 
 
+  // 🌟 LOGIKA WARNA BARU
   const colorName = product?.metadata?.color_name || "White"
+  const colorId = product?.metadata?.color_id || "#FFFFFF" // Hex Code
+  const groupId = product?.metadata?.group_id || null // Pengikat saudara
+
+  const [isColorDropdownOpen, setIsColorDropdownOpen] = useState(false)
+  const [relatedProducts, setRelatedProducts] = useState<any[]>([])
+
+  // 🌟 FETCH PRODUK SAUDARA BERDASARKAN GROUP_ID
+  useEffect(() => {
+    const fetchRelatedColors = async () => {
+      if (!groupId) {
+        setRelatedProducts([product]); // Kalau ga ada group_id, tampilin dia sendiri aja
+        return;
+      }
+
+      try {
+        // PERHATIAN: Ini contoh endpoint, sesuaikan dengan cara kamu nge-fetch produk di Frontend ya Say
+        // Medusa V2 biasanya pakai /store/products?metadata[group_id]=... atau API custom kamu
+        const res = await fetch(`/store/products?metadata[group_id]=${groupId}`);
+        if (res.ok) {
+          const data = await res.json();
+          // Masukkan produk saudara yang ditemukan (termasuk dirinya sendiri)
+          setRelatedProducts(data.products || [product]);
+        } else {
+          setRelatedProducts([product]);
+        }
+      } catch (error) {
+        setRelatedProducts([product]);
+      }
+    };
+
+    fetchRelatedColors();
+  }, [groupId, product]);
+
   const mainImage = product?.thumbnail || product?.images?.[0]?.url || "/placeholder.png"
   
   const topVariants = useMemo(() => {
@@ -68,7 +102,6 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
       
       let sizeVal = sizeOpt?.value || v.title?.replace(/top|bottom/i, '').trim() || "All Size"
       
-      // 🌟 FIX: Cegat tulisan default dari Medusa
       if (sizeVal.toLowerCase().includes("default option")) {
         sizeVal = "All Size"
       }
@@ -101,10 +134,8 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
 
   const getModalSizes = (variants: any[]) => {
     return variants.map((v: any) => {
-      // Cari nilai sizenya
       let sizeVal = v.options?.find((o: any) => !["top", "bottom"].includes(o.value?.toLowerCase().trim()))?.value || "All Size"
       
-      // 🌟 FIX: Cegat tulisan default dari Medusa
       if (sizeVal.toLowerCase().includes("default option")) {
         sizeVal = "All Size"
       }
@@ -260,8 +291,49 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
     <div className="flex flex-col mt-1">
       <h2 className="text-xl md:text-2xl font-black text-[#EF7044] mb-4">{mainDisplayPrice}</h2>
 
+      {/* 🌟 TAMPILAN WARNA DI LAYAR UTAMA (BISA KLIK JADI DROPDOWN) */}
       <div className="flex justify-between items-center mb-6">
-        <p className="text-[13px] text-gray-500 font-medium">Color : {colorName}</p>
+        <div className="flex items-center gap-3 relative">
+          <p className="text-[13px] text-gray-500 font-medium">Color : {colorName}</p>
+          
+          {/* Tombol Lingkaran Warna */}
+          <div 
+            onClick={() => setIsColorDropdownOpen(!isColorDropdownOpen)}
+            className="w-7 h-7 rounded-full border border-gray-300 p-[2px] cursor-pointer shadow-sm relative hover:scale-105 transition-transform"
+            title={`Select Color (Current: ${colorName})`}
+          >
+            <div className="w-full h-full rounded-full border border-gray-100" style={{ backgroundColor: colorId }}></div>
+            
+            {/* Pop-up Dropdown Warna Saudara */}
+            {isColorDropdownOpen && relatedProducts.length > 1 && (
+              <div className="absolute top-9 left-0 bg-white border border-gray-100 shadow-[0_10px_30px_rgba(0,0,0,0.1)] rounded-2xl p-3 flex gap-3 z-50 animate-in fade-in zoom-in-95">
+                {relatedProducts.map((relProd: any) => {
+                  const relColorId = relProd.metadata?.color_id || "#eee";
+                  const relColorName = relProd.metadata?.color_name || "Unknown";
+                  const isActive = relProd.id === product.id;
+                  
+                  return (
+                    <button 
+                      key={relProd.id}
+                      title={relColorName}
+                      onClick={() => {
+                        if (!isActive) {
+                          // Tutup dropdown dan arahkan ke halaman produk saudara
+                          setIsColorDropdownOpen(false);
+                          router.push(`/${countryCode}/products/${relProd.handle}`);
+                        }
+                      }}
+                      className={`w-8 h-8 rounded-full p-[2px] transition-all hover:scale-110 ${isActive ? 'border-2 border-[#EF7044] cursor-default' : 'border border-gray-200 hover:border-gray-400'}`}
+                    >
+                      <div className="w-full h-full rounded-full shadow-inner border border-gray-100" style={{ backgroundColor: relColorId }}></div>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
         <div className="flex items-center gap-2">
           <button onClick={toggleWishlist} className={`p-2 border rounded-full transition-colors ${isWishlisted ? "border-[#EF7044] bg-[#EF7044] text-white" : "border-[#EF7044] text-[#EF7044] hover:bg-orange-50"}`}>
             <Heart className={`w-5 h-5 ${isWishlisted ? "fill-current" : ""}`} />
@@ -300,7 +372,6 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
                 })()}
               </div>
 
-              {/* 🌟 FIX: Sembunyikan tombol jika ukurannya cuma 1 dan itu All Size */}
               {!(sizesForType.length === 1 && sizesForType[0].label === "All Size") && (
                 <div className="flex flex-row flex-wrap gap-1.5 mb-4">
                   {sizesForType.map((size: SizeData) => (
@@ -414,10 +485,11 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
                 </div>
               </div>
 
+              {/* 🌟 TAMPILAN WARNA DI MODAL (LINK HEX CODE NYALA JUGA) */}
               <div className="flex items-center gap-3 mb-6">
                 <span className="text-[13px] text-gray-500 font-medium">Color : {colorName}</span>
-                <div className="w-8 h-8 rounded-full border-2 border-[#EF7044] p-[2px]">
-                  <div className="w-full h-full rounded-full bg-white border border-gray-200 shadow-sm"></div>
+                <div className="w-8 h-8 rounded-full border border-gray-300 p-[2px] shadow-sm">
+                  <div className="w-full h-full rounded-full border border-gray-100" style={{ backgroundColor: colorId }}></div>
                 </div>
               </div>
 
@@ -437,7 +509,6 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
                     <Ruler className="w-3 h-3" /> Size Guide <span className="ml-1">›</span>
                   </button>
                 </div>
-                {/* 🌟 FIX: Sembunyikan tombol modal top jika cuma 1 All Size */}
                 {!(modalTopSizes.length === 1 && modalTopSizes[0].label === "All Size") && (
                   <div className="flex gap-2">
                     {modalTopSizes.map((size: SizeData) => (
@@ -463,7 +534,6 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
                     return null;
                   })()}
                 </div>
-                {/* 🌟 FIX: Sembunyikan tombol modal bottom jika cuma 1 All Size */}
                 {!(modalBottomSizes.length === 1 && modalBottomSizes[0].label === "All Size") && (
                   <div className="flex gap-2">
                     {modalBottomSizes.map((size: SizeData) => (
