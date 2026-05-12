@@ -318,7 +318,7 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
             <div className="w-full h-full rounded-full border border-gray-100" style={{ backgroundColor: colorId }}></div>
             
             {/* Pop-up Dropdown Warna Saudara */}
-            {isColorDropdownOpen && relatedProducts.length > 1 && (
+            {isColorDropdownOpen && (
               <div className="absolute top-9 left-0 bg-white border border-gray-100 shadow-[0_10px_30px_rgba(0,0,0,0.1)] rounded-2xl p-3 flex gap-3 z-50 animate-in fade-in zoom-in-95">
                 {relatedProducts.map((relProd: any) => {
                   const relColorId = relProd.metadata?.color_id || "#eee";
