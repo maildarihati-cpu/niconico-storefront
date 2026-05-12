@@ -148,7 +148,7 @@ export default function NavDrawer({ isOpen, onClose, view, setView }: Props) {
                   <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isCollectionsOpen ? "rotate-180" : ""}`} />
                 </button>
                 <div className={`flex flex-col gap-3.5 pl-4 overflow-hidden transition-all duration-300 origin-top ${isCollectionsOpen ? "max-h-[500px] opacity-100 mb-2" : "max-h-0 opacity-0 mb-0"}`}>
-                  {["Signature", "Island Escape", "Bali Summer"].map(item => (
+                  {["New Arrivals", "Signature", "Island Escape", "Bali Summer"].map(item => (
                     <LocalizedClientLink key={item} href="/store" onClick={onClose} className="text-[13px] text-gray-900 font-medium hover:text-[#ef7044] transition-colors">{item}</LocalizedClientLink>
                   ))}
                 </div>

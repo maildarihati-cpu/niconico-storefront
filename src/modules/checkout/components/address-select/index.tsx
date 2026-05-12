@@ -1,116 +1,45 @@
-import { Listbox, Transition } from "@headlessui/react"
-import { ChevronUpDown } from "@medusajs/icons"
-import { clx } from "@medusajs/ui"
-import { Fragment, useMemo } from "react"
+"use client"
 
-import Radio from "@modules/common/components/radio"
-import compareAddresses from "@lib/util/compare-addresses"
 import { HttpTypes } from "@medusajs/types"
+import { Text } from "@medusajs/ui"
+import React, { useState } from "react"
 
-type AddressSelectProps = {
-  addresses: HttpTypes.StoreCustomerAddress[]
-  addressInput: HttpTypes.StoreCartAddress | null
-  onSelect: (
-    address: HttpTypes.StoreCartAddress | undefined,
-    email?: string
-  ) => void
-}
-
-const AddressSelect = ({
-  addresses,
-  addressInput,
-  onSelect,
-}: AddressSelectProps) => {
-  const handleSelect = (id: string) => {
-    const savedAddress = addresses.find((a) => a.id === id)
-    if (savedAddress) {
-      onSelect(savedAddress as HttpTypes.StoreCartAddress)
-    }
-  }
-
-  const selectedAddress = useMemo(() => {
-    return addresses.find((a) => compareAddresses(a, addressInput))
-  }, [addresses, addressInput])
+export default function AddressSelect({ customer }: { customer: HttpTypes.StoreCustomer }) {
+  // PERBAIKAN: Ambil ID dari alamat pertama di dalam array jika ada
+  const [selectedId, setSelectedId] = useState<string | undefined>(
+    customer.addresses && customer.addresses.length > 0 ? customer.addresses[0].id : undefined
+  )
 
   return (
-    <Listbox onChange={handleSelect} value={selectedAddress?.id}>
-      <div className="relative">
-        <Listbox.Button
-          className="relative w-full flex justify-between items-center px-4 py-[10px] text-left bg-white cursor-default focus:outline-none border rounded-rounded focus-visible:ring-2 focus-visible:ring-opacity-75 focus-visible:ring-white focus-visible:ring-offset-gray-300 focus-visible:ring-offset-2 focus-visible:border-gray-300 text-base-regular"
-          data-testid="shipping-address-select"
-        >
-          {({ open }) => (
-            <>
-              <span className="block truncate">
-                {selectedAddress
-                  ? selectedAddress.address_1
-                  : "Choose an address"}
-              </span>
-              <ChevronUpDown
-                className={clx("transition-rotate duration-200", {
-                  "transform rotate-180": open,
-                })}
-              />
-            </>
-          )}
-        </Listbox.Button>
-        <Transition
-          as={Fragment}
-          leave="transition ease-in duration-100"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
-        >
-          <Listbox.Options
-            className="absolute z-20 w-full overflow-auto text-small-regular bg-white border border-top-0 max-h-60 focus:outline-none sm:text-sm"
-            data-testid="shipping-address-options"
-          >
-            {addresses.map((address) => {
-              return (
-                <Listbox.Option
-                  key={address.id}
-                  value={address.id}
-                  className="cursor-default select-none relative pl-6 pr-10 hover:bg-gray-50 py-4"
-                  data-testid="shipping-address-option"
-                >
-                  <div className="flex gap-x-4 items-start">
-                    <Radio
-                      checked={selectedAddress?.id === address.id}
-                      data-testid="shipping-address-radio"
-                    />
-                    <div className="flex flex-col">
-                      <span className="text-left text-base-semi">
-                        {address.first_name} {address.last_name}
-                      </span>
-                      {address.company && (
-                        <span className="text-small-regular text-ui-fg-base">
-                          {address.company}
-                        </span>
-                      )}
-                      <div className="flex flex-col text-left text-base-regular mt-2">
-                        <span>
-                          {address.address_1}
-                          {address.address_2 && (
-                            <span>, {address.address_2}</span>
-                          )}
-                        </span>
-                        <span>
-                          {address.postal_code}, {address.city}
-                        </span>
-                        <span>
-                          {address.province && `${address.province}, `}
-                          {address.country_code?.toUpperCase()}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </Listbox.Option>
-              )
-            })}
-          </Listbox.Options>
-        </Transition>
+    <div className="flex flex-col gap-y-6">
+      <div className="flex items-center gap-x-2">
+        <span className="bg-[#EF7044] text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">1</span>
+        <Text className="text-sm font-bold uppercase tracking-widest">Shipping Address</Text>
       </div>
-    </Listbox>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {customer.addresses?.map((address) => (
+          <div 
+            key={address.id}
+            onClick={() => setSelectedId(address.id)}
+            className={`p-5 rounded-[25px] border-2 transition-all cursor-pointer ${
+              selectedId === address.id 
+              ? "border-[#EF7044] bg-[#EF7044]/5" 
+              : "border-gray-100 hover:border-[#EF7044]/30"
+            }`}
+          >
+            <div className="flex justify-between items-start mb-2">
+              <Text className="font-black text-xs uppercase italic">{address.first_name} {address.last_name}</Text>
+              {selectedId === address.id && <div className="w-2 h-2 rounded-full bg-[#EF7044]" />}
+            </div>
+            <Text className="text-[11px] leading-relaxed text-gray-500 uppercase">
+              {address.address_1}, {address.city}<br />
+              {address.province}, {address.postal_code}<br />
+              {address.phone}
+            </Text>
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }
-
-export default AddressSelect

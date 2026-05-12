@@ -3,12 +3,14 @@
 import React, { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { useRouter, useParams } from "next/navigation";
-import { ChevronLeft, Check, Trash2 } from "lucide-react";
+import { ChevronLeft, Check, Trash2, Loader2 } from "lucide-react";
 // 🌟 KITA PANGGIL LAGI USECART-NYA BIAR SINKRON
 import { useCart } from "@/context/cart-context";
 import { updateLineItem, deleteLineItem } from "@lib/data/cart";
 import { listProducts } from "@lib/data/products";
 import { StoreCart, StoreCustomer } from "@medusajs/types";
+// 🌟 IMPORT FUNGSI SAKTI PEMISAH CART
+import { prepareCheckoutCart } from "@lib/util/checkout-util"; 
 
 interface CartTemplateProps {
   cart: StoreCart | any;
@@ -22,15 +24,16 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
   // 🌟 PAKE CONTEXT LAGI BIAR GAK ERROR ID BASI
   const { cart: contextCart, addToCart: refreshCart } = useCart();
   const cart = contextCart || initialCart;
-console.log("ISI METADATA ITEM:", cart?.items?.map((i: any) => i.metadata));
 
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [isLoadingItem, setIsLoadingItem] = useState<string | null>(null);
+  const [isCheckoutLoading, setIsCheckoutLoading] = useState(false); 
+  
   const [editingItem, setEditingItem] = useState<any>(null);
   const [editProductData, setEditProductData] = useState<any>(null);
   const [selectedNewVariant, setSelectedNewVariant] = useState<any>(null);
 
-  // 🌟 ILMU SULAP GROUPING
+  // 🌟 ILMU SULAP GROUPING (TETAP SAMA)
   const groupedItems = useMemo(() => {
     const groups: any[] = [];
     const bundles: Record<string, any[]> = {};
@@ -38,7 +41,6 @@ console.log("ISI METADATA ITEM:", cart?.items?.map((i: any) => i.metadata));
     if (!cart?.items) return groups;
 
     cart.items.forEach((item: any) => {
-      // Cek metadata untuk grouping
       if (item.metadata?.is_bundle && item.metadata?.bundle_id) {
         const bId = item.metadata.bundle_id;
         if (!bundles[bId]) bundles[bId] = [];
@@ -62,7 +64,6 @@ console.log("ISI METADATA ITEM:", cart?.items?.map((i: any) => i.metadata));
           thumbnail: topItem.thumbnail,
           unit_price: items.reduce((sum: number, i: any) => sum + i.unit_price, 0),
           quantity: topItem.quantity,
-          // 🌟 AMBIL SIZE DARI METADATA YANG KITA KIRIM TADI
           variant_title: `Top: ${topItem.metadata?.size || 'M'} / Bottom: ${bottomItem.metadata?.size || 'M'}`
         });
       } else {
@@ -87,7 +88,6 @@ console.log("ISI METADATA ITEM:", cart?.items?.map((i: any) => i.metadata));
 
   const getPrice = (amount: number) => countryCode === "id" ? amount : amount / 100;
 
-  // 🌟 FUNGSI UPDATE & DELETE DIPERBAIKI
   const handleUpdateQuantity = async (group: any, newQuantity: number) => {
     if (newQuantity < 1) return;
     setIsLoadingItem(group.id);
@@ -145,28 +145,42 @@ console.log("ISI METADATA ITEM:", cart?.items?.map((i: any) => i.metadata));
 
   const totals = calculateTotals();
 
-  const openEditVariant = async (item: any) => {
-    setEditingItem(item);
-    const data = await listProducts({
-      queryParams: { handle: item.variant.product.handle, fields: "*variants,*variants.prices" },
-      countryCode: countryCode as string,
-    }).catch(() => null);
-    if (data?.response?.products?.[0]) setEditProductData(data.response.products[0]);
-  };
+  // 🌟 PERBAIKAN LOGIKA CHECKOUT (CEK LOGIN & BIKIN URL FLAG)
+  const handleCheckout = async () => {
+    if (selectedItems.length === 0) return;
+    
+    // 1. CEGATAN LOGIN: Cek apakah ada data customer dari props
+    if (!customer || !customer.id) {
+      // User belum login. Jangan pindah halaman, tapi modifikasi URL-nya saja
+      // Pushing state dengan ?auth=login agar komponen Drawer nanti merespon
+      router.push(`/${countryCode}/cart?auth=login`, { scroll: false });
+      return; 
+    }
 
-  const saveNewVariant = async () => {
-    if (!selectedNewVariant || !editingItem) return;
-    setIsLoadingItem(editingItem.id);
-    setEditingItem(null); 
+    // 2. JIKA SUDAH LOGIN, LANJUT PROSES CHECKOUT
+    setIsCheckoutLoading(true);
+
     try {
-      await deleteLineItem(editingItem.id);
-      const { addToCart: medusaAddToCart } = await import("@lib/data/cart");
-      await medusaAddToCart({ variantId: selectedNewVariant.id, quantity: editingItem.quantity, countryCode: countryCode as string });
-      await refreshCart(false);
+      const isAllSelected = cart?.items?.length === selectedItems.length;
+
+      if (isAllSelected) {
+        // Kalau beli semua, gas langsung ke checkout
+        router.push(`/${countryCode}/checkout`);
+      } else {
+        // Kalau partial, pisahin keranjang dulu
+        const itemsToCheckout = cart.items.filter((item: any) => selectedItems.includes(item.id));
+        const checkoutCartId = await prepareCheckoutCart(cart, itemsToCheckout);
+
+        if (checkoutCartId) {
+          router.push(`/${countryCode}/checkout?cart_id=${checkoutCartId}`);
+        } else {
+          console.error("Gagal membuat checkout cart");
+        }
+      }
     } catch (error) {
-      console.error(error);
+      console.error("Error saat persiapan checkout:", error);
     } finally {
-      setIsLoadingItem(null); setEditProductData(null); setSelectedNewVariant(null);
+      setTimeout(() => setIsCheckoutLoading(false), 2000);
     }
   };
 
@@ -213,9 +227,7 @@ console.log("ISI METADATA ITEM:", cart?.items?.map((i: any) => i.metadata));
                   {group.isBundle ? (
                      <span className="block mt-1 text-[11px] text-[#e28564] font-bold">{displayVariant}</span>
                   ) : (
-                    <button onClick={() => openEditVariant(group.item)} className="text-left mt-1 text-[11px] text-gray-400 font-medium hover:text-[#e28564] transition-colors">
-                      {displayVariant}
-                    </button>
+                    <span className="block mt-1 text-[11px] text-gray-400 font-medium">{displayVariant}</span>
                   )}
 
                   <div className="flex justify-between items-center mt-2">
@@ -251,8 +263,23 @@ console.log("ISI METADATA ITEM:", cart?.items?.map((i: any) => i.metadata));
             <span>Subtotal</span><span>{formatPrice(totals.total)}</span>
           </div>
         </div>
-        <button disabled={selectedItems.length === 0} className={`w-full py-4 rounded-full font-bold text-[15px] transition-all ${selectedItems.length > 0 ? "bg-white text-[#DF714B] shadow-lg active:scale-95" : "bg-white/50 text-white/50 cursor-not-allowed"}`}>
-          CHECKOUT NOW.!
+        <button 
+          onClick={handleCheckout}
+          disabled={selectedItems.length === 0 || isCheckoutLoading} 
+          className={`w-full py-4 rounded-full font-bold text-[15px] transition-all flex items-center justify-center gap-2 ${
+            selectedItems.length > 0 && !isCheckoutLoading
+              ? "bg-white text-[#DF714B] shadow-lg active:scale-95 hover:bg-gray-50" 
+              : "bg-white/50 text-white/50 cursor-not-allowed"
+          }`}
+        >
+          {isCheckoutLoading ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              PREPARING...
+            </>
+          ) : (
+            "CHECKOUT NOW.!"
+          )}
         </button>
       </div>
     </div>

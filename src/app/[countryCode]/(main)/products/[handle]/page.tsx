@@ -60,13 +60,16 @@ function getImagesForVariant(
     return product.images
   }
 
-  const variant = product.variants!.find((v) => v.id === selectedVariantId)
-  if (!variant || !variant.images.length) {
+  const variant = product.variants.find((v) => v.id === selectedVariantId)
+  
+  // 🌟 PERBAIKAN 1: Tambahkan ? sebelum .length untuk mencegah error null
+  if (!variant || !variant.images?.length) {
     return product.images
   }
 
-  const imageIdsMap = new Map(variant.images.map((i) => [i.id, true]))
-  return product.images!.filter((i) => imageIdsMap.has(i.id))
+  // 🌟 PERBAIKAN 2: Tambahkan any pada map dan ? pada filter
+  const imageIdsMap = new Map(variant.images.map((i: any) => [i.id, true]))
+  return product.images?.filter((i) => imageIdsMap.has(i.id))
 }
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
@@ -87,11 +90,12 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     notFound()
   }
 
+  // 🌟 BONUS: Ganti Medusa Store jadi Niconico Resort
   return {
-    title: `${product.title} | Medusa Store`,
+    title: `${product.title} | Niconico Resort`,
     description: `${product.title}`,
     openGraph: {
-      title: `${product.title} | Medusa Store`,
+      title: `${product.title} | Niconico Resort`,
       description: `${product.title}`,
       images: product.thumbnail ? [product.thumbnail] : [],
     },
@@ -114,10 +118,14 @@ export default async function ProductPage(props: Props) {
     queryParams: { handle: params.handle },
   }).then(({ response }) => response.products[0])
 
-  const images = getImagesForVariant(pricedProduct, selectedVariantId)
-
   if (!pricedProduct) {
     notFound()
+  }
+
+  // 🌟 PERBAIKAN 3: Timpa gambar varian langsung ke objek product
+  const images = getImagesForVariant(pricedProduct, selectedVariantId)
+  if (images) {
+    pricedProduct.images = images
   }
 
   return (
@@ -125,7 +133,7 @@ export default async function ProductPage(props: Props) {
       product={pricedProduct}
       region={region}
       countryCode={params.countryCode}
-      images={images}
+      // 🚫 Hapus props images={images} karena ProductTemplate tidak memintanya
     />
   )
 }

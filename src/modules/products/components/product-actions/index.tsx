@@ -3,10 +3,12 @@
 import React, { useState, useMemo, useEffect } from "react"
 import { ShoppingCart, Heart, X, Ruler } from "lucide-react"
 import { addToCart } from "@lib/data/cart" 
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation" 
 import { updateCustomerWishlist } from "@lib/data/customer"
 
-// --- TIPE DATA ---
+import { useCart } from "@/context/cart-context"
+import { prepareCheckoutCart } from "@lib/util/checkout-util"
+
 interface SizeData {
   label: string
   inStock: boolean
@@ -16,12 +18,12 @@ interface SizeData {
 
 const ProductActions = ({ product, region, customer }: { product: any, region: any, customer: any }) => {
   const countryCode = useParams().countryCode as string
+  const router = useRouter() 
+  const { cart: mainCart } = useCart() 
 
-  // 1. DATA UMUM PRODUK
   const colorName = product?.metadata?.color_name || "White"
   const mainImage = product?.thumbnail || product?.images?.[0]?.url || "/placeholder.png"
   
-  // 🌟 LOGIC CERDAS: Cek ini produk 2-piece atau Regular?
   const topVariants = useMemo(() => {
     return product?.variants?.filter((v: any) => 
       v.options?.some((opt: any) => opt.value?.toLowerCase().trim() === "top")
@@ -38,7 +40,6 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
   const hasBottom = bottomVariants.length > 0
   const hasSet = hasTop && hasBottom
 
-  // Tentukan Tipe yang tersedia
   const availableTypes = useMemo(() => {
     if (hasSet) return ["SET", "TOP", "BOTTOM"]
     if (hasTop) return ["TOP"]
@@ -48,14 +49,12 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
 
   const [selectedType, setSelectedType] = useState<string>("")
 
-  // Set default type
   useEffect(() => {
     if (availableTypes.length > 0 && !selectedType) {
       setSelectedType(availableTypes[0])
     }
   }, [availableTypes, selectedType])
 
-  // 2. LOGIC TARIK SIZE
   const sizesForType: SizeData[] = useMemo(() => {
     if (selectedType === "SET" || !selectedType) return []
     
@@ -66,7 +65,8 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
 
     const sizes = variantsToUse.map((v: any) => {
       const sizeOpt = v.options?.find((o: any) => !["top", "bottom"].includes(o.value?.toLowerCase().trim()))
-      const sizeVal = sizeOpt?.value || v.title?.replace(/top|bottom/i, '').trim() || "OS"
+      // 🌟 LOGIC: Ganti OS jadi All Size jika size option tidak ditemukan
+      const sizeVal = sizeOpt?.value || v.title?.replace(/top|bottom/i, '').trim() || "All Size"
       const qty = v.inventory_quantity || 0
       const inStock = v.manage_inventory === false || v.allow_backorder === true || qty > 0
       return { label: sizeVal, inStock, variant: v, qty }
@@ -84,7 +84,6 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
     }
   }, [sizesForType, selectedType])
 
-  // 3. STATE UNTUK MODAL SET & SIZE GUIDE
   const [isSetModalOpen, setIsSetModalOpen] = useState(false)
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false)
   
@@ -94,10 +93,9 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
   const [isAdding, setIsAdding] = useState(false)
   const [isWishlisted, setIsWishlisted] = useState(false)
 
-  // Modal Size logic
   const getModalSizes = (variants: any[]) => {
     return variants.map((v: any) => {
-      const sizeVal = v.options?.find((o: any) => !["top", "bottom"].includes(o.value?.toLowerCase().trim()))?.value || "OS"
+      const sizeVal = v.options?.find((o: any) => !["top", "bottom"].includes(o.value?.toLowerCase().trim()))?.value || "All Size"
       const qty = v.inventory_quantity || 0
       const inStock = v.manage_inventory === false || v.allow_backorder === true || qty > 0
       return { label: sizeVal, inStock, variant: v, qty }
@@ -114,7 +112,6 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
     return Math.min(selectedModalTopVariant.inventory_quantity || 99, selectedModalBottomVariant.inventory_quantity || 99)
   }, [selectedModalTopVariant, selectedModalBottomVariant])
 
-  // 4. FORMAT HARGA
   const formatPrice = (amount: number) => {
     const finalPrice = countryCode === "id" ? amount : amount / 100
     return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(finalPrice)
@@ -143,7 +140,6 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
   const setPrice = (getVariantPrice(selectedModalTopVariant || topVariants[0]) || 0) + (getVariantPrice(selectedModalBottomVariant || bottomVariants[0]) || 0)
   const mainDisplayPrice = formatPrice(selectedType === "SET" ? setPrice : regulerPrice)
 
-  // 5. WISHLIST & CART LOGIC
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedWishlist = JSON.parse(localStorage.getItem("wishlist") || "[]")
@@ -152,83 +148,93 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
   }, [product.id])
 
   const toggleWishlist = async () => {
-  const localWishlist = JSON.parse(localStorage.getItem("wishlist") || "[]")
-  let updatedWishlist = []
+    const localWishlist = JSON.parse(localStorage.getItem("wishlist") || "[]")
+    let updatedWishlist = []
 
-  if (customer) {
-    // MODE CLOUD (LOGIN)
-    const cloudWishlist = customer.metadata?.wishlist || []
-    if (isWishlisted) {
-      updatedWishlist = cloudWishlist.filter((id: string) => id !== product.id)
+    if (customer) {
+      const cloudWishlist = customer.metadata?.wishlist || []
+      if (isWishlisted) {
+        updatedWishlist = cloudWishlist.filter((id: string) => id !== product.id)
+      } else {
+        updatedWishlist = [...cloudWishlist, product.id]
+      }
+      await updateCustomerWishlist(updatedWishlist)
     } else {
-      updatedWishlist = [...cloudWishlist, product.id]
+      if (isWishlisted) {
+        updatedWishlist = localWishlist.filter((id: string) => id !== product.id)
+      } else {
+        updatedWishlist = [...localWishlist, product.id]
+      }
+      localStorage.setItem("wishlist", JSON.stringify(updatedWishlist))
     }
-    await updateCustomerWishlist(updatedWishlist)
-  } else {
-    // MODE LOKAL (GUEST)
-    if (isWishlisted) {
-      updatedWishlist = localWishlist.filter((id: string) => id !== product.id)
-    } else {
-      updatedWishlist = [...localWishlist, product.id]
-    }
-    localStorage.setItem("wishlist", JSON.stringify(updatedWishlist))
+    
+    setIsWishlisted(!isWishlisted)
   }
-  
-  setIsWishlisted(!isWishlisted)
-}
 
-  const handleBuyNow = async (isSetBundle = false) => {
+  const handleBuyNow = async (isSetBundle = false, redirectToCheckout = false) => {
     setIsAdding(true)
     try {
-      if (isSetBundle) {
-        if (!selectedModalTopVariant || !selectedModalBottomVariant) return alert("Pilih size Top & Bottom dulu say!")
-        
-        const uniqueSetId = `BUNDLE-${Date.now()}`
+      if (redirectToCheckout) {
+        if (!mainCart) return alert("Sistem keranjang sedang disiapkan, tunggu sebentar ya say.")
 
-        // 1. Masukin TOP dengan metadata Color
-        await addToCart({ 
-          variantId: selectedModalTopVariant.id, 
-          quantity: setQuantity, 
-          countryCode: countryCode || "id",
-          metadata: { 
-            is_bundle: true, 
-            bundle_id: uniqueSetId, 
-            bundle_type: "TOP",
-            size: topSize,
-            color: colorName, // 🌟 Logic Color masuk sini say!
-          }
-        })
-        
-        // 2. Masukin BOTTOM dengan metadata Color
-        await addToCart({ 
-          variantId: selectedModalBottomVariant.id, 
-          quantity: setQuantity, 
-          countryCode: countryCode || "id",
-          metadata: { 
-            is_bundle: true, 
-            bundle_id: uniqueSetId, 
-            bundle_type: "BOTTOM",
-            size: bottomSize,
-            color: colorName, // 🌟 Logic Color masuk sini juga!
-          }
-        })
+        let itemsToBuy = [];
+        const uniqueSetId = `BUNDLE-${Date.now()}`;
 
-        alert(`Berhasil masuk keranjang!`)
-        setIsSetModalOpen(false)
+        if (isSetBundle) {
+          if (!selectedModalTopVariant || !selectedModalBottomVariant) return alert("Pilih size Top & Bottom dulu say!")
+          itemsToBuy = [
+            { variant_id: selectedModalTopVariant.id, quantity: setQuantity, metadata: { is_bundle: true, bundle_id: uniqueSetId, bundle_type: "TOP", size: topSize, color: colorName } },
+            { variant_id: selectedModalBottomVariant.id, quantity: setQuantity, metadata: { is_bundle: true, bundle_id: uniqueSetId, bundle_type: "BOTTOM", size: bottomSize, color: colorName } }
+          ];
+        } else {
+          if (!selectedRegulerVariant?.id) return alert("Pilih size dulu ya say!")
+          itemsToBuy = [
+            { variant_id: selectedRegulerVariant.id, quantity: 1, metadata: { color: colorName } }
+          ];
+        }
+
+        const newCartId = await prepareCheckoutCart(mainCart, itemsToBuy);
+        
+        if (newCartId) {
+          router.push(`/${countryCode}/checkout?cart_id=${newCartId}`);
+        } else {
+          alert("Gagal memproses Buy Now. Coba lagi ya say.");
+        }
+
       } else {
-        // Logic reguler (One-Piece) juga kita kasih metadata color
-        if (!selectedRegulerVariant?.id) return alert("Pilih size dulu ya say!")
-        await addToCart({ 
-          variantId: selectedRegulerVariant.id, 
-          quantity: 1, 
-          countryCode: countryCode || "id",
-          metadata: {
-            color: colorName // 🌟 Biar admin tau warna apa yang dibeli
-          }
-        })
+        if (isSetBundle) {
+          if (!selectedModalTopVariant || !selectedModalBottomVariant) return alert("Pilih size Top & Bottom dulu say!")
+          const uniqueSetId = `BUNDLE-${Date.now()}`
+          
+          await addToCart({ 
+            variantId: selectedModalTopVariant.id, 
+            quantity: setQuantity, 
+            countryCode: countryCode || "id",
+            metadata: { is_bundle: true, bundle_id: uniqueSetId, bundle_type: "TOP", size: topSize, color: colorName }
+          })
+          await addToCart({ 
+            variantId: selectedModalBottomVariant.id, 
+            quantity: setQuantity, 
+            countryCode: countryCode || "id",
+            metadata: { is_bundle: true, bundle_id: uniqueSetId, bundle_type: "BOTTOM", size: bottomSize, color: colorName }
+          })
+
+          alert(`Berhasil masuk keranjang!`)
+          setIsSetModalOpen(false)
+        } else {
+          if (!selectedRegulerVariant?.id) return alert("Pilih size dulu ya say!")
+          await addToCart({ 
+            variantId: selectedRegulerVariant.id, 
+            quantity: 1, 
+            countryCode: countryCode || "id",
+            metadata: { color: colorName }
+          })
+          
+          alert(`Berhasil masuk keranjang!`)
+        }
       }
     } catch (error) {
-      alert("Gagal menambahkan ke keranjang.")
+      alert("Terjadi kesalahan, silakan coba lagi.")
     } finally {
       setIsAdding(false)
     }
@@ -246,15 +252,13 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
           <button onClick={toggleWishlist} className={`p-2 border rounded-full transition-colors ${isWishlisted ? "border-[#EF7044] bg-[#EF7044] text-white" : "border-[#EF7044] text-[#EF7044] hover:bg-orange-50"}`}>
             <Heart className={`w-5 h-5 ${isWishlisted ? "fill-current" : ""}`} />
           </button>
-          <button onClick={() => selectedType === "SET" ? setIsSetModalOpen(true) : handleBuyNow(false)} disabled={isAdding || (selectedType !== "SET" && !selectedRegulerVariant)} className="p-2 border border-[#EF7044] rounded-full hover:bg-orange-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+          <button onClick={() => selectedType === "SET" ? setIsSetModalOpen(true) : handleBuyNow(false, false)} disabled={isAdding || (selectedType !== "SET" && !selectedRegulerVariant)} className="p-2 border border-[#EF7044] rounded-full hover:bg-orange-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
             <ShoppingCart className={`w-5 h-5 ${isAdding ? "text-gray-400" : "text-[#EF7044]"}`} />
           </button>
         </div>
       </div>
 
       <div className="flex flex-row items-start justify-between gap-3 mb-8">
-        
-        {/* KIRI: SIZE */}
         <div className={selectedType === "REGULAR" ? "w-full flex flex-col" : "w-[45%] flex flex-col"}>
           {selectedType === "SET" ? (
             <div className="flex flex-col h-full justify-center">
@@ -265,13 +269,28 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
             </div>
           ) : (
             <>
-              <p className="text-[13px] text-gray-500 font-medium mb-3">
-                Size <span className="ml-2">: {selectedSize || "Select"}</span>
-              </p>
+              <div className="flex justify-between items-center mb-3">
+                <p className="text-[13px] text-gray-500 font-medium">
+                  Size <span className="ml-2">: {selectedSize || "Select"}</span>
+                </p>
+                {(() => {
+                  const currentSize = sizesForType.find((s: SizeData) => s.label === selectedSize);
+                  if (currentSize?.variant?.manage_inventory) {
+                    return (
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${currentSize.qty <= 3 ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-600'}`}>
+                        Stock Available: {currentSize.qty}
+                      </span>
+                    )
+                  }
+                  return null;
+                })()}
+              </div>
+
               <div className="flex flex-row flex-wrap gap-1.5 mb-4">
                 {sizesForType.map((size: SizeData) => (
                   <button key={size.label} disabled={!size.inStock} onClick={() => setSelectedSize(size.label)}
-                    className={`relative w-8 h-8 shrink-0 rounded-full border flex items-center justify-center text-[10px] font-bold transition-all
+                    className={`relative h-8 shrink-0 rounded-full border flex items-center justify-center text-[10px] font-bold transition-all
+                      ${size.label === "All Size" ? "w-max px-3" : "w-8"}
                       ${!size.inStock ? 'border-gray-200 text-gray-300 cursor-not-allowed' : selectedSize === size.label ? 'bg-[#EF7044] border-[#EF7044] text-white shadow-md' : 'border-gray-300 text-gray-700 hover:border-[#EF7044]'}
                     `}>
                     {size.label}
@@ -287,7 +306,6 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
           </button>
         </div>
 
-        {/* KANAN: SET / TOP / BOTTOM */}
         {selectedType !== "REGULAR" && (
           <div className="w-[55%] flex flex-row gap-1.5">
             {availableTypes.includes("SET") && (
@@ -325,15 +343,12 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
 
       <div className="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-md border-t border-gray-100 p-4 z-40 rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
         <div className="container mx-auto max-w-[480px]">
-          <button onClick={() => selectedType === "SET" ? setIsSetModalOpen(true) : handleBuyNow(false)} disabled={isAdding || (selectedType !== "SET" && !selectedRegulerVariant)} className="w-full bg-[#EF7044] text-white py-4 rounded-full font-bold text-lg tracking-wide hover:bg-[#d65f36] active:scale-95 transition-all shadow-lg disabled:bg-gray-300">
+          <button onClick={() => selectedType === "SET" ? setIsSetModalOpen(true) : handleBuyNow(false, true)} disabled={isAdding || (selectedType !== "SET" && !selectedRegulerVariant)} className="w-full bg-[#EF7044] text-white py-4 rounded-full font-bold text-lg tracking-wide hover:bg-[#d65f36] active:scale-95 transition-all shadow-lg disabled:bg-gray-300">
             {isAdding ? "PROCESSING..." : "BUY NOW"}
           </button>
         </div>
       </div>
 
-      {/* ========================================= */}
-      {/* 🌟 MODAL POPUP SET (BUNDLING) */}
-      {/* ========================================= */}
       {isSetModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity">
           <div className="relative bg-white w-full max-w-[480px] h-[85vh] sm:h-auto sm:max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col animate-in slide-in-from-bottom-10 sm:slide-in-from-bottom-0 sm:fade-in-20">
@@ -367,7 +382,6 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
                 </div>
               </div>
 
-              {/* Thumbnails SET/TOP/BOTTOM */}
               <div className="flex gap-2 mb-6">
                 <div className="w-16 h-16 rounded-xl border-2 border-[#EF7044] overflow-hidden relative opacity-70">
                    <img src={mainImage} className="w-full h-full object-cover" />
@@ -392,7 +406,16 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
 
               <div className="mb-5">
                 <div className="flex justify-between items-end mb-3">
-                  <p className="text-[13px] text-gray-500 font-medium">Top Size <span className="ml-2">: {topSize || "Select"}</span></p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-[13px] text-gray-500 font-medium">Top Size <span className="ml-2">: {topSize || "Select"}</span></p>
+                    {(() => {
+                      const cTop = modalTopSizes.find((s: SizeData) => s.label === topSize);
+                      if (cTop?.variant?.manage_inventory) {
+                        return <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${cTop.qty <= 5 ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-600'}`}>Stok: {cTop.qty}</span>
+                      }
+                      return null;
+                    })()}
+                  </div>
                   <button onClick={() => setIsSizeGuideOpen(true)} className="flex items-center gap-1 text-[11px] font-bold text-black border-b border-black pb-[1px]">
                     <Ruler className="w-3 h-3" /> Size Guide <span className="ml-1">›</span>
                   </button>
@@ -400,7 +423,9 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
                 <div className="flex gap-2">
                   {modalTopSizes.map((size: SizeData) => (
                     <button key={size.label} disabled={!size.inStock} onClick={() => setTopSize(size.label)}
-                      className={`relative w-10 h-10 shrink-0 rounded-full border flex items-center justify-center text-xs font-bold transition-all ${!size.inStock ? 'border-gray-200 text-gray-300 cursor-not-allowed' : topSize === size.label ? 'bg-[#EF7044] border-[#EF7044] text-white shadow-md' : 'border-gray-300 text-gray-700'}`}>
+                      className={`relative h-10 shrink-0 rounded-full border flex items-center justify-center text-xs font-bold transition-all 
+                        ${size.label === "All Size" ? "w-max px-4" : "w-10"}
+                        ${!size.inStock ? 'border-gray-200 text-gray-300 cursor-not-allowed' : topSize === size.label ? 'bg-[#EF7044] border-[#EF7044] text-white shadow-md' : 'border-gray-300 text-gray-700'}`}>
                       {size.label} {!size.inStock && <div className="absolute w-full h-[1px] bg-gray-300 rotate-45"></div>}
                     </button>
                   ))}
@@ -408,11 +433,22 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
               </div>
 
               <div className="mb-6">
-                <p className="text-[13px] text-gray-500 font-medium mb-3">Bottom Size <span className="ml-2">: {bottomSize || "Select"}</span></p>
+                <div className="flex items-center gap-2 mb-3">
+                  <p className="text-[13px] text-gray-500 font-medium">Bottom Size <span className="ml-2">: {bottomSize || "Select"}</span></p>
+                  {(() => {
+                    const cBot = modalBottomSizes.find((s: SizeData) => s.label === bottomSize);
+                    if (cBot?.variant?.manage_inventory) {
+                      return <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${cBot.qty <= 5 ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-600'}`}>Stok: {cBot.qty}</span>
+                    }
+                    return null;
+                  })()}
+                </div>
                 <div className="flex gap-2">
                   {modalBottomSizes.map((size: SizeData) => (
                     <button key={size.label} disabled={!size.inStock} onClick={() => setBottomSize(size.label)}
-                      className={`relative w-10 h-10 shrink-0 rounded-full border flex items-center justify-center text-xs font-bold transition-all ${!size.inStock ? 'border-gray-200 text-gray-300 cursor-not-allowed' : bottomSize === size.label ? 'bg-[#EF7044] border-[#EF7044] text-white shadow-md' : 'border-gray-300 text-gray-700'}`}>
+                      className={`relative h-10 shrink-0 rounded-full border flex items-center justify-center text-xs font-bold transition-all 
+                        ${size.label === "All Size" ? "w-max px-4" : "w-10"}
+                        ${!size.inStock ? 'border-gray-200 text-gray-300 cursor-not-allowed' : bottomSize === size.label ? 'bg-[#EF7044] border-[#EF7044] text-white shadow-md' : 'border-gray-300 text-gray-700'}`}>
                       {size.label} {!size.inStock && <div className="absolute w-full h-[1px] bg-gray-300 rotate-45"></div>}
                     </button>
                   ))}
@@ -422,8 +458,10 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
               <div className="flex items-center justify-between py-4 border-t border-gray-100">
                 <div className="flex items-center gap-2">
                   <span className="text-[13px] text-gray-500 font-medium">Quantity :</span>
-                  {topSize && bottomSize && maxAvailableSet <= 5 && (
-                    <span className="text-xs text-[#EF7044] font-medium">Hurry! Only <span className="font-bold">{maxAvailableSet}</span> left.</span>
+                  {topSize && bottomSize && (
+                    <span className={`text-xs font-medium ${maxAvailableSet <= 5 ? 'text-red-500' : 'text-[#EF7044]'}`}>
+                      Sisa Set: <span className="font-bold">{maxAvailableSet}</span>
+                    </span>
                   )}
                 </div>
                 <div className="flex items-center border border-gray-300 rounded-full px-3 py-1.5 gap-4">
@@ -434,17 +472,16 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
               </div>
             </div>
 
-            {/* DUA TOMBOL SESUAI DESAIN */}
             <div className="absolute bottom-0 left-0 w-full bg-white p-4 border-t border-gray-100 flex gap-3">
               <button 
-                onClick={() => handleBuyNow(true)} 
+                onClick={() => handleBuyNow(true, false)} 
                 disabled={isAdding || !topSize || !bottomSize}
                 className="flex-1 border-2 border-[#EF7044] text-[#EF7044] bg-white py-3.5 rounded-full font-bold text-sm tracking-wide hover:bg-orange-50 transition-colors disabled:opacity-50 disabled:border-gray-300 disabled:text-gray-400"
               >
                 ADD TO CART
               </button>
               <button 
-                onClick={() => handleBuyNow(true)} 
+                onClick={() => handleBuyNow(true, true)} 
                 disabled={isAdding || !topSize || !bottomSize}
                 className="flex-1 bg-[#EF7044] text-white py-3.5 rounded-full font-bold text-sm tracking-wide shadow-lg hover:bg-[#d65f36] transition-colors disabled:opacity-50 disabled:bg-gray-300"
               >
@@ -455,9 +492,6 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
         </div>
       )}
 
-      {/* ========================================= */}
-      {/* 📐 POPUP SIZE GUIDE (FULL CODE) */}
-      {/* ========================================= */}
       {isSizeGuideOpen && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsSizeGuideOpen(false)} />

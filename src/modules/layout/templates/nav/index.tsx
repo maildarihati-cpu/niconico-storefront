@@ -1,14 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation"; 
-import { Menu, Search, ShoppingBag, User, X } from "lucide-react";
+import { usePathname, useSearchParams, useRouter } from "next/navigation"; 
+import { Menu, Search, ShoppingBag, User } from "lucide-react";
 import CartPreview from "@modules/cart/templates/preview"
 import { useCart } from "@/context/cart-context";
 
-// Import Drawer Kanan (Profile) & Drawer Kiri (Nav/Search)
 import ProfileContent from "../../components/profile-drawer/ProfileContent";
 import NavDrawer from "../../components/nav-drawer/NavDrawer"; 
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
@@ -18,21 +17,49 @@ const Navbar = () => {
   const [navView, setNavView] = useState<"menu" | "search">("menu");
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   
+  // 🌟 TAMBAHAN: State untuk mengontrol view di dalam Profile Drawer
+  const [profileView, setProfileView] = useState<any>("menu");
+  
   const pathname = usePathname(); 
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  
   const { cart, cartCount, isCartBouncing, showPreview } = useCart();
 
-  if (pathname?.includes("/cart")) {
-    return null;
-  }
+  // 🌟 LISTENER URL FLAG
+  useEffect(() => {
+    const authFlag = searchParams?.get("auth");
+    if (authFlag === "login") {
+      setProfileView("login"); // 👈 LANGSUNG SET KE LOGIN VIEW
+      setIsProfileOpen(true); 
+      router.replace(pathname || "/", { scroll: false });
+    }
+  }, [searchParams, pathname, router]);
 
   // ==========================================
-  // LOGIC CEK HALAMAN UNTUK WARNA (DIUPDATE)
-  // Sekarang termasuk rute /collections agar sinkron dengan UI kamu say!
+  // 🌟 PERBAIKAN: PASS VIEW & SETVIEW KE PROFILECONTENT
   // ==========================================
+  if (pathname?.includes("/cart")) {
+    return (
+      <>
+        {isProfileOpen && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[90] transition-opacity" onClick={() => setIsProfileOpen(false)} />
+        )}
+        <div className={`fixed top-0 right-0 h-full w-[90%] max-w-[480px] bg-white z-[100] shadow-2xl transform transition-transform duration-300 overflow-hidden ${isProfileOpen ? "translate-x-0" : "translate-x-full"}`}>
+          <ProfileContent 
+            view={profileView} 
+            setView={setProfileView} 
+            onClose={() => setIsProfileOpen(false)} 
+          />
+        </div>
+      </>
+    );
+  }
+
   const isOrangeNav = 
     pathname?.includes("/store") || 
     pathname?.includes("/products") || 
-    pathname?.includes("/collections"); // 👈 Tambahan rute ini say
+    pathname?.includes("/collections");
 
   const navBgClass = isOrangeNav 
     ? "bg-[#EF7044]/85 backdrop-blur-md border-[#EF7044]/10" 
@@ -44,39 +71,23 @@ const Navbar = () => {
   return (
     <>
       <nav className={`fixed top-5 left-5 right-5 z-40 flex items-center justify-between px-6 py-3.5 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-500 ${navBgClass}`}>
-        
-        {/* KIRI: HAMBURGER & SEARCH */}
         <div className="flex items-center gap-4 -ml-1">
-          <button 
-            onClick={() => { setNavView("menu"); setIsNavOpen(true); }} 
-            className="p-1 hover:opacity-70 transition-opacity"
-          >
+          <button onClick={() => { setNavView("menu"); setIsNavOpen(true); }} className="p-1 hover:opacity-70 transition-opacity">
             <Menu className={`w-5 h-5 transition-colors duration-300 ${iconColorClass}`} />
           </button>
-          <button 
-            onClick={() => { setNavView("search"); setIsNavOpen(true); }} 
-            className="p-1 hover:opacity-70 transition-opacity"
-          >
+          <button onClick={() => { setNavView("search"); setIsNavOpen(true); }} className="p-1 hover:opacity-70 transition-opacity">
             <Search className={`w-5 h-5 transition-colors duration-300 ${iconColorClass}`} />
           </button>
         </div>
         
-        {/* Tengah: Logo Dinamis */}
         <Link href="/" className="relative flex items-center justify-center w-28 h-8 md:w-36 md:h-10 hover:scale-105 transition-transform">
           <Image src={logoSrc} alt="Niconico Logo" fill className="object-contain" priority sizes="150px" />
         </Link>
 
-        {/* Kanan: Cart & Profile */}
         <div className="flex gap-4 items-center -mr-1">
           <div className="relative group">
             <LocalizedClientLink href="/cart" className="p-1 block">
-              <ShoppingBag 
-                className={`w-5 h-5 transition-all duration-300 ${
-                  isCartBouncing 
-                    ? (isOrangeNav ? "scale-125 text-white" : "scale-125 text-[#ED5725]") 
-                    : iconColorClass
-                }`} 
-              />
+              <ShoppingBag className={`w-5 h-5 transition-all duration-300 ${isCartBouncing ? (isOrangeNav ? "scale-125 text-white" : "scale-125 text-[#ED5725]") : iconColorClass}`} />
             </LocalizedClientLink>
 
             {cartCount > 0 && (
@@ -94,18 +105,26 @@ const Navbar = () => {
             )}
           </div>
 
-          <button onClick={() => setIsProfileOpen(true)} className="p-1 hover:opacity-70 transition-opacity">
+          {/* 🌟 ICON USER: Pastikan view di-reset ke 'menu' kalau diklik manual */}
+          <button 
+            onClick={() => { setProfileView("menu"); setIsProfileOpen(true); }} 
+            className="p-1 hover:opacity-70 transition-opacity"
+          >
             <User className={`w-5 h-5 transition-colors duration-300 ${iconColorClass}`} />
           </button>
         </div>
       </nav>
 
-      {/* Profile Drawer & Nav Drawer tetap sama */}
+      {/* Profile Drawer */}
       {isProfileOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity" onClick={() => setIsProfileOpen(false)} />
       )}
       <div className={`fixed top-0 right-0 h-full w-[90%] max-w-[480px] bg-white z-[60] shadow-2xl transform transition-transform duration-300 overflow-hidden ${isProfileOpen ? "translate-x-0" : "translate-x-full"}`}>
-        <ProfileContent onClose={() => setIsProfileOpen(false)} />
+        <ProfileContent 
+          view={profileView} 
+          setView={setProfileView} 
+          onClose={() => setIsProfileOpen(false)} 
+        />
       </div>
 
       <NavDrawer isOpen={isNavOpen} onClose={() => setIsNavOpen(false)} view={navView} setView={setNavView} />
