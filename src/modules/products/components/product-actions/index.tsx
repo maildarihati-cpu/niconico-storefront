@@ -29,7 +29,7 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
   const [isColorDropdownOpen, setIsColorDropdownOpen] = useState(false)
   const [relatedProducts, setRelatedProducts] = useState<any[]>([])
 
-  // 🌟 FETCH PRODUK SAUDARA BERDASARKAN GROUP_ID (BYPASS SEARCH MODULE)
+  // 🌟 FETCH PRODUK SAUDARA BERDASARKAN GROUP_ID (BYPASS SEARCH MODULE + DEBUG)
   useEffect(() => {
     const fetchRelatedColors = async () => {
       if (!groupId) {
@@ -41,7 +41,7 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
         const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000";
         const apiKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "";
 
-        // 🌟 FIX: Jangan pakai '?q=', langsung tarik 100 produk terbaru!
+        // Tarik 100 produk terbaru
         const res = await fetch(`${backendUrl}/store/products?limit=100`, {
           method: "GET",
           headers: {
@@ -53,12 +53,20 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
         if (res.ok) {
           const data = await res.json();
           
+          // 🌟 KITA INTIP SEMUA DATA ASLINYA DI SINI
+          console.log("1. GROUP ID YANG DICARI:", groupId);
+          console.log("2. SEMUA PRODUK DARI SERVER:", data.products);
+          
           // Filter manual: Cari yang group_id-nya sama persis dengan produk ini
-          const trueSiblings = data.products?.filter((p: any) => 
-            p.metadata?.group_id === groupId
-          ) || [];
+          const trueSiblings = data.products?.filter((p: any) => {
+            // Kita log juga metadatanya biar kelihatan
+            if (p.title?.toLowerCase().includes("ruth")) {
+               console.log(`Cek produk ${p.title} metadatanya:`, p.metadata);
+            }
+            return p.metadata?.group_id === groupId;
+          }) || [];
 
-          console.log("CEK SAUDARA YANG KETEMU (BYPASS):", trueSiblings);
+          console.log("3. CEK SAUDARA YANG KETEMU (BYPASS):", trueSiblings);
 
           if (trueSiblings.length > 0) {
             setRelatedProducts(trueSiblings);
@@ -69,6 +77,7 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
           setRelatedProducts([product]);
         }
       } catch (error) {
+        console.error("Error fetching related products:", error);
         setRelatedProducts([product]);
       }
     };
