@@ -33,18 +33,31 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
   useEffect(() => {
     const fetchRelatedColors = async () => {
       if (!groupId) {
-        setRelatedProducts([product]); // Kalau ga ada group_id, tampilin dia sendiri aja
+        setRelatedProducts([product]); 
         return;
       }
 
       try {
-        // PERHATIAN: Ini contoh endpoint, sesuaikan dengan cara kamu nge-fetch produk di Frontend ya Say
-        // Medusa V2 biasanya pakai /store/products?metadata[group_id]=... atau API custom kamu
-        const res = await fetch(`/store/products?metadata[group_id]=${groupId}`);
+        // Ambil URL dan API Key dari environment variables
+        const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000";
+        const apiKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "";
+
+        // 🌟 FIX: Tambahkan header x-publishable-api-key sesuai permintaan Medusa
+        const res = await fetch(`${backendUrl}/store/products?metadata[group_id]=${groupId}`, {
+          method: "GET",
+          headers: {
+            "x-publishable-api-key": apiKey,
+            "Content-Type": "application/json"
+          }
+        });
+
         if (res.ok) {
           const data = await res.json();
-          // Masukkan produk saudara yang ditemukan (termasuk dirinya sendiri)
-          setRelatedProducts(data.products || [product]);
+          if (data.products && data.products.length > 0) {
+            setRelatedProducts(data.products);
+          } else {
+            setRelatedProducts([product]);
+          }
         } else {
           setRelatedProducts([product]);
         }
