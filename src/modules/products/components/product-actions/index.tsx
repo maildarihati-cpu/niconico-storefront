@@ -43,7 +43,7 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
         const apiKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "";
 
         // 🌟 FIX: Tambahkan header x-publishable-api-key sesuai permintaan Medusa
-        const res = await fetch(`${backendUrl}/store/products?tags=${groupId}`, {
+        const res = await fetch(`${backendUrl}/store/products?q=${groupId}`, {
           method: "GET",
           headers: {
             "x-publishable-api-key": apiKey,
