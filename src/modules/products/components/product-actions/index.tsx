@@ -727,3 +727,4 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
 }
 
 export default ProductActions
+
