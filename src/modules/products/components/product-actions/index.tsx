@@ -26,7 +26,6 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
   const colorId = product?.metadata?.color_id || "#FFFFFF" 
   const groupId = product?.metadata?.group_id || null 
 
-  const [isColorDropdownOpen, setIsColorDropdownOpen] = useState(false)
   const [relatedProducts, setRelatedProducts] = useState<any[]>([])
 
   // 🌟 FETCH PRODUK SAUDARA (PAKAI HANDLE LOGIC BYPASS MEDUSA)
@@ -310,67 +309,80 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
     <div className="flex flex-col mt-1">
       <h2 className="text-xl md:text-2xl font-black text-[#EF7044] mb-4">{mainDisplayPrice}</h2>
 
-      {/* 🌟 TAMPILAN WARNA DI LAYAR UTAMA (BISA KLIK JADI DROPDOWN) */}
+      {/* 🌟 TAMPILAN WARNA BERJEJER */}
       <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-3 relative">
+        <div className="flex items-center gap-3">
           <p className="text-[13px] text-gray-500 font-medium">Color : {colorName}</p>
           
-          {/* Tombol Lingkaran Warna */}
-          <div 
-            onClick={() => setIsColorDropdownOpen(!isColorDropdownOpen)}
-            className="w-7 h-7 rounded-full border border-gray-300 p-[2px] cursor-pointer shadow-sm relative hover:scale-105 transition-transform"
-            title={`Select Color (Current: ${colorName})`}
-          >
-            <div className="w-full h-full rounded-full border border-gray-100" style={{ backgroundColor: colorId }}></div>
-            
-            {/* Pop-up Dropdown Warna Saudara */}
-            {isColorDropdownOpen && relatedProducts.length > 0 && (
-              <div className="absolute top-9 left-0 bg-white border border-gray-100 shadow-[0_10px_30px_rgba(0,0,0,0.1)] rounded-2xl p-3 flex gap-3 z-50 animate-in fade-in zoom-in-95">
-                {relatedProducts.map((relProd: any) => {
-                  const isActive = relProd.id === product.id;
-                  
-                  // 🌟 JURUS HACKER: Ekstrak warna dari Handle karena Metadata disembunyikan Medusa!
-                  let extractedColor = "#eeeeee"; 
-                  let displayName = "Unknown";
-                  
-                  if (relProd.metadata?.color_id) {
-                     extractedColor = relProd.metadata.color_id;
-                     displayName = relProd.metadata.color_name || "Unknown";
-                  } else if (relProd.handle && groupId) {
-                     const colorFromHandle = relProd.handle.toLowerCase().replace(groupId.toLowerCase(), '').replace(/-/g, '').trim();
-                     
-                     // Kamus warna bantuan jika warna aneh
-                     const colorDictionary: Record<string, string> = {
-                        "black": "#222222", 
-                        "white": "#FFFFFF",
-                        "navy": "#000080",
-                        "nude": "#E3BC9A",
-                        "pink": "#FF4545",
-                     };
+          {/* List Warna Berjejer ke Samping */}
+          <div className="flex flex-wrap gap-2">
+            {relatedProducts.length > 0 ? (
+              relatedProducts.map((relProd: any) => {
+                const isActive = relProd.id === product.id;
+                
+                // 🌟 JURUS HACKER LEBIH PINTAR: Cari warna spesifik di dalam URL
+                let extractedColor = "#eeeeee"; 
+                let displayName = "Unknown";
+                
+                if (relProd.metadata?.color_id) {
+                   extractedColor = relProd.metadata.color_id;
+                   displayName = relProd.metadata.color_name || "Unknown";
+                } else if (relProd.handle) {
+                   const handleStr = relProd.handle.toLowerCase();
+                   
+                   // Kamus warna lengkap
+                   const colorDictionary: Record<string, string> = {
+                      "black": "#222222", "white": "#FFFFFF", "navy": "#000080", 
+                      "nude": "#E3BC9A", "pink": "#FFC0CB", "red": "#FF0000", 
+                      "blue": "#0000FF", "green": "#008000", "yellow": "#FFFF00", 
+                      "orange": "#FFA500", "purple": "#800080", "gray": "#808080", 
+                      "grey": "#808080", "brown": "#A52A2A", "gold": "#FFD700", 
+                      "silver": "#C0C0C0", "maroon": "#800000", "teal": "#008080", 
+                      "olive": "#808000"
+                   };
 
-                     extractedColor = colorDictionary[colorFromHandle] || colorFromHandle || "#eeeeee";
-                     displayName = colorFromHandle.toUpperCase();
-                  }
+                   let foundColor = false;
+                   for (const [cName, cHex] of Object.entries(colorDictionary)) {
+                     // Jika URL mengandung kata warna (contoh: eliana-swimsuit-black)
+                     if (handleStr.includes(`-${cName}`) || handleStr.endsWith(cName)) {
+                       extractedColor = cHex;
+                       displayName = cName.toUpperCase();
+                       foundColor = true;
+                       break;
+                     }
+                   }
 
-                  return (
-                    <button 
-                      key={relProd.id}
-                      title={displayName}
-                      onClick={() => {
-                        if (!isActive) {
-                          setIsColorDropdownOpen(false);
-                          router.push(`/${countryCode}/products/${relProd.handle}`);
-                        }
-                      }}
-                      className={`w-8 h-8 rounded-full p-[2px] transition-all hover:scale-110 ${isActive ? 'border-2 border-[#EF7044] cursor-default' : 'border border-gray-200 hover:border-gray-400'}`}
-                    >
-                      <div 
-                        className="w-full h-full rounded-full shadow-inner border border-gray-200" 
-                        style={{ backgroundColor: extractedColor }}
-                      ></div>
-                    </button>
-                  )
-                })}
+                   // Jika tidak ada di kamus, ambil kata terakhir di URL sebagai warna paksaan
+                   if (!foundColor) {
+                     const parts = handleStr.split('-');
+                     const lastWord = parts[parts.length - 1];
+                     extractedColor = lastWord; 
+                     displayName = lastWord.toUpperCase();
+                   }
+                }
+
+                return (
+                  <button 
+                    key={relProd.id}
+                    title={displayName}
+                    onClick={() => {
+                      if (!isActive) {
+                        router.push(`/${countryCode}/products/${relProd.handle}`);
+                      }
+                    }}
+                    className={`w-7 h-7 rounded-full p-[2px] transition-all hover:scale-110 ${isActive ? 'border-2 border-[#EF7044] cursor-default' : 'border border-gray-300 hover:border-gray-500 shadow-sm'}`}
+                  >
+                    <div 
+                      className="w-full h-full rounded-full border border-gray-100" 
+                      style={{ backgroundColor: extractedColor }}
+                    ></div>
+                  </button>
+                )
+              })
+            ) : (
+              // Fallback ketika data masih loading atau gagal ditarik
+              <div className="w-7 h-7 rounded-full p-[2px] border-2 border-[#EF7044] shadow-sm cursor-default">
+                <div className="w-full h-full rounded-full border border-gray-100" style={{ backgroundColor: colorId }}></div>
               </div>
             )}
           </div>
@@ -512,20 +524,7 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
                 </div>
               </div>
 
-              <div className="flex gap-2 mb-6">
-                <div className="w-16 h-16 rounded-xl border-2 border-[#EF7044] overflow-hidden relative opacity-70">
-                   <img src={mainImage} className="w-full h-full object-cover" />
-                   <div className="absolute inset-0 bg-[#EF7044]/30 flex items-center justify-center"><span className="text-white text-[9px] font-bold">SET</span></div>
-                </div>
-                <div className="w-16 h-16 rounded-xl overflow-hidden relative">
-                   <img src={mainImage} className="w-full h-full object-cover object-top scale-[1.5]" />
-                   <div className="absolute inset-0 bg-black/20 flex items-center justify-center"><span className="text-white text-[9px] font-bold">TOP</span></div>
-                </div>
-                <div className="w-16 h-16 rounded-xl overflow-hidden relative">
-                   <img src={mainImage} className="w-full h-full object-cover object-bottom scale-[1.5]" />
-                   <div className="absolute inset-0 bg-black/20 flex items-center justify-center"><span className="text-white text-[9px] font-bold">BOTTOM</span></div>
-                </div>
-              </div>
+              {/* THUMBNAIL TOP DAN BOTTOM DIHAPUS DARI SINI SESUAI REQUEST */}
 
               <div className="flex items-center gap-3 mb-6">
                 <span className="text-[13px] text-gray-500 font-medium">Color : {colorName}</span>
@@ -727,4 +726,3 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
 }
 
 export default ProductActions
-
