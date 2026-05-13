@@ -1,23 +1,14 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useParams, useRouter } from "next/navigation";
-import { Heart, Search, X, ChevronDown, ArrowUp, ShoppingCart, Ruler } from "lucide-react";
-import LocalizedClientLink from "@modules/common/components/localized-client-link";
-import { listProducts } from "@lib/data/products";
 import { useCart } from "@/context/cart-context";
-import { addToCart as medusaAddToCart } from "@lib/data/cart";
-
-// Kategori Atas
-const topCategories = [
-  { name: "ALL", handle: "all", img: "/all-cat.jpg" },
-  { name: "BIKINIS", handle: "bikinis", img: "/bikini-cat.jpg" },
-  { name: "SWIMSUIT", handle: "swimsuit", img: "/swimsuit-cat.jpg" },
-  { name: "RESORT WEAR", handle: "resort-wear", img: "/resort-cat.jpg" },
-  { name: "MEN'S WEAR", handle: "mens-wear", img: "/mens-cat.jpg" },
-  { name: "ACCESORIES", handle: "accesories", img: "/acc-cat.jpg" },
-];
+import { addToCart } from "@lib/data/cart"; 
+import { listProducts } from "@lib/data/products";
+import LocalizedClientLink from "@modules/common/components/localized-client-link";
+import { ShoppingCart, Heart, X, Ruler } from "lucide-react";
+import { prepareCheckoutCart } from "@lib/util/checkout-util";
 
 // ==========================================
 // 🌟 FUNGSI PEMBANTU UNTUK URUTAN SIZE (S, M, L, XL)
@@ -250,14 +241,14 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
       if (isSetBundle) {
         if (!selectedModalTopVariant || !selectedModalBottomVariant) return alert("Pilih size Top & Bottom dulu say!")
         const uniqueSetId = `BUNDLE-${Date.now()}`
-        await medusaAddToCart({ variantId: selectedModalTopVariant.id, quantity: setQuantity, countryCode: countryCode || "id", metadata: { is_bundle: true, bundle_id: uniqueSetId, bundle_type: "TOP", size: topSize, color: colorName }})
-        await medusaAddToCart({ variantId: selectedModalBottomVariant.id, quantity: setQuantity, countryCode: countryCode || "id", metadata: { is_bundle: true, bundle_id: uniqueSetId, bundle_type: "BOTTOM", size: bottomSize, color: colorName }})
+        await addToCart({ variantId: selectedModalTopVariant.id, quantity: setQuantity, countryCode: countryCode || "id", metadata: { is_bundle: true, bundle_id: uniqueSetId, bundle_type: "TOP", size: topSize, color: colorName }})
+        await addToCart({ variantId: selectedModalBottomVariant.id, quantity: setQuantity, countryCode: countryCode || "id", metadata: { is_bundle: true, bundle_id: uniqueSetId, bundle_type: "BOTTOM", size: bottomSize, color: colorName }})
         if (updateNavbarCartCount) updateNavbarCartCount();
         setIsSetModalOpen(false)
         onClose() 
       } else {
         if (!selectedRegulerVariant?.id) return alert("Pilih size dulu ya say!")
-        await medusaAddToCart({ variantId: selectedRegulerVariant.id, quantity: 1, countryCode: countryCode || "id", metadata: { color: colorName }})
+        await addToCart({ variantId: selectedRegulerVariant.id, quantity: 1, countryCode: countryCode || "id", metadata: { color: colorName }})
         if (updateNavbarCartCount) updateNavbarCartCount();
         onClose() 
       }
@@ -532,350 +523,170 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
 }
 
 // ==========================================
-// 🌟 2. KOMPONEN UTAMA STORE
+// 🌟 2. KOMPONEN UTAMA TOP COLLECTIONS 
 // ==========================================
-export default function StoreTemplate() {
+const collectionsConfig = {
+  "New Arrivals": { handle: "new-arrivals", link: "/collections/new-arrivals" },
+  "Best Seller": { handle: "best-seller", link: "/collections/best-seller" },
+  "Signature": { handle: "signature", link: "/collections/signature" },
+  "Island Escape": { handle: "island-escape", link: "/collections/island-escape" }
+};
+
+const tabs = ["New Arrivals", "Best Seller", "Signature", "Island Escape"];
+
+export default function TopCollections() {
   const { countryCode } = useParams();
   
-  // STATE UTAMA
+  const [activeTab, setActiveTab] = useState(tabs[0]);
+  const activeConfig = collectionsConfig[activeTab as keyof typeof collectionsConfig];
+
   const [products, setProducts] = useState<any[]>([]);
-  const [page, setPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  
-  // STATE UI
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [wishlist, setWishlist] = useState<string[]>([]);
-  
-  // STATE POPUP VARIAN
+  const [isLoading, setIsLoading] = useState(true);
+
+  // State Pemicu Quick Shop Modal
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
-  
-  // STATE FILTER
-  const [searchQuery, setSearchQuery] = useState("");
-  const [activeCategory, setActiveCategory] = useState("all");
-  const [minPrice, setMinPrice] = useState(200000);
-  const [maxPrice, setMaxPrice] = useState(5000000); 
-  const [selectedSize, setSelectedSize] = useState("");
-  const [selectedColor, setSelectedColor] = useState("");
-  const [selectedDrawerCategory, setSelectedDrawerCategory] = useState("");
 
-  // 🌟 Ambil Wishlist dari LocalStorage saat Load
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const stored = JSON.parse(localStorage.getItem("wishlist") || "[]");
-      setWishlist(stored);
-    }
-  }, []);
+    const fetchProductsByCollection = async () => {
+      setIsLoading(true);
+      setProducts([]); 
+      try {
+        const data = await listProducts({
+          queryParams: { 
+            limit: 100,
+            order: "-created_at",
+            // 🌟 fields DITAMBAHIN STOK BIAR MUNCUL ANGKA SISA STOKNYA
+            fields: "*collection,*variants,*variants.prices,*variants.inventory_quantity,*variants.manage_inventory,*variants.allow_backorder" 
+          }, 
+          countryCode: countryCode as string,
+        }).catch(() => null);
 
-  // Kunci scroll body saat popup atau filter terbuka
+        if (data && data.response) {
+          const filtered = data.response.products.filter((p: any) => {
+            const productHandle = p.collection?.handle?.toLowerCase();
+            const targetHandle = activeConfig.handle.toLowerCase();
+            return productHandle === targetHandle;
+          });
+          setProducts(filtered);
+        }
+      } catch (error) {
+        console.error("Fetch Error:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProductsByCollection();
+  }, [activeTab, countryCode, activeConfig.handle]);
+
+  // SCROLL LOCK KETIKA POPUP TERBUKA
   useEffect(() => {
-    if (selectedProduct || isFilterOpen) {
+    if (selectedProduct) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "unset";
     }
     return () => { document.body.style.overflow = "unset"; };
-  }, [selectedProduct, isFilterOpen]);
+  }, [selectedProduct]);
 
-  const formatPrice = (amount: number) => {
-    return new Intl.NumberFormat("id-ID", {
+  const dynamicHeroImage = products.length > 0 ? products[0].thumbnail : null;
+
+  const formatMedusaPrice = (product: any) => {
+    const variants = product.variants || [];
+    if (variants.length === 0) return "N/A";
+    const variant = variants[0];
+    const targetCurrency = countryCode === "id" ? "idr" : "usd";
+    const priceObject = variant.calculated_price || variant.prices?.find((p: any) => p.currency_code?.toLowerCase() === targetCurrency) || variant.prices?.[0];
+    if (!priceObject) return "N/A";
+    let amount = priceObject.calculated_amount || priceObject.amount;
+    const currency = (priceObject.currency_code || targetCurrency).toLowerCase();
+    const finalAmount = currency === "idr" ? amount : amount / 100;
+    return new Intl.NumberFormat(currency === "idr" ? "id-ID" : "en-US", {
       style: "currency",
-      currency: "IDR",
+      currency: currency.toUpperCase(),
       minimumFractionDigits: 0,
-    }).format(amount);
-  };
-
-  const getProductPrice = (product: any) => {
-    const price = product.variants?.[0]?.prices?.[0]?.amount || 0;
-    return countryCode === "id" ? price : price / 100;
-  };
-
-  // 1. FUNGSI FETCH PRODUK
-  const fetchStoreProducts = useCallback(async (pageNumber: number, reset = false) => {
-    setIsLoading(true);
-    try {
-      const limit = 100; 
-      const offset = (pageNumber - 1) * limit;
-      
-      const data = await listProducts({
-        queryParams: { 
-          limit,
-          offset,
-          order: "-created_at",
-          fields: "*collection,*variants,*variants.prices,*variants.inventory_quantity,*variants.manage_inventory,*variants.allow_backorder",
-          q: searchQuery || undefined 
-        }, 
-        countryCode: countryCode as string,
-      }).catch(() => null);
-
-      if (data && data.response) {
-        let fetched = data.response.products;
-
-        if (activeCategory !== "all") {
-          fetched = fetched.filter((p: any) => p.collection?.handle?.toLowerCase() === activeCategory.toLowerCase());
-        }
-
-        fetched = fetched.filter((p: any) => {
-          const finalPrice = getProductPrice(p);
-          return finalPrice >= minPrice && finalPrice <= maxPrice;
-        });
-
-        if (selectedSize) {
-          fetched = fetched.filter((p: any) => 
-            p.variants?.some((v: any) => v.title.toLowerCase().includes(selectedSize.toLowerCase()))
-          );
-        }
-
-        if (selectedDrawerCategory) {
-          fetched = fetched.filter((p: any) => 
-            p.collection?.title?.toLowerCase() === selectedDrawerCategory.toLowerCase()
-          );
-        }
-
-        if (reset) {
-          setProducts(fetched);
-        } else {
-          setProducts(prev => [...prev, ...fetched]); 
-        }
-        
-        setHasMore(data.response.products.length === limit);
-      }
-    } catch (error) {
-      console.error("Filter Error:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [countryCode, searchQuery, activeCategory, minPrice, maxPrice, selectedSize, selectedDrawerCategory]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchStoreProducts(1, true);
-      setPage(1);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [searchQuery, activeCategory]);
-
-  const handleApplyFilter = () => {
-    setIsFilterOpen(false);
-    setPage(1);
-    fetchStoreProducts(1, true);
-  };
-
-  const handleResetFilter = () => {
-    setMinPrice(200000);
-    setMaxPrice(5000000);
-    setSelectedSize("");
-    setSelectedColor("");
-    setSelectedDrawerCategory("");
-  };
-
-  const handleLoadMore = () => {
-    const nextPage = page + 1;
-    setPage(nextPage);
-    fetchStoreProducts(nextPage, false);
-  };
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const toggleWishlist = (e: React.MouseEvent, productId: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    let updatedWishlist = [];
-    if (wishlist.includes(productId)) {
-      updatedWishlist = wishlist.filter(id => id !== productId);
-    } else {
-      updatedWishlist = [...wishlist, productId];
-    }
-    setWishlist(updatedWishlist);
-    localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
-  };
-
-  const closeAndRefreshWishlist = () => {
-    setSelectedProduct(null);
-    const stored = JSON.parse(localStorage.getItem("wishlist") || "[]");
-    setWishlist(stored);
+    }).format(finalAmount);
   };
 
   return (
-    <div className="bg-white min-h-screen pb-20 mx-auto max-w-[1200px] md:max-w-md relative">
-      
-      {/* HEADER STICKY */}
-      <div className="sticky top-0 z-30 bg-white/85 backdrop-blur-lg pt-[100px] pb-4 px-4 shadow-[0_10px_30px_rgba(0,0,0,0.03)] border-b border-gray-50">
-        <div className="relative mb-6">
-          <input 
-            type="text" 
-            placeholder="Search products..." 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-gray-50/80 border border-gray-100 rounded-full py-3 pl-12 pr-4 text-sm font-medium focus:outline-none focus:border-[#EF7044] transition-colors shadow-inner"
-          />
-          <Search className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
-        </div>
+    <section className="py-12 bg-white max-w-[1200px] mx-auto md:max-w-6xl relative">
+      <h2 className="text-3xl font-bold text-center text-gray-900 mb-8 tracking-tight">Top Collections</h2>
 
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-black text-gray-900 tracking-tight">Product Category</h1>
-          <button 
-            onClick={() => setIsFilterOpen(true)}
-            className="flex items-center gap-2 border border-orange-200 text-[#EF7044] bg-orange-50/70 px-5 py-2 rounded-full text-sm font-bold hover:bg-orange-100 transition-colors"
-          >
-            Filter <ChevronDown className="w-4 h-4" />
+      {/* TABS (UI ASLI) */}
+      <div className="flex overflow-x-auto gap-6 md:gap-8 px-4 mb-10 border-b border-gray-100 scrollbar-hide">
+        {tabs.map((tab) => (
+          <button key={tab} onClick={() => setActiveTab(tab)} className="flex flex-col items-center whitespace-nowrap min-w-max pb-3 relative group">
+            <div className={`w-1.5 h-1.5 rounded-full mb-1 transition-all duration-300 ${activeTab === tab ? "bg-[#EF7044]" : "bg-transparent"}`}></div>
+            <span className={`text-sm md:text-base transition-all duration-300 ${activeTab === tab ? "text-[#EF7044] font-bold" : "text-gray-400 hover:text-[#EF7044]"}`}>
+              {tab}
+            </span>
+            <div className={`absolute bottom-0 left-0 h-[2px] bg-[#EF7044] transition-all duration-300 ${activeTab === tab ? "w-full" : "w-0"}`}></div>
           </button>
-        </div>
-
-        <div className="flex overflow-x-auto gap-5 scrollbar-hide pb-2">
-          {topCategories.map((cat) => (
-            <button key={cat.handle} onClick={() => setActiveCategory(cat.handle)} className="flex flex-col items-center min-w-[70px] gap-2 group">
-              <div className={`w-[72px] h-[72px] rounded-full overflow-hidden border-2 transition-all p-0.5 ${activeCategory === cat.handle ? "border-[#EF7044]" : "border-transparent"}`}>
-                <div className="w-full h-full rounded-full overflow-hidden bg-gray-100">
-                   <img src={cat.img} alt={cat.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
-                </div>
-              </div>
-              <span className={`text-[10px] font-black uppercase tracking-wider text-center leading-tight ${activeCategory === cat.handle ? "text-gray-900" : "text-gray-400"}`}>
-                {cat.name}
-              </span>
-            </button>
-          ))}
-        </div>
+        ))}
       </div>
 
-      {/* GRID PRODUK */}
-      <div className="px-4 pt-6 grid grid-cols-2 gap-x-3 gap-y-6 mb-10">
-        {products.length > 0 ? (
-          products.map((product) => (
-            <LocalizedClientLink key={product.id} href={`/products/${product.handle}`} className="flex flex-col group block animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="relative aspect-[3/4] bg-gray-50 rounded-[20px] overflow-hidden mb-3 border border-gray-100 shadow-sm">
-                <img src={product.thumbnail || "/placeholder.png"} alt={product.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                
-                {/* WISHLIST BUTTON */}
-                <button onClick={(e) => toggleWishlist(e, product.id)} className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-all ${wishlist.includes(product.id) ? "bg-[#EF7044] text-white" : "bg-white/80 backdrop-blur-sm text-gray-300 hover:text-[#EF7044]"}`}>
-                  <Heart className={`w-4 h-4 ${wishlist.includes(product.id) ? "fill-current" : ""}`} />
-                </button>
+      <div className="px-4">
+        {/* HERO IMAGE */}
+        <div className="mb-10 flex justify-center">
+          <LocalizedClientLink href={activeConfig.link} className="w-full max-w-2xl aspect-[3/4] md:aspect-[4/5] rounded-[32px] overflow-hidden block relative group shadow-xl bg-gray-50 border border-gray-100">
+            {isLoading ? (
+               <div className="w-full h-full animate-pulse bg-gray-200" />
+            ) : dynamicHeroImage ? (
+              <>
+                <img src={dynamicHeroImage} alt={activeTab} className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-1000" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent flex items-end justify-center p-8">
+                    <span className="text-white font-bold text-sm md:text-lg px-8 py-4 bg-[#EF7044] rounded-full shadow-lg hover:scale-105 transition-transform uppercase tracking-widest">
+                      Explore {activeTab}
+                    </span>
+                </div>
+              </>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-gray-300 font-medium italic">No products in this collection</div>
+            )}
+          </LocalizedClientLink>
+        </div>
 
-                {/* 🌟 ADD TO CART BUTTON (+) MEMBUKA QUICK SHOP MODAL */}
-                <button 
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedProduct(product); }} 
-                  className="absolute bottom-3 right-3 w-9 h-9 bg-[#EF7044] text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white active:scale-90 transition-transform z-10"
-                >
-                  +
-                </button>
+        {/* PRODUCT CAROUSEL */}
+        {!isLoading && products.length > 0 ? (
+          <div className="flex overflow-x-auto gap-4 md:gap-6 pb-8 scrollbar-hide flex-nowrap items-start">
+            {products.map((product) => (
+              <div key={product.id} className="min-w-[170px] max-w-[170px] md:min-w-[240px] md:max-w-[240px] flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="w-full aspect-[3/4] bg-gray-50 rounded-[24px] overflow-hidden relative mb-4 group border border-gray-100 shadow-sm">
+                  <img src={product.thumbnail || "/placeholder.png"} alt={product.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                  
+                  {/* 🌟 TOMBOL + UNTUK MEMBUKA QUICK SHOP MODAL */}
+                  <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedProduct(product); }} className="absolute bottom-3 right-3 w-10 h-10 bg-[#EF7044] text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 active:scale-95 transition-all z-10 border-2 border-white">
+                    +
+                  </button>
+                  
+                  <LocalizedClientLink href={`/products/${product.handle}`} className="absolute inset-0 z-0" />
+                </div>
+                <div className="flex flex-col items-center text-center px-2">
+                  <h3 className="text-xs md:text-sm text-gray-800 font-bold line-clamp-2 h-10 mb-1">{product.title}</h3>
+                  <p className="text-[#EF7044] text-sm md:text-base font-black">{formatMedusaPrice(product)}</p>
+                </div>
               </div>
-              
-              <div className="border border-[#EF7044] rounded-full text-center py-1.5 px-2 mx-1 mb-1.5 flex items-center justify-center h-8">
-                <h3 className="text-[11px] font-bold text-[#EF7044] truncate w-full px-1">{product.title}</h3>
-              </div>
-              <p className="text-[#EF7044] text-xs font-black text-center">
-                {formatPrice(getProductPrice(product))}
-              </p>
+            ))}
+            <LocalizedClientLink href={activeConfig.link} className="min-w-[170px] md:min-w-[240px] aspect-[3/4] flex flex-col items-center justify-center bg-gray-50 rounded-[24px] border-2 border-dashed border-gray-200 hover:border-[#EF7044] hover:bg-orange-50 transition-all group flex-shrink-0">
+                <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center mb-3 group-hover:bg-[#EF7044] group-hover:text-white text-gray-400 transition-all shadow-sm">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                </div>
+                <span className="text-gray-600 group-hover:text-[#EF7044] font-bold text-sm">View All</span>
             </LocalizedClientLink>
-          ))
-        ) : (
-          <div className="col-span-2 text-center py-20 bg-gray-50 rounded-[40px] border border-dashed border-gray-200">
-            <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">No products match your filter</p>
+          </div>
+        ) : !isLoading && (
+          <div className="text-center py-20 bg-gray-50 rounded-[40px] border border-dashed border-gray-200">
+            <p className="text-gray-400 font-medium italic">Koleksi ini sedang disiapkan.</p>
           </div>
         )}
       </div>
 
-      {/* VIEW MORE & BACK TO TOP */}
-      <div className="px-4">
-        {hasMore && products.length > 0 && (
-          <button onClick={handleLoadMore} disabled={isLoading} className="w-full py-4 rounded-full bg-gray-50 border border-gray-200 text-gray-600 font-bold text-sm uppercase tracking-widest hover:bg-gray-100 transition-colors mb-8 shadow-sm">
-            {isLoading ? "Loading..." : "View More"}
-          </button>
-        )}
-      </div>
-
-      {products.length > 0 && (
-        <div className="flex justify-center mb-8">
-          <button onClick={scrollToTop} className="flex flex-col items-center gap-2 text-gray-300 hover:text-[#EF7044] transition-colors">
-            <div className="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center shadow-sm bg-white">
-              <ArrowUp className="w-5 h-5" />
-            </div>
-            <span className="text-[10px] font-black uppercase tracking-widest">Back to Top</span>
-          </button>
-        </div>
-      )}
-
-      {/* =========================================
-          🌟 POPUP PILIH VARIAN (QUICK SHOP)
-          ========================================= */}
+      {/* 🌟 RENDER QUICK SHOP MODAL JIKA ADA PRODUK YANG DIKLIK */}
       {selectedProduct && (
         <QuickShopModal 
           product={selectedProduct} 
-          onClose={closeAndRefreshWishlist} 
+          onClose={() => setSelectedProduct(null)} 
         />
       )}
-
-      {/* =========================================
-          DRAWER FILTER
-          ========================================= */}
-      <div className={`fixed inset-0 z-[1000] transition-opacity duration-300 ${isFilterOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsFilterOpen(false)} />
-        <div className={`absolute top-0 right-0 h-full w-[85%] max-w-[400px] bg-white shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col ${isFilterOpen ? "translate-x-0" : "translate-x-full"}`}>
-          
-          <div className="pt-8 pb-4 px-6 flex justify-between items-center flex-shrink-0">
-            <h2 className="text-xl font-medium text-gray-900">Filter</h2>
-            <button onClick={() => setIsFilterOpen(false)}><X className="w-5 h-5 text-gray-600" /></button>
-          </div>
-          <div className="border-b border-gray-100 mx-6"></div>
-
-          <div className="p-6 overflow-y-auto flex-1 space-y-7">
-            <div>
-              <p className="text-[15px] font-medium text-gray-900 mb-4">Price</p>
-              <div className="px-2">
-                <input type="range" min="200000" max="5000000" step="50000" value={maxPrice} onChange={(e) => setMaxPrice(Number(e.target.value))} className="w-full accent-[#EF7044]" />
-                <div className="flex justify-between mt-1 text-xs text-gray-600">
-                  <span>Rp 200K</span>
-                  <span>{formatPrice(maxPrice)}</span>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <p className="text-[15px] font-medium text-gray-900 mb-3">Size</p>
-              <div className="flex flex-wrap gap-2.5">
-                {["S", "M", "L", "XL"].map(size => (
-                  <button key={size} onClick={() => setSelectedSize(selectedSize === size ? "" : size)} className={`px-6 py-1.5 rounded-full border transition-colors text-sm ${selectedSize === size ? "border-[#EF7044] text-[#EF7044]" : "border-gray-300 text-gray-700 bg-white"}`}>{size}</button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <p className="text-[15px] font-medium text-gray-900 mb-4">Color</p>
-              <div className="flex flex-wrap gap-3.5">
-                {["#DAA520", "#CD5C5C", "#1C2833", "#4A5D6B", "#E5E7EB", "#5C4033", "#E6B0AA"].map((color, i) => (
-                  <button key={i} onClick={() => setSelectedColor(selectedColor === color ? "" : color)} className={`w-7 h-7 rounded-full transition-all ${selectedColor === color ? "ring-2 ring-offset-2 ring-gray-400 scale-110" : "border border-gray-100"}`} style={{ backgroundColor: color }} />
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <p className="text-[15px] font-medium text-gray-900 mb-3">Category</p>
-              <div className="flex flex-wrap gap-2.5">
-                {["Bikinis", "Swimsuit", "Resort Wear", "Men's Wear", "Accesories"].map(cat => (
-                  <button key={cat} onClick={() => setSelectedDrawerCategory(selectedDrawerCategory === cat ? "" : cat)} className={`px-5 py-1.5 rounded-full border transition-colors text-sm ${selectedDrawerCategory === cat ? "border-[#EF7044] text-[#EF7044]" : "border-gray-300 text-gray-700 bg-white"}`}>{cat}</button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <p className="text-[15px] font-medium text-gray-900 mb-3">Collections</p>
-              <div className="flex flex-wrap gap-2.5">
-                {["New Realese", "Best Seller", "Signature", "Island Escape", "Discount %"].map(col => (
-                  <button key={col} className="px-5 py-1.5 rounded-full border border-gray-300 text-gray-700 bg-white hover:border-[#EF7044] hover:text-[#EF7044] transition-colors text-sm">{col}</button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="border-t border-gray-100 mx-6 pt-5 pb-8 bg-white flex gap-3 flex-shrink-0">
-            <button onClick={handleResetFilter} className="flex-1 py-3 rounded-full border border-orange-200 text-orange-400/80 font-medium text-sm transition-colors">Reset</button>
-            <button onClick={handleApplyFilter} className="flex-1 py-3 rounded-full bg-[#EF7044] text-white font-medium text-sm hover:opacity-90 transition-opacity">Apply</button>
-          </div>
-        </div>
-      </div>
-
-    </div>
+    </section>
   );
 }
