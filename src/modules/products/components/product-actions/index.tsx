@@ -345,7 +345,7 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
                         "white": "#FFFFFF",
                         "navy": "#000080",
                         "nude": "#E3BC9A",
-                        "pink": "#FF4545"
+                        "pink": "#FF4545",
                      };
 
                      extractedColor = colorDictionary[colorFromHandle] || colorFromHandle || "#eeeeee";
