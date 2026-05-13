@@ -59,7 +59,33 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
 
-  const colorName = product?.metadata?.color_name || "White"
+  // 🌟 LOGIKA WARNA PINTAR (Metadata + Fallback Ekstrak URL)
+  let colorName = product?.metadata?.color_name;
+  let colorId = product?.metadata?.color_id;
+
+  if (!colorName || !colorId) {
+    const handleStr = product?.handle?.toLowerCase() || "";
+    const colorDictionary: Record<string, string> = {
+       "black": "#222222", "white": "#FFFFFF", "navy": "#000080", 
+       "nude": "#E3BC9A", "pink": "#FFC0CB", "red": "#FF0000", 
+       "blue": "#0000FF", "green": "#008000", "yellow": "#FFFF00", 
+       "orange": "#FFA500", "purple": "#800080", "gray": "#808080", 
+       "grey": "#808080", "brown": "#A52A2A", "gold": "#FFD700", 
+       "silver": "#C0C0C0", "maroon": "#800000", "teal": "#008080", 
+       "olive": "#808000"
+    };
+    
+    for (const [cName, cHex] of Object.entries(colorDictionary)) {
+      if (handleStr.includes(`-${cName}`) || handleStr.endsWith(cName)) {
+        if (!colorName) colorName = cName.charAt(0).toUpperCase() + cName.slice(1);
+        if (!colorId) colorId = cHex;
+        break;
+      }
+    }
+    if (!colorName) colorName = "All Variant";
+    if (!colorId) colorId = "#eeeeee";
+  }
+
   const mainImage = product?.thumbnail || product?.images?.[0]?.url || "/placeholder.png"
   
   const topVariants = useMemo(() => {
@@ -102,7 +128,13 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
 
     const sizes = variantsToUse.map((v: any) => {
       const sizeOpt = v.options?.find((o: any) => !["top", "bottom"].includes(o.value?.toLowerCase().trim()))
-      const sizeVal = sizeOpt?.value || v.title?.replace(/top|bottom/i, '').trim() || "All Size"
+      let sizeVal = sizeOpt?.value || v.title?.replace(/top|bottom/i, '').trim() || "All Size"
+      
+      // 🌟 FIX: Cegah bocornya teks 'Default Option' atau 'Option'
+      if (sizeVal.toLowerCase().includes("default") || sizeVal.toLowerCase().includes("option")) {
+        sizeVal = "All Size"
+      }
+
       const qty = v.inventory_quantity || 0
       const inStock = v.manage_inventory === false || v.allow_backorder === true || qty > 0
       return { label: sizeVal, inStock, variant: v, qty }
@@ -132,7 +164,13 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
 
   const getModalSizes = (variants: any[]) => {
     const rawSizes = variants.map((v: any) => {
-      const sizeVal = v.options?.find((o: any) => !["top", "bottom"].includes(o.value?.toLowerCase().trim()))?.value || "All Size"
+      let sizeVal = v.options?.find((o: any) => !["top", "bottom"].includes(o.value?.toLowerCase().trim()))?.value || "All Size"
+      
+      // 🌟 FIX: Cegah bocornya teks 'Default Option' atau 'Option'
+      if (sizeVal.toLowerCase().includes("default") || sizeVal.toLowerCase().includes("option")) {
+        sizeVal = "All Size"
+      }
+
       const qty = v.inventory_quantity || 0
       const inStock = v.manage_inventory === false || v.allow_backorder === true || qty > 0
       return { label: sizeVal, inStock, variant: v, qty }
@@ -242,7 +280,12 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
         </div>
 
         <div className="flex justify-between items-center mb-6">
-          <p className="text-[13px] text-gray-500 font-medium">Color : {colorName}</p>
+          <div className="flex items-center gap-3">
+            <p className="text-[13px] text-gray-500 font-medium">Color : {colorName}</p>
+            <div className="w-6 h-6 rounded-full border border-gray-300 p-[2px] shadow-sm">
+              <div className="w-full h-full rounded-full border border-gray-100" style={{ backgroundColor: colorId }}></div>
+            </div>
+          </div>
           <div className="flex items-center gap-2">
             <button onClick={toggleWishlist} className={`p-2 border rounded-full transition-colors ${isWishlisted ? "border-[#EF7044] bg-[#EF7044] text-white" : "border-[#EF7044] text-[#EF7044] hover:bg-orange-50"}`}>
               <Heart className={`w-5 h-5 ${isWishlisted ? "fill-current" : ""}`} />
@@ -276,7 +319,7 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
                   {sizesForType.map((size: SizeData) => (
                     <button key={size.label} disabled={!size.inStock} onClick={() => setSelectedSize(size.label)}
                       className={`relative h-8 shrink-0 rounded-full border flex items-center justify-center text-[10px] font-bold transition-all
-                        ${size.label === "All Size" ? "w-max px-3" : "w-8"}
+                        ${size.label.length > 3 ? "w-max px-3" : "w-8"}
                         ${!size.inStock ? 'border-gray-200 text-gray-300 cursor-not-allowed' : selectedSize === size.label ? 'bg-[#EF7044] border-[#EF7044] text-white shadow-md' : 'border-gray-300 text-gray-700 hover:border-[#EF7044]'}`}>
                       {size.label}
                       {!size.inStock && <div className="absolute w-full h-[1px] bg-gray-300 rotate-45"></div>}
@@ -365,26 +408,6 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
                     </div>
                   </div>
                 </div>
-                <div className="flex gap-2 mb-6">
-                  <div className="w-16 h-16 rounded-xl border-2 border-[#EF7044] overflow-hidden relative opacity-70">
-                     <img src={mainImage} className="w-full h-full object-cover" />
-                     <div className="absolute inset-0 bg-[#EF7044]/30 flex items-center justify-center"><span className="text-white text-[9px] font-bold">SET</span></div>
-                  </div>
-                  <div className="w-16 h-16 rounded-xl overflow-hidden relative">
-                     <img src={mainImage} className="w-full h-full object-cover object-top scale-[1.5]" />
-                     <div className="absolute inset-0 bg-black/20 flex items-center justify-center"><span className="text-white text-[9px] font-bold">TOP</span></div>
-                  </div>
-                  <div className="w-16 h-16 rounded-xl overflow-hidden relative">
-                     <img src={mainImage} className="w-full h-full object-cover object-bottom scale-[1.5]" />
-                     <div className="absolute inset-0 bg-black/20 flex items-center justify-center"><span className="text-white text-[9px] font-bold">BOTTOM</span></div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 mb-6">
-                  <span className="text-[13px] text-gray-500 font-medium">Color : {colorName}</span>
-                  <div className="w-8 h-8 rounded-full border-2 border-[#EF7044] p-[2px]">
-                    <div className="w-full h-full rounded-full bg-white border border-gray-200 shadow-sm"></div>
-                  </div>
-                </div>
 
                 <div className="mb-5">
                   <div className="flex items-center gap-2 mb-3">
@@ -394,7 +417,7 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
                     {modalTopSizes.map((size: SizeData) => (
                       <button key={size.label} disabled={!size.inStock} onClick={() => setTopSize(size.label)}
                         className={`relative h-10 shrink-0 rounded-full border flex items-center justify-center text-xs font-bold transition-all 
-                          ${size.label === "All Size" ? "w-max px-4" : "w-10"}
+                          ${size.label.length > 3 ? "w-max px-4" : "w-10"}
                           ${!size.inStock ? 'border-gray-200 text-gray-300 cursor-not-allowed' : topSize === size.label ? 'bg-[#EF7044] border-[#EF7044] text-white shadow-md' : 'border-gray-300 text-gray-700'}`}>
                         {size.label} {!size.inStock && <div className="absolute w-full h-[1px] bg-gray-300 rotate-45"></div>}
                       </button>
@@ -410,7 +433,7 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
                     {modalBottomSizes.map((size: SizeData) => (
                       <button key={size.label} disabled={!size.inStock} onClick={() => setBottomSize(size.label)}
                         className={`relative h-10 shrink-0 rounded-full border flex items-center justify-center text-xs font-bold transition-all 
-                          ${size.label === "All Size" ? "w-max px-4" : "w-10"}
+                          ${size.label.length > 3 ? "w-max px-4" : "w-10"}
                           ${!size.inStock ? 'border-gray-200 text-gray-300 cursor-not-allowed' : bottomSize === size.label ? 'bg-[#EF7044] border-[#EF7044] text-white shadow-md' : 'border-gray-300 text-gray-700'}`}>
                         {size.label} {!size.inStock && <div className="absolute w-full h-[1px] bg-gray-300 rotate-45"></div>}
                       </button>
@@ -542,7 +565,7 @@ export default function StoreTemplate() {
     return countryCode === "id" ? price : price / 100;
   };
 
-  // 1. FUNGSI FETCH PRODUK (Filter Logic - TETAP SAMA, CUMA TAMBAH FIELDS INVENTORY)
+  // 1. FUNGSI FETCH PRODUK
   const fetchStoreProducts = useCallback(async (pageNumber: number, reset = false) => {
     setIsLoading(true);
     try {
@@ -554,7 +577,6 @@ export default function StoreTemplate() {
           limit,
           offset,
           order: "-created_at",
-          // 🌟 WAJIB: Tambah field inventory biar stok muncul di modal
           fields: "*collection,*variants,*variants.prices,*variants.inventory_quantity,*variants.manage_inventory,*variants.allow_backorder",
           q: searchQuery || undefined 
         }, 
@@ -608,7 +630,6 @@ export default function StoreTemplate() {
     return () => clearTimeout(timer);
   }, [searchQuery, activeCategory]);
 
-  // ACTION FILTER
   const handleApplyFilter = () => {
     setIsFilterOpen(false);
     setPage(1);
@@ -633,7 +654,6 @@ export default function StoreTemplate() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // 🌟 LOGIKA WISHLIST DISINKRONKAN DENGAN LOCALSTORAGE
   const toggleWishlist = (e: React.MouseEvent, productId: string) => {
     e.preventDefault();
     e.stopPropagation();
@@ -647,7 +667,6 @@ export default function StoreTemplate() {
     localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
   };
 
-  // 🌟 FUNGSI MENUTUP MODAL DAN REFRESH WISHLIST DARI MODAL
   const closeAndRefreshWishlist = () => {
     setSelectedProduct(null);
     const stored = JSON.parse(localStorage.getItem("wishlist") || "[]");
