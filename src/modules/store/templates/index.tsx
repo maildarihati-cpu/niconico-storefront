@@ -781,6 +781,7 @@ export default function StoreTemplate() {
           onClose={closeAndRefreshWishlist} 
         />
       )}
+      
 
       {/* =========================================
           DRAWER FILTER
