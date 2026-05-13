@@ -26,13 +26,25 @@ export default function WishlistPage() {
         return
       }
 
-      // Ambil detail produk dari Medusa berdasarkan list ID
+      // Ambil produk dalam jumlah besar dari Medusa
       const { response } = await listProducts({
-        queryParams: { id: savedWishlist, fields: "*variants.calculated_price" },
+        queryParams: { 
+          limit: 100, // Ambil banyak produk sekaligus
+          fields: "*variants.calculated_price" 
+        },
         countryCode: countryCode as string,
       })
 
-      setWishlistItems(response.products)
+      // Filter produk HANYA JIKA ID-nya ada di dalam savedWishlist
+      if (response && response.products) {
+        const matchedProducts = response.products.filter(product => 
+          product.id && savedWishlist.includes(product.id)
+        );
+        setWishlistItems(matchedProducts)
+      } else {
+        setWishlistItems([])
+      }
+
     } catch (error) {
       console.error("Gagal mengambil wishlist:", error)
     } finally {
