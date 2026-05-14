@@ -99,10 +99,11 @@ function AuthCallbackHandler() {
           }
 
           // 5. CACHE BUSTER & PINDAH KE BERANDA
-          router.refresh()
-          setTimeout(() => {
-            router.push("/")
-          }, 500)
+          console.log("Login sukses, me-refresh halaman ke profil...");
+          
+          // Menggunakan window.location.href memaksa browser memuat ulang dari server
+          // sehingga Next.js WAJIB membaca ulang cookie KTP kamu yang baru!
+          window.location.href = "/account"; 
 
         } else {
           router.push("/login")
