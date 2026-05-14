@@ -107,13 +107,13 @@ export default function NavDrawer({ isOpen, onClose, view, setView }: Props) {
                 <p className="text-[#ef7044] text-[13px] font-medium mb-3">Featured</p>
                 <div className="grid grid-cols-2 gap-3">
                   <LocalizedClientLink href="/store" onClick={onClose} className="relative h-14 rounded-xl overflow-hidden group block shadow-sm">
-                    <Image src="/bikini-cat.jpg" alt="Today's Offers" fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <Image src="/today-offer.png" alt="Today's Offers" fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center transition-colors group-hover:bg-black/50">
                       <span className="text-white text-xs font-bold">Today's Offers</span>
                     </div>
                   </LocalizedClientLink>
                   <LocalizedClientLink href="/store" onClick={onClose} className="relative h-14 rounded-xl overflow-hidden group block shadow-sm">
-                    <Image src="/resort-cat.jpg" alt="Make Your Own Brand" fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <Image src="/myob.png" alt="Make Your Own Brand" fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center transition-colors group-hover:bg-black/50">
                       <span className="text-white text-xs font-bold text-center leading-tight">Make Your<br/>Own Brand</span>
                     </div>

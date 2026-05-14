@@ -114,7 +114,7 @@ useEffect(() => {
           { title: "SWIMSUIT", img: "/swimsuit.png", handle: "swimsuit" },
           { title: "RESORT WEAR", img: "/resort-wear.png", handle: "resort-wear" },
           { title: "MEN'S WEAR", img: "/mens-wear.png", handle: "mens-wear" },
-          { title: "ACCESORIES", img: "/accesssories.png", handle: "accessories" }
+          { title: "ACCESORIES", img: "/accessories.png", handle: "accessories" }
         ].map((item, idx) => (
           <FadeInSection key={idx} delay={idx * 150}>
             {/* 🌟 Bungkus div dengan LocalizedClientLink agar bisa diklik dan tembus filter Store */}

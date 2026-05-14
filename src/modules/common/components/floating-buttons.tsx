@@ -18,13 +18,20 @@ export default function FloatingButtons() {
       
       {/* 🌟 SHOP NOW BUTTON (Disembunyikan di halaman Store & Product) */}
       {!hideShopNow && (
-        <LocalizedClientLink 
-          href="/store"
-          className="flex items-center justify-center gap-2 px-5 py-3.5 bg-[#000000] text-white rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.15)] hover:bg-[#EF7044] hover:scale-105 transition-all duration-300 group"
-        >
-          <ShoppingBag className="w-5 h-5" />
-          <span className="text-[12px] font-bold uppercase tracking-widest">Shop Now</span>
-        </LocalizedClientLink>
+        <div className="flex flex-col items-center gap-1.5 group">
+          {/* Teks di atas tombol */}
+          <span className="text-[10px] font-bold uppercase tracking-widest text-gray-800 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-md shadow-sm transition-all duration-300 group-hover:-translate-y-1 group-hover:text-[#EF7044]">
+            Shop Now
+          </span>
+          
+          {/* Tombol Lingkaran */}
+          <LocalizedClientLink 
+            href="/store"
+            className="flex items-center justify-center w-14 h-14 bg-[#000000] text-white rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.15)] hover:bg-[#EF7044] hover:scale-110 transition-all duration-300"
+          >
+            <ShoppingBag className="w-6 h-6" />
+          </LocalizedClientLink>
+        </div>
       )}
 
       {/* 🌟 WHATSAPP BUTTON (Selalu Muncul) */}
