@@ -53,22 +53,16 @@ export default function LoginView({ onClose, setView, onSuccess }: Props) {
   const handleGoogleAuth = async (e: React.MouseEvent) => {
   e.preventDefault();
   
-  // Ambil URL backend Railway kamu
   const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://niconico-backend-production.up.railway.app";
   
   try {
-    // 1. Tembak API Medusa diem-diem di balik layar buat minta link Google
+    // 🌟 PERBAIKAN: Kita BUANG bagian "headers" biar nggak kena cegat Preflight CORS!
     const response = await fetch(`${backendUrl}/auth/customer/google`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      }
+      method: "GET"
     });
     
-    // 2. Baca balasan dari Medusa (yang tadi cuma tampil di layar hitam itu)
     const data = await response.json();
 
-    // 3. Kalau Medusa ngasih URL 'location', baru deh kita eksekusi pindah halaman!
     if (data.location) {
       window.location.href = data.location;
     } else {
