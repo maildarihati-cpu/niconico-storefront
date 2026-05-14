@@ -12,6 +12,7 @@ import HeroSection from "@modules/home/components/hero-section";
 import OurStoryTeller from "@modules/home/components/our-story-teller";
 import StoreSection from "@modules/home/components/store-location";
 import { Analytics } from "@vercel/analytics/react"
+import LocalizedClientLink from "@modules/common/components/localized-client-link";
 
 // --- MESIN TRANSISI (DIPERLAMBAT JADI 2 DETIK) ---
 const FadeInSection = ({ children, delay = 0 }: { children: React.ReactNode, delay?: number }) => {
@@ -102,46 +103,47 @@ useEffect(() => {
       </FadeInSection>
 
       
-      <FadeInSection>
+      <section className="w-full bg-white">
+      <h2 className="text-center text-2xl font-bold tracking-tight text-gray-900 py-6">
+        Feature Products
+      </h2>
+      
+      <div className="flex flex-col w-full">
+        {[
+          { title: "BIKINIS", img: "/bikinis.png", handle: "bikinis" },
+          { title: "SWIMSUIT", img: "/swimsuit.png", handle: "swimsuit" },
+          { title: "RESORT WEAR", img: "/resort-wear.png", handle: "resort-wear" },
+          { title: "MEN'S WEAR", img: "/mens-wear.png", handle: "mens-wear" },
+          { title: "ACCESORIES", img: "/accesssories.png", handle: "accessories" }
+        ].map((item, idx) => (
+          <FadeInSection key={idx} delay={idx * 150}>
+            {/* 🌟 Bungkus div dengan LocalizedClientLink agar bisa diklik dan tembus filter Store */}
+            <LocalizedClientLink 
+              href={`/store?category=${item.handle}`} 
+              className="relative w-full h-[150px] group cursor-pointer overflow-hidden block"
+            >
+              
+              <Image 
+                src={item.img} 
+                alt={item.title} 
+                fill 
+                unoptimized
+                className="object-cover transition-transform duration-700 group-hover:scale-105" 
+              />
+              
+              <div className="absolute inset-0 bg-black/40 transition-colors duration-500 group-hover:bg-[#ED5725]/20"></div>
+              
+              <div className="absolute inset-0 flex items-center justify-center">
+                <h3 className="font-inter text-white text-[28px] font-black italic tracking-[0.15em] drop-shadow-lg uppercase">
+                  {item.title}
+                </h3>
+              </div>
         
-        <section className="w-full bg-white">
-          <h2 className="text-center text-2xl font-bold tracking-tight text-gray-900 py-6">
-            Feature Products
-          </h2>
-          
-          <div className="flex flex-col w-full">
-            {[
-              { title: "BIKINIS", img: "https://images.unsplash.com/photo-1564859228273-274232fdb516?q=80&w=800&auto=format&fit=crop" },
-              { title: "SWIMSUIT", img: "https://images.unsplash.com/photo-1520316587275-5e4f06f68971?q=80&w=800&auto=format&fit=crop" },
-              { title: "RESORT WEAR", img: "https://images.unsplash.com/photo-1574634534894-89d7576c8259?q=80&w=800&auto=format&fit=crop" },
-              { title: "MEN'S WEAR", img: "https://images.unsplash.com/photo-1516257984-b1b4d707412e?q=80&w=800&auto=format&fit=crop" },
-              { title: "ACCESORIES", img: "https://images.unsplash.com/photo-1523206489230-c012c64b2b48?q=80&w=800&auto=format&fit=crop" }
-            ].map((item, idx) => (
-              <FadeInSection key={idx} delay={idx * 150}>
-                <div className="relative w-full h-[150px] group cursor-pointer overflow-hidden">
-                  
-                  <Image 
-                    src={item.img} 
-                    alt={item.title} 
-                    fill 
-                    unoptimized
-                    className="object-cover transition-transform duration-700 group-hover:scale-105" 
-                  />
-                  
-                  <div className="absolute inset-0 bg-black/40 transition-colors duration-500 group-hover:bg-[#ED5725]/20"></div>
-                  
-                  <div className="absolute inset-0 flex items-center justify-center">
-                  <h3 className="font-inter text-white text-[28px] font-black italic tracking-[0.15em] drop-shadow-lg uppercase">
-                    {item.title}
-                  </h3>
-                </div>
-                  
-                </div>
-              </FadeInSection>
-            ))}
-          </div>
-        </section>
-      </FadeInSection>
+            </LocalizedClientLink>
+          </FadeInSection>
+        ))}
+      </div>
+    </section>
 
       <FadeInSection>
         <InstagramFeed />

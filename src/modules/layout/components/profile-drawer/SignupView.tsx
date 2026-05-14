@@ -27,15 +27,19 @@ export default function SignupView({ onClose, setView }: Props) {
   
   const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://niconico-backend-production.up.railway.app";
   
+  // 🌟 Ini "tiket pulang"-nya. Pastikan mengarah ke halaman web kamu!
+  const storefrontUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://dev.niconicoresort.com";
+  
   try {
-    // 🌟 PERBAIKAN: Kita BUANG bagian "headers" biar nggak kena cegat Preflight CORS!
-    const response = await fetch(`${backendUrl}/auth/customer/google`, {
+    // 🌟 PERBAIKAN: Kita selipkan ?redirect_to= di sini biar Medusa tahu harus balikin user ke mana
+    const response = await fetch(`${backendUrl}/auth/customer/google?redirect_to=${encodeURIComponent(storefrontUrl)}`, {
       method: "GET"
     });
     
     const data = await response.json();
 
     if (data.location) {
+      // Pergi ke halaman Google
       window.location.href = data.location;
     } else {
       console.error("Gagal mendapatkan link Google:", data);
