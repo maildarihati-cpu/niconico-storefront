@@ -20,7 +20,7 @@ export default function FloatingButtons() {
       {!hideShopNow && (
         <LocalizedClientLink 
           href="/store"
-          className="flex items-center justify-center w-14 h-14 bg-[#000000] rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.15)] hover:bg-[#EF7044] hover:scale-110 transition-all duration-300 focus:outline-none focus-visible:outline-none"
+          className="flex items-center justify-center w-14 h-14 bg-[#000000] rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.15)] hover:bg-[#EF7044] hover:scale-110 transition-all duration-300 outline-none !outline-none ring-0 !ring-0 focus:ring-0 focus:outline-none active:outline-none active:ring-0 border-none"
         >
           <div className="relative w-6 h-6">
             <Image 
