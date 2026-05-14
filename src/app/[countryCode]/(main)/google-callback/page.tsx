@@ -41,30 +41,52 @@ function AuthCallbackHandler() {
             if (!checkRes.ok) {
               console.log("Profil belum ada, membuat KTP baru ke Medusa...")
               
-              const createRes = await fetch(`${backendUrl}/store/customers`, {
-                method: "POST",
-                headers: { 
-                  "Authorization": `Bearer ${data.token}`,
-                  "Content-Type": "application/json",
-                  "x-publishable-api-key": pubKey 
-                },
-                // Medusa v2 kadang butuh setidaknya objek kosong, atau ada parameter wajib dari template kamu
-                body: JSON.stringify({}) 
-              })
+              // 🌟 BONGKAR TOKEN BUAT NYARI EMAIL
+              let userEmail = "";
+              try {
+                if (data.auth_identity?.app_metadata?.email) {
+                  userEmail = data.auth_identity.app_metadata.email;
+                } else {
+                  const payload = JSON.parse(atob(data.token.split('.')[1]));
+                  userEmail = payload.email || payload.actor_id || ""; 
+                }
+              } catch (e) {
+                console.error("Gagal membedah email dari token:", e);
+              }
 
-              // 🌟 INI JEBAKAN BATMAN-NYA: Kita tangkap pesan error aslinya!
-              if (!createRes.ok) {
-                const errorData = await createRes.json()
-                console.error("ALASAN GAGAL BIKIN KTP:", errorData)
-                alert("Gagal bikin KTP dari Google. Cek Inspect Element -> Console!")
-                return // Kita stop di sini biar layarnya nggak refresh
+              // Kalau email ketemu, kita daftarin ke Medusa!
+              if (userEmail) {
+                const createRes = await fetch(`${backendUrl}/store/customers`, {
+                  method: "POST",
+                  headers: { 
+                    "Authorization": `Bearer ${data.token}`,
+                    "Content-Type": "application/json",
+                    "x-publishable-api-key": pubKey 
+                  },
+                  body: JSON.stringify({ 
+                    email: userEmail,
+                    first_name: "Member", 
+                    last_name: "Google"   
+                  }) 
+                })
+
+                if (!createRes.ok) {
+                  const errorData = await createRes.json()
+                  console.error("ALASAN GAGAL BIKIN KTP:", errorData)
+                  alert("Gagal bikin KTP dari Google. Cek Inspect Element -> Console!")
+                  return // Stop biar nggak refresh
+                }
+              } else {
+                console.error("Email dari Google gagal diekstrak!");
+                alert("Email tidak ditemukan dari Google.")
+                return;
               }
             }
           } catch (err) {
             console.error("Gagal sinkronisasi data customer:", err)
           }
 
-          // 5. CACHE BUSTER
+          // 5. CACHE BUSTER & PINDAH KE BERANDA
           router.refresh()
           setTimeout(() => {
             router.push("/")
