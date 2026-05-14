@@ -2,8 +2,8 @@
 
 import React from "react"
 import { usePathname } from "next/navigation"
+import Image from "next/image"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
-import { ShoppingBag } from "lucide-react"
 
 export default function FloatingButtons() {
   const pathname = usePathname()
@@ -14,24 +14,23 @@ export default function FloatingButtons() {
   const hideShopNow = isStorePage || isProductPage
 
   return (
-    <div className="fixed bottom-8 right-8 z-[999] flex flex-col gap-4 items-end">
+    <div className="fixed bottom-8 right-8 z-[999] flex flex-col gap-4 items-center">
       
       {/* 🌟 SHOP NOW BUTTON (Disembunyikan di halaman Store & Product) */}
       {!hideShopNow && (
-        <div className="flex flex-col items-center gap-1.5 group">
-          {/* Teks di atas tombol */}
-          <span className="text-[10px] font-bold uppercase tracking-widest text-gray-800 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-md shadow-sm transition-all duration-300 group-hover:-translate-y-1 group-hover:text-[#EF7044]">
-            Shop Now
-          </span>
-          
-          {/* Tombol Lingkaran */}
-          <LocalizedClientLink 
-            href="/store"
-            className="flex items-center justify-center w-14 h-14 bg-[#000000] text-white rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.15)] hover:bg-[#EF7044] hover:scale-110 transition-all duration-300"
-          >
-            <ShoppingBag className="w-6 h-6" />
-          </LocalizedClientLink>
-        </div>
+        <LocalizedClientLink 
+          href="/store"
+          className="flex items-center justify-center w-14 h-14 bg-[#000000] rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.15)] hover:bg-[#EF7044] hover:scale-110 transition-all duration-300"
+        >
+          <div className="relative w-6 h-6">
+            <Image 
+              src="/shop-now.svg" 
+              alt="Shop Now" 
+              fill 
+              className="object-contain" 
+            />
+          </div>
+        </LocalizedClientLink>
       )}
 
       {/* 🌟 WHATSAPP BUTTON (Selalu Muncul) */}
