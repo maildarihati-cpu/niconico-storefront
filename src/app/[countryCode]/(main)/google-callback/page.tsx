@@ -99,18 +99,19 @@ function AuthCallbackHandler() {
           }
 
           // 5. CACHE BUSTER & PINDAH KE BERANDA
-          console.log("Login sukses, me-refresh halaman ke profil...");
+          console.log("Login sukses, kembali ke Beranda...");
           
-          // Menggunakan window.location.href memaksa browser memuat ulang dari server
-          // sehingga Next.js WAJIB membaca ulang cookie KTP kamu yang baru!
-          window.location.href = "/account"; 
+          // Memaksa browser muat ulang dari server, 
+          // supaya tombol di Drawer kamu otomatis berubah jadi profil
+          window.location.href = "/"; 
 
         } else {
-          router.push("/login")
+          // Kalau gagal, lempar balik ke Beranda juga (karena loginnya di drawer)
+          window.location.href = "/";
         }
       } catch (error) {
         console.error("Error total:", error)
-        router.push("/login")
+        window.location.href = "/";
       }
     }
 
