@@ -38,14 +38,15 @@ function AuthCallbackHandler() {
             })
 
             // 4. Kalau KTP belum ada (401), buatkan baru!
-            // 4. Kalau KTP belum ada (401), buatkan baru!
             if (!checkRes.ok) {
               console.log("Profil belum ada, membuat KTP baru ke Medusa...")
-              console.log("Data full dari Medusa:", data) // Biar kita bisa intip isinya!
               
               let userEmail = "";
+              let firstName = "Google";
+              let lastName = "User";
+
               try {
-                // 🌟 JURUS BEDAH TOKEN TINGKAT DEWA (Anti Error Base64)
+                // 🌟 JURUS BEDAH TOKEN TINGKAT DEWA
                 const base64Url = data.token.split('.')[1];
                 const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
                 const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
@@ -53,22 +54,19 @@ function AuthCallbackHandler() {
                 }).join(''));
                 
                 const payload = JSON.parse(jsonPayload);
-                console.log("Isi Payload Token:", payload);
-
-                // Coba cari email asli dulu siapa tau dikasih
-                userEmail = data?.auth_identity?.app_metadata?.email || payload?.email || "";
-
-                // 🌟 JURUS BYPASS: Kalau Medusa pelit, kita pakai ID unik jadi email!
-                if (!userEmail && payload?.actor_id) {
-                  userEmail = `${payload.actor_id}@login-google.com`;
-                }
+                
+                // 🌟 BINGO! Tarik data asli dari "user_metadata"
+                userEmail = payload?.user_metadata?.email || "";
+                firstName = payload?.user_metadata?.given_name || payload?.user_metadata?.name || "Member";
+                lastName = payload?.user_metadata?.family_name || ""; // Dikosongkan aja kalau emang ga ada last name
+                
               } catch (e) {
                 console.error("Gagal membedah token:", e);
               }
 
-              console.log("Email yang akan didaftarkan:", userEmail);
+              console.log("Mendaftarkan KTP Asli:", userEmail, firstName, lastName);
 
-              // Eksekusi Pendaftaran!
+              // Eksekusi Pendaftaran Pakai Data Asli!
               if (userEmail) {
                 const createRes = await fetch(`${backendUrl}/store/customers`, {
                   method: "POST",
@@ -79,8 +77,8 @@ function AuthCallbackHandler() {
                   },
                   body: JSON.stringify({ 
                     email: userEmail,
-                    first_name: "Google",
-                    last_name: "User"
+                    first_name: firstName,
+                    last_name: lastName
                   }) 
                 })
 
@@ -91,8 +89,8 @@ function AuthCallbackHandler() {
                   return // Stop biar layar nggak refresh
                 }
               } else {
-                console.error("Email atau ID tidak ditemukan sama sekali!");
-                alert("Gagal memproses data dari Google. Cek Console!")
+                console.error("Email asli tidak ditemukan sama sekali!");
+                alert("Gagal memproses email aslimu. Cek Console!")
                 return;
               }
             }
