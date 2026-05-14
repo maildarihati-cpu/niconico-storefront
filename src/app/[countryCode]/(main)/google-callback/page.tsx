@@ -44,7 +44,7 @@ function AuthCallbackHandler() {
               let lastName = "User";
 
               try {
-                // 🌟 JURUS BEDAH TOKEN TINGKAT DEWA
+                // JURUS BEDAH TOKEN TINGKAT DEWA
                 const base64Url = data.token.split('.')[1];
                 const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
                 const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
@@ -64,7 +64,6 @@ function AuthCallbackHandler() {
 
               console.log("Mendaftarkan KTP Asli:", userEmail, firstName, lastName);
 
-              // Eksekusi Pendaftaran Pakai Data Asli!
               if (userEmail) {
                 const createRes = await fetch(`${backendUrl}/store/customers`, {
                   method: "POST",
@@ -96,12 +95,22 @@ function AuthCallbackHandler() {
             console.error("Gagal sinkronisasi data customer:", err)
           }
 
-          // 4. 🌟 JURUS PAMUNGKAS: Bangunkan Server Next.js & Hapus Cache!
-          console.log("Data siap, memproses sesi login di Server...");
-          await finalizeGoogleLogin(data.token);
+          // 🌟 4. LOGIKA BACA MEMO (URL ASAL)
+          let returnUrl = "/";
+          if (typeof window !== "undefined") {
+            const savedUrl = localStorage.getItem("redirect_after_login");
+            if (savedUrl) {
+              returnUrl = savedUrl;
+              // Hapus memo setelah dibaca agar tidak redirect terus-terusan di masa depan
+              localStorage.removeItem("redirect_after_login"); 
+            }
+          }
+
+          // 🌟 5. FINISH: Bangunkan Server Next.js & Redirect ke URL asal
+          console.log("Data siap, memproses sesi login di Server. Redirect ke:", returnUrl);
+          await finalizeGoogleLogin(data.token, returnUrl);
 
         } else {
-          // Kalau ga ada token, lempar ke beranda
           router.push("/")
         }
       } catch (error) {
