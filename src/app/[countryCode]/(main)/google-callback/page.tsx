@@ -26,22 +26,29 @@ function AuthCallbackHandler() {
           document.cookie = `_medusa_jwt=${data.token}; path=/; max-age=2592000; secure; samesite=lax`
           
           try {
-            // 3. Cek Profil KTP ke Medusa
+            // Siapkan Kunci Publik Medusa dari .env kamu
+            const pubKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || ""
+
+            // 3. Cek Profil KTP ke Medusa (Sekarang bawa Publishable Key)
             const checkRes = await fetch(`${backendUrl}/store/customers/me`, {
               method: "GET",
-              headers: { "Authorization": `Bearer ${data.token}` }
+              headers: { 
+                "Authorization": `Bearer ${data.token}`,
+                "x-publishable-api-key": pubKey // 🌟 INI DIA PENYELAMATNYA
+              }
             })
 
-            // 4. Kalau KTP belum ada (Error 404), Kita suruh Medusa buatin detik ini juga!
+            // 4. Kalau KTP belum ada, buatkan baru!
             if (!checkRes.ok) {
               console.log("Profil belum ada, membuat KTP baru ke Medusa...")
               await fetch(`${backendUrl}/store/customers`, {
                 method: "POST",
                 headers: { 
                   "Authorization": `Bearer ${data.token}`,
-                  "Content-Type": "application/json"
+                  "Content-Type": "application/json",
+                  "x-publishable-api-key": pubKey // 🌟 WAJIB DIBAWA JUGA DI SINI
                 },
-                body: JSON.stringify({}) // Medusa v2 otomatis baca email dari token
+                body: JSON.stringify({}) 
               })
             }
           } catch (err) {
