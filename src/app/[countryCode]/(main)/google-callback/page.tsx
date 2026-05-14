@@ -26,36 +26,45 @@ function AuthCallbackHandler() {
           document.cookie = `_medusa_jwt=${data.token}; path=/; max-age=2592000; secure; samesite=lax`
           
           try {
-            // Siapkan Kunci Publik Medusa dari .env kamu
             const pubKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || ""
-
-            // 3. Cek Profil KTP ke Medusa (Sekarang bawa Publishable Key)
+            
+            // 3. Cek Profil KTP ke Medusa
             const checkRes = await fetch(`${backendUrl}/store/customers/me`, {
               method: "GET",
               headers: { 
                 "Authorization": `Bearer ${data.token}`,
-                "x-publishable-api-key": pubKey // 🌟 INI DIA PENYELAMATNYA
+                "x-publishable-api-key": pubKey 
               }
             })
 
-            // 4. Kalau KTP belum ada, buatkan baru!
+            // 4. Kalau KTP belum ada (401), buatkan baru!
             if (!checkRes.ok) {
               console.log("Profil belum ada, membuat KTP baru ke Medusa...")
-              await fetch(`${backendUrl}/store/customers`, {
+              
+              const createRes = await fetch(`${backendUrl}/store/customers`, {
                 method: "POST",
                 headers: { 
                   "Authorization": `Bearer ${data.token}`,
                   "Content-Type": "application/json",
-                  "x-publishable-api-key": pubKey // 🌟 WAJIB DIBAWA JUGA DI SINI
+                  "x-publishable-api-key": pubKey 
                 },
+                // Medusa v2 kadang butuh setidaknya objek kosong, atau ada parameter wajib dari template kamu
                 body: JSON.stringify({}) 
               })
+
+              // 🌟 INI JEBAKAN BATMAN-NYA: Kita tangkap pesan error aslinya!
+              if (!createRes.ok) {
+                const errorData = await createRes.json()
+                console.error("ALASAN GAGAL BIKIN KTP:", errorData)
+                alert("Gagal bikin KTP dari Google. Cek Inspect Element -> Console!")
+                return // Kita stop di sini biar layarnya nggak refresh
+              }
             }
           } catch (err) {
-            console.error("Gagal membuat profil customer:", err)
+            console.error("Gagal sinkronisasi data customer:", err)
           }
 
-          // 5. CACHE BUSTER: Suruh Next.js hapus ingatan lama, lalu pindah ke Beranda
+          // 5. CACHE BUSTER
           router.refresh()
           setTimeout(() => {
             router.push("/")
