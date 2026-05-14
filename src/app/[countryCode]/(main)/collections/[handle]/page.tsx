@@ -5,6 +5,7 @@ import { createPortal } from "react-dom"
 import { useParams } from "next/navigation"
 import { listProducts } from "@lib/data/products"
 import { listCollections } from "@lib/data/collections"
+// 👈 IMPORT listCategories SUDAH DIHAPUS AGAR TIDAK ERROR SERVER-ONLY
 import { useCart } from "@/context/cart-context"
 import { addToCart as medusaAddToCart } from "@lib/data/cart"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
@@ -77,7 +78,7 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
 
-  // LOGIKA WARNA PINTAR (Metadata + Fallback Ekstrak URL)
+  // LOGIKA WARNA PINTAR
   let colorName = product?.metadata?.color_name;
   let colorId = product?.metadata?.color_id;
 
@@ -156,7 +157,6 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
       const sizeOpt = v.options?.find((o: any) => !["top", "bottom"].includes(o.value?.toLowerCase().trim()))
       let sizeVal = sizeOpt?.value || v.title?.replace(/top|bottom/i, '').trim() || "All Size"
       
-      // FIX: Cegah teks Option
       if (sizeVal.toLowerCase().includes("default") || sizeVal.toLowerCase().includes("option")) {
         sizeVal = "All Size"
       }
@@ -191,12 +191,9 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
   const getModalSizes = (variants: any[]) => {
     const rawSizes = variants.map((v: any) => {
       let sizeVal = v.options?.find((o: any) => !["top", "bottom"].includes(o.value?.toLowerCase().trim()))?.value || "All Size"
-      
-      // FIX: Cegah teks Option
       if (sizeVal.toLowerCase().includes("default") || sizeVal.toLowerCase().includes("option")) {
         sizeVal = "All Size"
       }
-
       const qty = v.inventory_quantity || 0
       const inStock = v.manage_inventory === false || v.allow_backorder === true || qty > 0
       return { label: sizeVal, inStock, variant: v, qty }
@@ -590,16 +587,42 @@ export default function CollectionDetailPage() {
         
         if (currentCol) {
           setCollection(currentCol)
-          const { response } = await listProducts({
+        }
+
+        // 🌟 TRIK AJAIB: Bypass "server-only" dengan Native Fetch langsung ke Medusa API
+        const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000";
+        const apiKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "";
+        
+        const catRes = await fetch(`${backendUrl}/store/product-categories?handle=${handle}`, {
+          headers: { "x-publishable-api-key": apiKey }
+        });
+        const catData = await catRes.json();
+        const matchedCategory = catData.product_categories?.[0];
+
+        if (matchedCategory) {
+          // 3. 🌟 Jika Kategori ketemu, tarik produk berdasarkan CATEGORY_ID
+          const { response: productResponse } = await listProducts({
             queryParams: { 
-              collection_id: [currentCol.id], 
+              category_id: [matchedCategory.id], 
               limit: 12,
-              // FIX: Wajib tambah fields ini biar Inventory & Stok muncul di popup
               fields: "*collection,*variants,*variants.prices,*variants.inventory_quantity,*variants.manage_inventory,*variants.allow_backorder" 
             },
             countryCode: countryCode as string,
           })
-          setProducts(response.products)
+          setProducts(productResponse.products)
+        } else {
+          // Fallback: Kalau kategori gak ketemu, cari berdasarkan Collection ID
+          if (currentCol) {
+             const { response: fallbackResponse } = await listProducts({
+              queryParams: { 
+                collection_id: [currentCol.id], 
+                limit: 12,
+                fields: "*collection,*variants,*variants.prices,*variants.inventory_quantity,*variants.manage_inventory,*variants.allow_backorder" 
+              },
+              countryCode: countryCode as string,
+            })
+            setProducts(fallbackResponse.products)
+          }
         }
 
         const others = collections.filter((c: any) => c.handle !== handle)
