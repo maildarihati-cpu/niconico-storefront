@@ -1,22 +1,21 @@
 "use client"
 
-import React, { useEffect } from "react"
+import React, { useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 
-export default function GoogleCallbackPage() {
+// 1. Kita pisahkan fungsi yang pakai "useSearchParams" ke komponen kecil
+function AuthCallbackHandler() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
   useEffect(() => {
     const fetchTokenFromMedusa = async () => {
-      const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "[https://niconico-backend-production.up.railway.app](https://niconico-backend-production.up.railway.app)"
+      const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://niconico-backend-production.up.railway.app"
       
-      // 1. Tangkap kode rahasia yang dibawa Google di URL
       const queryParams = searchParams.toString()
       if (!queryParams) return
 
       try {
-        // 2. Tukarkan kode dari Google dengan Token milik Medusa
         const response = await fetch(`${backendUrl}/auth/customer/google/callback?${queryParams}`, {
           method: "GET"
         })
@@ -24,10 +23,8 @@ export default function GoogleCallbackPage() {
         const data = await response.json()
 
         if (data.token) {
-          // 🌟 3. LOGIN BERHASIL! Simpan Token ke dalam Cookie Browser
+          // LOGIN BERHASIL!
           document.cookie = `_medusa_jwt=${data.token}; path=/; max-age=2592000; secure; samesite=lax`
-          
-          // 4. Lempar user masuk ke halaman utama!
           window.location.href = "/" 
         } else {
           console.error("Gagal dapat token:", data)
@@ -43,10 +40,22 @@ export default function GoogleCallbackPage() {
     fetchTokenFromMedusa()
   }, [searchParams, router])
 
+  // Komponen ini kerja di balik layar aja, jadi return null
+  return null
+}
+
+// 2. Ini Halaman Utamanya yang membungkus komponen di atas pakai Suspense
+export default function GoogleCallbackPage() {
   return (
     <div className="h-screen w-full flex flex-col items-center justify-center bg-gray-50">
+       {/* Animasi loading tetap jalan di luar */}
        <div className="w-12 h-12 border-4 border-[#EF7044] border-t-transparent rounded-full animate-spin"></div>
        <p className="mt-4 text-gray-500 font-medium text-sm animate-pulse">Menyiapkan akun kamu, tunggu sebentar...</p>
+       
+       {/* 3. INI DIA OBATNYA! Membungkus data dinamis dengan Suspense */}
+       <Suspense fallback={null}>
+         <AuthCallbackHandler />
+       </Suspense>
     </div>
   )
 }
