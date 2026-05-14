@@ -49,6 +49,14 @@ export default function LoginView({ onClose, setView, onSuccess }: Props) {
     }
   };
 
+  // 🌟 FUNGSI GOOGLE AUTH
+  const handleGoogleAuth = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://niconico-backend-production.up.railway.app";
+    const storefrontUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8000";
+    window.location.href = `${backendUrl}/auth/customer/google?redirect_to=${storefrontUrl}`;
+  };
+
   return (
     <div className="flex flex-col h-full bg-white px-8 pt-8 pb-6 overflow-y-auto [&::-webkit-scrollbar]:hidden">
       
@@ -114,6 +122,28 @@ export default function LoginView({ onClose, setView, onSuccess }: Props) {
           )}
         </button>
       </form>
+
+      {/* 🌟 TOMBOL GOOGLE LOGIN DI SINI */}
+      <div className="w-full mt-6">
+        <div className="flex items-center gap-3 mb-5">
+          <div className="h-[1px] bg-gray-200 flex-1"></div>
+          <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Or continue with</span>
+          <div className="h-[1px] bg-gray-200 flex-1"></div>
+        </div>
+
+        <button 
+          onClick={handleGoogleAuth}
+          type="button"
+          className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 text-gray-700 py-3 rounded-xl font-bold text-[11px] uppercase tracking-widest hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm active:scale-95"
+        >
+          <img 
+            src="https://www.svgrepo.com/show/475656/google-color.svg" 
+            alt="Google Icon" 
+            className="w-4 h-4" 
+          />
+          GOOGLE
+        </button>
+      </div>
 
       <div className="mt-auto pt-8 pb-4 text-center">
         <p className="text-xs text-gray-400 font-medium">
