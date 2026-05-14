@@ -22,12 +22,36 @@ export default function SignupView({ onClose, setView }: Props) {
   const errorMessage = typeof message === "string" ? message : null;
 
   // 🌟 FUNGSI GOOGLE AUTH
-  const handleGoogleAuth = (e: React.MouseEvent) => {
-    e.preventDefault();
-    const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://niconico-backend-production.up.railway.app";
-    const storefrontUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:8000";
-    window.location.href = `${backendUrl}/auth/customer/google?redirect_to=${storefrontUrl}`;
-  };
+  const handleGoogleAuth = async (e: React.MouseEvent) => {
+  e.preventDefault();
+  
+  // Ambil URL backend Railway kamu
+  const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://niconico-backend-production.up.railway.app";
+  
+  try {
+    // 1. Tembak API Medusa diem-diem di balik layar buat minta link Google
+    const response = await fetch(`${backendUrl}/auth/customer/google`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      }
+    });
+    
+    // 2. Baca balasan dari Medusa (yang tadi cuma tampil di layar hitam itu)
+    const data = await response.json();
+
+    // 3. Kalau Medusa ngasih URL 'location', baru deh kita eksekusi pindah halaman!
+    if (data.location) {
+      window.location.href = data.location;
+    } else {
+      console.error("Gagal mendapatkan link Google:", data);
+      alert("Terjadi kesalahan saat menghubungi server.");
+    }
+  } catch (error) {
+    console.error("Error Auth:", error);
+    alert("Tidak dapat terhubung ke server.");
+  }
+};
 
   return (
     <div className="flex flex-col h-full bg-white px-8 pt-8 pb-6 overflow-y-auto [&::-webkit-scrollbar]:hidden">
