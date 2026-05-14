@@ -38,23 +38,37 @@ function AuthCallbackHandler() {
             })
 
             // 4. Kalau KTP belum ada (401), buatkan baru!
+            // 4. Kalau KTP belum ada (401), buatkan baru!
             if (!checkRes.ok) {
               console.log("Profil belum ada, membuat KTP baru ke Medusa...")
+              console.log("Data full dari Medusa:", data) // Biar kita bisa intip isinya!
               
-              // 🌟 BONGKAR TOKEN BUAT NYARI EMAIL
               let userEmail = "";
               try {
-                if (data.auth_identity?.app_metadata?.email) {
-                  userEmail = data.auth_identity.app_metadata.email;
-                } else {
-                  const payload = JSON.parse(atob(data.token.split('.')[1]));
-                  userEmail = payload.email || payload.actor_id || ""; 
+                // 🌟 JURUS BEDAH TOKEN TINGKAT DEWA (Anti Error Base64)
+                const base64Url = data.token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                
+                const payload = JSON.parse(jsonPayload);
+                console.log("Isi Payload Token:", payload);
+
+                // Coba cari email asli dulu siapa tau dikasih
+                userEmail = data?.auth_identity?.app_metadata?.email || payload?.email || "";
+
+                // 🌟 JURUS BYPASS: Kalau Medusa pelit, kita pakai ID unik jadi email!
+                if (!userEmail && payload?.actor_id) {
+                  userEmail = `${payload.actor_id}@login-google.com`;
                 }
               } catch (e) {
-                console.error("Gagal membedah email dari token:", e);
+                console.error("Gagal membedah token:", e);
               }
 
-              // Kalau email ketemu, kita daftarin ke Medusa!
+              console.log("Email yang akan didaftarkan:", userEmail);
+
+              // Eksekusi Pendaftaran!
               if (userEmail) {
                 const createRes = await fetch(`${backendUrl}/store/customers`, {
                   method: "POST",
@@ -65,20 +79,20 @@ function AuthCallbackHandler() {
                   },
                   body: JSON.stringify({ 
                     email: userEmail,
-                    first_name: "Member", 
-                    last_name: "Google"   
+                    first_name: "Google",
+                    last_name: "User"
                   }) 
                 })
 
                 if (!createRes.ok) {
                   const errorData = await createRes.json()
-                  console.error("ALASAN GAGAL BIKIN KTP:", errorData)
-                  alert("Gagal bikin KTP dari Google. Cek Inspect Element -> Console!")
-                  return // Stop biar nggak refresh
+                  console.error("MASIH GAGAL BIKIN KTP:", errorData)
+                  alert("Gagal daftar di database. Cek Console!")
+                  return // Stop biar layar nggak refresh
                 }
               } else {
-                console.error("Email dari Google gagal diekstrak!");
-                alert("Email tidak ditemukan dari Google.")
+                console.error("Email atau ID tidak ditemukan sama sekali!");
+                alert("Gagal memproses data dari Google. Cek Console!")
                 return;
               }
             }
