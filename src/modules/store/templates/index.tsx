@@ -11,12 +11,12 @@ import { addToCart as medusaAddToCart } from "@lib/data/cart";
 
 // Kategori Atas
 const topCategories = [
-  { name: "ALL", handle: "all", img: "/all-cat.jpg" },
-  { name: "BIKINIS", handle: "bikinis", img: "/bikini-cat.jpg" },
-  { name: "SWIMSUIT", handle: "swimsuit", img: "/swimsuit-cat.jpg" },
-  { name: "RESORT WEAR", handle: "resort-wear", img: "/resort-cat.jpg" },
-  { name: "MEN'S WEAR", handle: "mens-wear", img: "/mens-cat.jpg" },
-  { name: "ACCESORIES", handle: "accesories", img: "/acc-cat.jpg" },
+  { name: "ALL", handle: "all", img: "/all.png" },
+  { name: "BIKINIS", handle: "bikinis", img: "/category/bikinis.png" },
+  { name: "SWIMSUIT", handle: "swimsuit", img: "/category/swimsuit.png" },
+  { name: "RESORT WEAR", handle: "resort-wear", img: "/category/resort-wear.png" },
+  { name: "MEN'S WEAR", handle: "mens-wear", img: "/category/mens-wear.png" },
+  { name: "ACCESORIES", handle: "accesories", img: "/category/accessories.png" },
 ];
 
 // ==========================================
@@ -781,7 +781,7 @@ export default function StoreTemplate() {
           onClose={closeAndRefreshWishlist} 
         />
       )}
-      
+
 
       {/* =========================================
           DRAWER FILTER

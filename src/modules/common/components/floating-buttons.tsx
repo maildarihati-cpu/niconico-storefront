@@ -24,7 +24,7 @@ export default function FloatingButtons() {
         >
           <div className="relative w-6 h-6">
             <Image 
-              src="/shop-now.svg" 
+              src="/shop-now.png" 
               alt="Shop Now" 
               fill 
               className="object-contain" 
