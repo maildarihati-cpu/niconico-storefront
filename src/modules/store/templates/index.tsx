@@ -11,7 +11,7 @@ import { addToCart as medusaAddToCart } from "@lib/data/cart";
 
 // Kategori Atas
 const topCategories = [
-  { name: "ALL", handle: "all", img: "/all.png" },
+  { name: "ALL", handle: "all", img: "/category/all.png" },
   { name: "BIKINIS", handle: "bikinis", img: "/category/bikinis.png" },
   { name: "SWIMSUIT", handle: "swimsuit", img: "/category/swimsuit.png" },
   { name: "RESORT WEAR", handle: "resort-wear", img: "/category/resort-wear.png" },

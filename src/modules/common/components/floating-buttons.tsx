@@ -20,9 +20,11 @@ export default function FloatingButtons() {
       {!hideShopNow && (
         <LocalizedClientLink 
           href="/store"
-          className="flex items-center justify-center w-20 h-20 bg-transparent outline-none focus:outline-none ring-0 hover:scale-125 transition-transform duration-300"
+          // 👈 Tambahkan w-14 h-14 di sini agar sama dengan tombol WA, dan perbaiki efek hover-nya
+          className="flex items-center justify-center w-14 h-14 bg-transparent outline-none focus:outline-none ring-0 hover:scale-110 transition-transform duration-300 drop-shadow-lg"
         >
-          <div className="relative w-6 h-6">
+          {/* 👈 Ubah w-6 h-6 menjadi w-full h-full agar gambar memenuhi container w-14 h-14 */}
+          <div className="relative w-full h-full">
             <Image 
               src="/shop-now.png" 
               alt="Shop Now" 
