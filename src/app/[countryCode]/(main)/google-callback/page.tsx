@@ -2,6 +2,7 @@
 
 import React, { useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import { finalizeGoogleLogin } from "./action"
 
 function AuthCallbackHandler() {
   const router = useRouter()
@@ -22,13 +23,10 @@ function AuthCallbackHandler() {
         const data = await response.json()
 
         if (data.token) {
-          // 2. Simpan Kunci Token ke Browser
-          document.cookie = `_medusa_jwt=${data.token}; path=/; max-age=2592000; secure; samesite=lax`
-          
           try {
             const pubKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || ""
             
-            // 3. Cek Profil KTP ke Medusa
+            // 2. Cek Profil KTP ke Medusa
             const checkRes = await fetch(`${backendUrl}/store/customers/me`, {
               method: "GET",
               headers: { 
@@ -37,7 +35,7 @@ function AuthCallbackHandler() {
               }
             })
 
-            // 4. Kalau KTP belum ada (401), buatkan baru!
+            // 3. Kalau KTP belum ada (401), buatkan baru!
             if (!checkRes.ok) {
               console.log("Profil belum ada, membuat KTP baru ke Medusa...")
               
@@ -55,10 +53,10 @@ function AuthCallbackHandler() {
                 
                 const payload = JSON.parse(jsonPayload);
                 
-                // 🌟 BINGO! Tarik data asli dari "user_metadata"
+                // Tarik data asli dari "user_metadata"
                 userEmail = payload?.user_metadata?.email || "";
                 firstName = payload?.user_metadata?.given_name || payload?.user_metadata?.name || "Member";
-                lastName = payload?.user_metadata?.family_name || ""; // Dikosongkan aja kalau emang ga ada last name
+                lastName = payload?.user_metadata?.family_name || ""; 
                 
               } catch (e) {
                 console.error("Gagal membedah token:", e);
@@ -86,7 +84,7 @@ function AuthCallbackHandler() {
                   const errorData = await createRes.json()
                   console.error("MASIH GAGAL BIKIN KTP:", errorData)
                   alert("Gagal daftar di database. Cek Console!")
-                  return // Stop biar layar nggak refresh
+                  return 
                 }
               } else {
                 console.error("Email asli tidak ditemukan sama sekali!");
@@ -98,20 +96,17 @@ function AuthCallbackHandler() {
             console.error("Gagal sinkronisasi data customer:", err)
           }
 
-          // 5. CACHE BUSTER & PINDAH KE BERANDA
-          console.log("Login sukses, kembali ke Beranda...");
-          
-          // Memaksa browser muat ulang dari server, 
-          // supaya tombol di Drawer kamu otomatis berubah jadi profil
-          window.location.href = "/"; 
+          // 4. 🌟 JURUS PAMUNGKAS: Bangunkan Server Next.js & Hapus Cache!
+          console.log("Data siap, memproses sesi login di Server...");
+          await finalizeGoogleLogin(data.token);
 
         } else {
-          // Kalau gagal, lempar balik ke Beranda juga (karena loginnya di drawer)
-          window.location.href = "/";
+          // Kalau ga ada token, lempar ke beranda
+          router.push("/")
         }
       } catch (error) {
         console.error("Error total:", error)
-        window.location.href = "/";
+        router.push("/")
       }
     }
 
