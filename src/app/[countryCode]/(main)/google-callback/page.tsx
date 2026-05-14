@@ -23,8 +23,32 @@ function AuthCallbackHandler() {
         const data = await response.json()
 
         if (data.token) {
-          // LOGIN BERHASIL!
+          // 1. Simpan Token ke dalam Cookie Browser
           document.cookie = `_medusa_jwt=${data.token}; path=/; max-age=2592000; secure; samesite=lax`
+          
+          try {
+            // 2. Cek apakah KTP (Profil Customer) sudah ada di database Medusa
+            const checkCustomer = await fetch(`${backendUrl}/store/customers/me`, {
+              method: "GET",
+              headers: { "Authorization": `Bearer ${data.token}` }
+            })
+
+            // 3. Kalau belum ada (responnya Error/404), kita suruh Medusa buatkan profilnya detik itu juga!
+            if (!checkCustomer.ok) {
+              await fetch(`${backendUrl}/store/customers`, {
+                method: "POST",
+                headers: {
+                  "Authorization": `Bearer ${data.token}`,
+                  "Content-Type": "application/json"
+                },
+                body: JSON.stringify({}) // Medusa akan pintar menautkannya otomatis dengan akun Google ini
+              })
+            }
+          } catch (err) {
+            console.error("Gagal sinkronisasi data customer:", err)
+          }
+
+          // 4. Setelah urusan KTP beres, baru kita lempar user ke halaman utama!
           window.location.href = "/" 
         } else {
           console.error("Gagal dapat token:", data)
