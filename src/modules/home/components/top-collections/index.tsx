@@ -566,7 +566,7 @@ export default function TopCollections() {
             const targetHandle = activeConfig.handle.toLowerCase();
             return p.categories?.some((c: any) => c.handle?.toLowerCase() === targetHandle);
           });
-          setProducts(filtered);
+          setProducts(filtered.slice(0,4));
         }
       } catch (error) {
         console.error("Fetch Error:", error);

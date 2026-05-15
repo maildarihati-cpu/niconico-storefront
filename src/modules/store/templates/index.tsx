@@ -9,7 +9,7 @@ import { listProducts } from "@lib/data/products";
 import { useCart } from "@/context/cart-context";
 import { addToCart as medusaAddToCart } from "@lib/data/cart";
 
-// Kategori Atas
+// Kategori Atas (Sesuaikan handle ini dengan nama di Medusa)
 const topCategories = [
   { name: "ALL", handle: "all", img: "/category/all.png" },
   { name: "BIKINIS", handle: "bikinis", img: "/category/bikinis.png" },
@@ -18,6 +18,19 @@ const topCategories = [
   { name: "MEN'S WEAR", handle: "mens-wear", img: "/category/mens-wear.png" },
   { name: "ACCESORIES", handle: "accesories", img: "/category/accessories.png" },
 ];
+
+// 🌟 KAMUS WARNA UNTUK DRAWER FILTER (BOS BISA TAMBAH WARNA DI SINI!)
+const COLOR_IDENTITY: Record<string, string> = {
+  black: "#222222",
+  white: "#FFFFFF",
+  navy: "#000080",
+  nude: "#E3BC9A",
+  pink: "#FFC0CB",
+  red: "#FF0000",
+  blue: "#0000FF",
+  yellow: "#FFFF00",
+  green: "#008000"
+};
 
 // ==========================================
 // 🌟 FUNGSI PEMBANTU UNTUK URUTAN SIZE (S, M, L, XL)
@@ -409,9 +422,21 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
                   </div>
                 </div>
 
+                <div className="flex items-center gap-3 mb-6">
+                  <span className="text-[13px] text-gray-500 font-medium">Color : {colorName}</span>
+                  <div className="w-8 h-8 rounded-full border-2 border-[#EF7044] p-[2px]">
+                    <div className="w-full h-full rounded-full bg-white border border-gray-200 shadow-sm" style={{ backgroundColor: colorId }}></div>
+                  </div>
+                </div>
+
                 <div className="mb-5">
                   <div className="flex items-center gap-2 mb-3">
                     <p className="text-[13px] text-gray-500 font-medium">Top Size <span className="ml-2">: {topSize || "Select"}</span></p>
+                    {(() => {
+                        const cTop = modalTopSizes.find((s: SizeData) => s.label === topSize);
+                        if (cTop?.variant?.manage_inventory) return <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${cTop.qty <= 3 ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-600'}`}>Stock: {cTop.qty}</span>
+                        return null;
+                      })()}
                   </div>
                   <div className="flex gap-2">
                     {modalTopSizes.map((size: SizeData) => (
@@ -428,6 +453,11 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
                 <div className="mb-6">
                   <div className="flex items-center gap-2 mb-3">
                     <p className="text-[13px] text-gray-500 font-medium">Bottom Size <span className="ml-2">: {bottomSize || "Select"}</span></p>
+                    {(() => {
+                      const cBot = modalBottomSizes.find((s: SizeData) => s.label === bottomSize);
+                      if (cBot?.variant?.manage_inventory) return <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${cBot.qty <= 3 ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-600'}`}>Stock: {cBot.qty}</span>
+                      return null;
+                    })()}
                   </div>
                   <div className="flex gap-2">
                     {modalBottomSizes.map((size: SizeData) => (
@@ -525,16 +555,16 @@ export default function StoreTemplate() {
   // STATE POPUP VARIAN
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   
-  // STATE FILTER
+  // 🌟 STATE FILTER (Sinkronisasi Category Luar & Dalam Drawer)
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeCategory, setActiveCategory] = useState("all");
+  const [activeCategory, setActiveCategory] = useState("all"); 
   const [minPrice, setMinPrice] = useState(200000);
   const [maxPrice, setMaxPrice] = useState(5000000); 
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
-  const [selectedDrawerCategory, setSelectedDrawerCategory] = useState("");
+  const [selectedCollection, setSelectedCollection] = useState("");
 
-  // 🌟 Ambil Wishlist dari LocalStorage saat Load
+  // Ambil Wishlist dari LocalStorage saat Load
   useEffect(() => {
     if (typeof window !== "undefined") {
       const stored = JSON.parse(localStorage.getItem("wishlist") || "[]");
@@ -577,7 +607,8 @@ export default function StoreTemplate() {
           limit,
           offset,
           order: "-created_at",
-          fields: "*collection,*variants,*variants.prices,*variants.inventory_quantity,*variants.manage_inventory,*variants.allow_backorder",
+          // 🌟 Ditambah *categories untuk filter category & collections
+          fields: "*collection,*categories,*variants,*variants.prices,*variants.inventory_quantity,*variants.manage_inventory,*variants.allow_backorder",
           q: searchQuery || undefined 
         }, 
         countryCode: countryCode as string,
@@ -586,24 +617,40 @@ export default function StoreTemplate() {
       if (data && data.response) {
         let fetched = data.response.products;
 
+        // 🌟 1. FILTER CATEGORY (Sinkron Luar & Dalam Drawer)
         if (activeCategory !== "all") {
-          fetched = fetched.filter((p: any) => p.collection?.handle?.toLowerCase() === activeCategory.toLowerCase());
+           fetched = fetched.filter((p: any) => 
+             p.categories?.some((c: any) => c.handle?.toLowerCase() === activeCategory.toLowerCase())
+           );
         }
 
+        // 🌟 2. FILTER COLLECTION (Dari tombol Collection di Drawer - tetap filter by Category)
+        if (selectedCollection) {
+          // Format nama tombol "New Release" -> handle "new-release"
+          const collectionHandle = selectedCollection.toLowerCase().replace(/ /g, '-');
+          fetched = fetched.filter((p: any) => 
+             p.categories?.some((c: any) => c.handle?.toLowerCase() === collectionHandle)
+           );
+        }
+
+        // 🌟 3. FILTER WARNA (Murni memotong Handle!)
+        if (selectedColor) {
+           fetched = fetched.filter((p: any) => {
+              const handle = p.handle?.toLowerCase() || "";
+              return handle.endsWith(`-${selectedColor.toLowerCase()}`);
+           });
+        }
+
+        // 4. FILTER HARGA
         fetched = fetched.filter((p: any) => {
           const finalPrice = getProductPrice(p);
           return finalPrice >= minPrice && finalPrice <= maxPrice;
         });
 
+        // 5. FILTER SIZE
         if (selectedSize) {
           fetched = fetched.filter((p: any) => 
             p.variants?.some((v: any) => v.title.toLowerCase().includes(selectedSize.toLowerCase()))
-          );
-        }
-
-        if (selectedDrawerCategory) {
-          fetched = fetched.filter((p: any) => 
-            p.collection?.title?.toLowerCase() === selectedDrawerCategory.toLowerCase()
           );
         }
 
@@ -620,8 +667,9 @@ export default function StoreTemplate() {
     } finally {
       setIsLoading(false);
     }
-  }, [countryCode, searchQuery, activeCategory, minPrice, maxPrice, selectedSize, selectedDrawerCategory]);
+  }, [countryCode, searchQuery, activeCategory, minPrice, maxPrice, selectedSize, selectedCollection, selectedColor]);
 
+  // Eksekusi setiap kali ada perubahan di luar Drawer
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchStoreProducts(1, true);
@@ -641,7 +689,8 @@ export default function StoreTemplate() {
     setMaxPrice(5000000);
     setSelectedSize("");
     setSelectedColor("");
-    setSelectedDrawerCategory("");
+    setActiveCategory("all"); // Sinkron Reset
+    setSelectedCollection("");
   };
 
   const handleLoadMore = () => {
@@ -699,6 +748,7 @@ export default function StoreTemplate() {
           </button>
         </div>
 
+        {/* 🌟 KATEGORI LUAR */}
         <div className="flex overflow-x-auto gap-5 scrollbar-hide pb-2">
           {topCategories.map((cat) => (
             <button key={cat.handle} onClick={() => setActiveCategory(cat.handle)} className="flex flex-col items-center min-w-[70px] gap-2 group">
@@ -728,7 +778,7 @@ export default function StoreTemplate() {
                   <Heart className={`w-4 h-4 ${wishlist.includes(product.id) ? "fill-current" : ""}`} />
                 </button>
 
-                {/* 🌟 ADD TO CART BUTTON (+) MEMBUKA QUICK SHOP MODAL */}
+                {/* ADD TO CART BUTTON (+) MEMBUKA QUICK SHOP MODAL */}
                 <button 
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedProduct(product); }} 
                   className="absolute bottom-3 right-3 w-9 h-9 bg-[#EF7044] text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white active:scale-90 transition-transform z-10"
@@ -817,29 +867,56 @@ export default function StoreTemplate() {
               </div>
             </div>
 
+            {/* 🌟 LOGIKA WARNA YANG DINAMIS DARI COLOR_IDENTITY */}
             <div>
               <p className="text-[15px] font-medium text-gray-900 mb-4">Color</p>
-              <div className="flex flex-wrap gap-3.5">
-                {["#DAA520", "#CD5C5C", "#1C2833", "#4A5D6B", "#E5E7EB", "#5C4033", "#E6B0AA"].map((color, i) => (
-                  <button key={i} onClick={() => setSelectedColor(selectedColor === color ? "" : color)} className={`w-7 h-7 rounded-full transition-all ${selectedColor === color ? "ring-2 ring-offset-2 ring-gray-400 scale-110" : "border border-gray-100"}`} style={{ backgroundColor: color }} />
+              <div className="flex flex-wrap gap-4">
+                {Object.entries(COLOR_IDENTITY).map(([colorName, colorHex]) => (
+                  <button 
+                    key={colorName} 
+                    onClick={() => setSelectedColor(selectedColor === colorName ? "" : colorName)} 
+                    className="flex flex-col items-center gap-1 group"
+                  >
+                    <div 
+                      className={`w-7 h-7 rounded-full transition-all ${selectedColor === colorName ? "ring-2 ring-offset-2 ring-gray-900 scale-110" : "border border-gray-200 group-hover:scale-110"}`} 
+                      style={{ backgroundColor: colorHex }} 
+                    />
+                    <span className={`text-[9px] uppercase tracking-tighter transition-all ${selectedColor === colorName ? "font-bold text-gray-900" : "font-medium text-gray-400"}`}>
+                      {colorName}
+                    </span>
+                  </button>
                 ))}
               </div>
             </div>
 
+            {/* 🌟 KATEGORI DALAM DRAWER SINKRON DENGAN LUAR */}
             <div>
               <p className="text-[15px] font-medium text-gray-900 mb-3">Category</p>
               <div className="flex flex-wrap gap-2.5">
-                {["Bikinis", "Swimsuit", "Resort Wear", "Men's Wear", "Accesories"].map(cat => (
-                  <button key={cat} onClick={() => setSelectedDrawerCategory(selectedDrawerCategory === cat ? "" : cat)} className={`px-5 py-1.5 rounded-full border transition-colors text-sm ${selectedDrawerCategory === cat ? "border-[#EF7044] text-[#EF7044]" : "border-gray-300 text-gray-700 bg-white"}`}>{cat}</button>
+                {topCategories.map(cat => (
+                  <button 
+                    key={cat.handle} 
+                    onClick={() => setActiveCategory(activeCategory === cat.handle ? "all" : cat.handle)} 
+                    className={`px-5 py-1.5 rounded-full border transition-colors text-sm ${activeCategory === cat.handle ? "border-[#EF7044] text-[#EF7044]" : "border-gray-300 text-gray-700 bg-white"}`}
+                  >
+                    {cat.name}
+                  </button>
                 ))}
               </div>
             </div>
 
+            {/* 🌟 COLLECTIONS FILTER JUGA MENGAMBIL DARI CATEGORIES */}
             <div>
               <p className="text-[15px] font-medium text-gray-900 mb-3">Collections</p>
               <div className="flex flex-wrap gap-2.5">
-                {["New Realese", "Best Seller", "Signature", "Island Escape", "Discount %"].map(col => (
-                  <button key={col} className="px-5 py-1.5 rounded-full border border-gray-300 text-gray-700 bg-white hover:border-[#EF7044] hover:text-[#EF7044] transition-colors text-sm">{col}</button>
+                {["New Arrivals", "Best Seller", "Signature", "Island Escape", "Discount"].map(col => (
+                  <button 
+                    key={col} 
+                    onClick={() => setSelectedCollection(selectedCollection === col ? "" : col)}
+                    className={`px-5 py-1.5 rounded-full border transition-colors text-sm ${selectedCollection === col ? "border-[#EF7044] text-[#EF7044]" : "border-gray-300 text-gray-700 bg-white hover:border-[#EF7044] hover:text-[#EF7044]"}`}
+                  >
+                    {col}
+                  </button>
                 ))}
               </div>
             </div>
