@@ -8,7 +8,6 @@ import { addToCart } from "@lib/data/cart";
 import { listProducts } from "@lib/data/products";
 import LocalizedClientLink from "@modules/common/components/localized-client-link";
 import { ShoppingCart, Heart, X, Ruler } from "lucide-react";
-import { prepareCheckoutCart } from "@lib/util/checkout-util";
 
 // ==========================================
 // 🌟 FUNGSI PEMBANTU UNTUK URUTAN SIZE (S, M, L, XL)
@@ -555,17 +554,17 @@ export default function TopCollections() {
           queryParams: { 
             limit: 100,
             order: "-created_at",
-            // 🌟 fields DITAMBAHIN STOK BIAR MUNCUL ANGKA SISA STOKNYA
-            fields: "*collection,*variants,*variants.prices,*variants.inventory_quantity,*variants.manage_inventory,*variants.allow_backorder" 
+            // 🌟 fields: KITA TAMBAH *categories AGAR DATA KATEGORI IKUT KETARIK
+            fields: "*collection,*categories,*variants,*variants.prices,*variants.inventory_quantity,*variants.manage_inventory,*variants.allow_backorder" 
           }, 
           countryCode: countryCode as string,
         }).catch(() => null);
 
         if (data && data.response) {
+          // 🌟 FILTER: Kita saring produk yang punya kategori sesuai dengan handle tab yang diklik
           const filtered = data.response.products.filter((p: any) => {
-            const productHandle = p.collection?.handle?.toLowerCase();
             const targetHandle = activeConfig.handle.toLowerCase();
-            return productHandle === targetHandle;
+            return p.categories?.some((c: any) => c.handle?.toLowerCase() === targetHandle);
           });
           setProducts(filtered);
         }
