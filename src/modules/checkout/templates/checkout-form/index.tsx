@@ -201,7 +201,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
         </div>
 
         {/* SHIPPING & GATEWAY */}
-        <div className="bg-[#DF714B] rounded-[40px] p-7 text-white shadow-xl relative overflow-hidden">
+        <div className="bg-[#EF7044] rounded-[15px] p-7 text-white shadow-xl relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
           
           <h4 className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80 mb-5">Delivery Method</h4>
@@ -215,7 +215,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                   onClick={() => handleSelectShipping(method.id)}
                   className={`flex justify-between items-center p-4 rounded-2xl border transition-all cursor-pointer ${
                     cart.shipping_methods?.some((m: any) => m.shipping_option_id === method.id)
-                    ? "bg-white text-[#DF714B] border-white shadow-md font-black"
+                    ? "bg-white text-[#EF7044] border-white shadow-md font-black"
                     : "border-white/20 hover:bg-white/10"
                   }`}
                 >
@@ -253,14 +253,14 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
           )}
           <div className="flex justify-between items-center pt-4">
             <span className="text-[15px] font-black uppercase italic tracking-tighter text-gray-400">Total amount</span>
-            <span className="text-2xl font-black text-[#DF714B] tracking-tighter">Rp {(cart.total || 0).toLocaleString("id-ID")}</span>
+            <span className="text-2xl font-black text-[#EF7044] tracking-tighter">Rp {(cart.total || 0).toLocaleString("id-ID")}</span>
           </div>
         </div>
 
         <button 
           onClick={handlePayNow}
           disabled={isPaying}
-          className="w-full bg-[#DF714B] text-white py-5 rounded-full font-black text-[15px] shadow-2xl active:scale-95 transition-all flex items-center justify-center gap-3 uppercase tracking-[0.2em]"
+          className="w-full bg-[#EF7044] text-white py-5 rounded-full font-black text-[15px] shadow-2xl active:scale-95 transition-all flex items-center justify-center gap-3 uppercase tracking-[0.2em]"
         >
           {isPaying ? <Loader2 className="w-5 h-5 animate-spin" /> : "Pay Now"}
         </button>

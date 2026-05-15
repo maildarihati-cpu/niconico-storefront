@@ -139,7 +139,7 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
     if (!cart?.items) return { subtotal: 0, tax: 0, shipping: 0, total: 0 };
     const selectedCartItems = cart.items.filter((item: any) => selectedItems.includes(item.id));
     const subtotal = selectedCartItems.reduce((acc: number, item: any) => acc + (item.unit_price * item.quantity), 0);
-    const tax = subtotal * 0.1; 
+    const tax = subtotal * 0; 
     return { subtotal: getPrice(subtotal), tax: getPrice(tax), total: getPrice(subtotal + tax) };
   };
 
@@ -251,7 +251,7 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
         )}
       </div>
 
-      <div className="mt-10 mx-5 mb-10 bg-[#DF714B] rounded-[32px] p-8 shadow-xl">
+      <div className="mt-10 mx-5 mb-10 bg-[#EF7044] rounded-[15px] p-8 shadow-xl">
         <div className="space-y-4 mb-6 text-white">
           <div className="flex justify-between text-sm border-b border-white/20 pb-3">
             <span>Total Price</span><span>{formatPrice(totals.subtotal)}</span>
