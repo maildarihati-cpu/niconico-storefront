@@ -29,7 +29,6 @@ export default function AboutUsPage() {
     <main className="w-full min-h-screen bg-white text-[#111111]" style={{ fontFamily: '"Inter", sans-serif' }}>
       
       {/* ================= HERO SECTION ================= */}
-      {/* "ABOUT US" diposisikan di bawah (items-end) */}
       <section className="relative w-full h-[60vh] md:h-[70vh] flex items-end justify-center bg-black pb-16 md:pb-20">
         <div className="absolute inset-0 w-full h-full opacity-60">
           <Image
@@ -48,15 +47,15 @@ export default function AboutUsPage() {
       </section>
 
       {/* ================= TAB NAVIGATION ================= */}
-      {/* Menggunakan flex-wrap agar tab tidak kepotong/bablas keluar layar */}
+      {/* Pakai flex-nowrap dan overflow-x-auto biar fix 1 baris */}
       <section className="w-full max-w-full mx-auto py-10 md:py-14">
-        <div className="flex justify-center border-b border-gray-200 mb-8 md:mb-12 px-4">
-          <div className="flex flex-wrap justify-center gap-x-6 md:gap-x-16 gap-y-4">
+        <div className="flex justify-center border-b border-gray-200 mb-8 md:mb-12 px-4 overflow-x-auto no-scrollbar">
+          <div className="flex flex-nowrap justify-center space-x-6 md:space-x-16 w-max">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`pb-4 text-sm md:text-base tracking-[0.15em] uppercase transition-all duration-300 relative focus:outline-none ${
+                className={`pb-4 text-[10px] md:text-sm tracking-[0.15em] uppercase transition-all duration-300 relative focus:outline-none whitespace-nowrap ${
                   activeTab === tab.id
                     ? "text-[#EF7044] font-bold"
                     : "text-gray-400 hover:text-gray-900 font-medium"
@@ -72,7 +71,6 @@ export default function AboutUsPage() {
         </div>
 
         {/* ================= TAB CONTENT VIEW ================= */}
-        {/* Dihilangkan overflow-hidden agar teks aman tidak terpotong */}
         <div className="w-full transition-all duration-500">
           
           {/* TAB 1: OUR STORY */}
@@ -161,7 +159,7 @@ export default function AboutUsPage() {
       </section>
 
       {/* ================= DYNAMIC LOGO SECTION ================= */}
-      {/* grid-cols-4 memaksa minimal ada 4 kolom secara horizontal, walaupun di layar HP */}
+      {/* Menggunakan flex + gap konstan untuk tampilan mengalir dengan tinggi sama rata */}
       <section className="w-full py-20 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex items-center justify-center mb-14 opacity-60">
@@ -172,16 +170,16 @@ export default function AboutUsPage() {
             <span className="h-[1px] w-20 bg-gray-300"></span>
           </div>
           
-          <div className="grid grid-cols-4 md:grid-cols-5 gap-4 md:gap-16 items-center justify-items-center">
+          <div className="flex flex-wrap items-center justify-center gap-8 md:gap-14">
             {brandLogos.map((logo, index) => (
               <div 
                 key={index} 
-                className="h-6 md:h-10 w-full flex items-center justify-center grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-500"
+                className="h-8 md:h-12 w-auto flex items-center justify-center grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-500"
               >
                 <img
                   src={logo.src}
                   alt={logo.alt}
-                  className="max-h-full w-auto object-contain"
+                  className="h-full w-auto object-contain"
                 />
               </div>
             ))}
