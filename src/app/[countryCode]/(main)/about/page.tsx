@@ -3,7 +3,7 @@
 import React, { useState } from "react"
 import Image from "next/image"
 
-// 🌟 IMPORT COMPONENT BAWAAN SESUAI REQUEST
+// 🌟 IMPORT COMPONENT BAWAAN
 import OurStoryTeller from "@modules/home/components/our-story-teller";
 import StoreSection from "@modules/home/components/store-location";
 
@@ -29,7 +29,8 @@ export default function AboutUsPage() {
     <main className="w-full min-h-screen bg-white text-[#111111]" style={{ fontFamily: '"Inter", sans-serif' }}>
       
       {/* ================= HERO SECTION ================= */}
-      <section className="relative w-full h-[60vh] md:h-[75vh] flex items-end justify-start bg-black pb-16 md:pb-24 px-6 md:px-16 overflow-hidden">
+      {/* "ABOUT US" Posisis Tengah & Bold */}
+      <section className="relative w-full h-[60vh] md:h-[70vh] flex items-center justify-center bg-black overflow-hidden">
         <div className="absolute inset-0 w-full h-full opacity-60">
           <Image
             src="/images/about-hero.jpg"
@@ -39,30 +40,31 @@ export default function AboutUsPage() {
             priority
           />
         </div>
-        <div className="relative z-10 w-full max-w-7xl mx-auto">
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-light tracking-[0.2em] text-white uppercase text-left leading-tight">
+        <div className="relative z-10 text-center px-6">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-[0.2em] text-white uppercase leading-tight">
             ABOUT US
           </h1>
         </div>
       </section>
 
       {/* ================= TAB NAVIGATION ================= */}
-      <section className="w-full max-w-7xl mx-auto px-6 py-12 md:py-20">
-        <div className="flex justify-center border-b border-gray-200 overflow-x-auto no-scrollbar mb-16 md:mb-20">
-          <div className="flex space-x-10 md:space-x-20 whitespace-nowrap px-4">
+      {/* Jarak Konten Lebih Naik (py-10) & Tab Bold saat Aktif */}
+      <section className="w-full max-w-full mx-auto py-10 md:py-14">
+        <div className="flex justify-center border-b border-gray-200 overflow-x-auto no-scrollbar mb-8 md:mb-12">
+          <div className="flex space-x-8 md:space-x-16 whitespace-nowrap px-6">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`pb-4 text-[10px] md:text-xs tracking-[0.15em] uppercase transition-all duration-300 relative focus:outline-none ${
+                className={`pb-4 text-xs md:text-sm tracking-[0.15em] uppercase transition-all duration-300 relative focus:outline-none ${
                   activeTab === tab.id
-                    ? "text-[#EF7044] font-medium"
-                    : "text-gray-400 hover:text-gray-900"
+                    ? "text-[#EF7044] font-bold" // Active: Bold + Orange
+                    : "text-gray-400 hover:text-gray-900 font-medium"
                 }`}
               >
                 {tab.label}
                 {activeTab === tab.id && (
-                  <span className="absolute bottom-0 left-0 w-full h-[2px] bg-[#EF7044]" />
+                  <span className="absolute bottom-0 left-0 w-full h-[2.5px] bg-[#EF7044]" />
                 )}
               </button>
             ))}
@@ -70,71 +72,85 @@ export default function AboutUsPage() {
         </div>
 
         {/* ================= TAB CONTENT VIEW ================= */}
-        <div className="w-full transition-all duration-500 min-h-[50vh]">
+        <div className="w-full transition-all duration-500">
           
-          {/* TAB 1: OUR STORY (Gambar 1:5 di atas, Teks di bawah) */}
+          {/* TAB 1: OUR STORY (Landscape 1:6 Full Width) */}
           {activeTab === "our-story" && (
-            <div className="flex flex-col gap-10 md:gap-12 animate-in fade-in duration-500">
-              <div className="relative w-full aspect-[3/1] md:aspect-[5/1] bg-gray-100 overflow-hidden">
+            <div className="flex flex-col gap-10 md:gap-14 animate-in fade-in duration-500">
+              <div className="relative w-full aspect-[4/1] md:aspect-[6/1] bg-gray-100 overflow-hidden">
                 <Image src="/images/our-story.jpg" alt="Our Story" fill className="object-cover" />
               </div>
-              <div className="w-full space-y-6">
-                <h2 className="text-xl md:text-2xl font-light tracking-[0.15em] uppercase text-gray-900 text-left">
-                  [JUDUL TAB 1]
-                </h2>
-                <div className="text-gray-600 font-light leading-relaxed text-sm md:text-base text-left space-y-4 max-w-4xl">
-                  <p>[PARAGRAF TAB 1]</p>
+              <div className="max-w-5xl mx-auto px-6 text-left space-y-6">
+                <div className="text-gray-700 font-normal leading-relaxed text-base md:text-lg space-y-6">
+                  <p>
+                    Founded in Jakarta in 2002 by designer <strong className="font-bold border-b border-black">Nico Genze</strong>, Niconico 
+                    was born from a passion for tropical living and thoughtful design.
+                    After moving to Bali a year later, the brand naturally evolved into
+                    a celebration of sun, sea, and coastal life.
+                  </p>
+                  <p>
+                    What began as a small boutique has grown into a global symbol
+                    of effortless island luxury, guided by a commitment to function,
+                    durability, and the way a woman moves.
+                  </p>
                 </div>
               </div>
             </div>
           )}
 
-          {/* TAB 2: THE CRAFT (Teks di Kiri, Gambar 2:3 di Kanan) */}
+          {/* TAB 2: THE CRAFT (Teks Kiri, Image 35% Nempel Kanan) */}
           {activeTab === "the-craft" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-20 items-center animate-in fade-in duration-500">
-              <div className="space-y-6 order-last md:order-first">
-                <h2 className="text-xl md:text-2xl font-light tracking-[0.15em] uppercase text-gray-900 text-left">
-                  [JUDUL TAB 2]
-                </h2>
-                <div className="text-gray-600 font-light leading-relaxed text-sm md:text-base text-left space-y-4">
-                  <p>[PARAGRAF TAB 2]</p>
+            <div className="flex flex-col md:flex-row items-center animate-in fade-in duration-500 overflow-hidden">
+              <div className="w-full md:w-[65%] px-6 md:pl-20 md:pr-16 py-10">
+                <div className="text-gray-700 font-normal leading-relaxed text-base md:text-lg space-y-6">
+                  <p>
+                    Today, Niconico remains independent and founder-led. 
+                    Every piece is designed by Nico and produced entirely in-house
+                    in Bali—from the initial pattern to the final hand-finished detail.
+                  </p>
+                  <p>
+                    We prioritize responsible, long-lasting fabrics that balance
+                    performance with a reduced environmental impact.
+                    For us, sustainability isn't a trend; it's about making pieces that last.
+                  </p>
                 </div>
               </div>
-              <div className="relative w-full aspect-[2/3] bg-gray-100 overflow-hidden">
+              <div className="w-full md:w-[35%] relative aspect-[2/3] bg-gray-100">
                 <Image src="/images/the-craft.jpg" alt="The Craft" fill className="object-cover" />
               </div>
             </div>
           )}
 
-          {/* TAB 3: THE SPIRIT (Gambar 2:3 di Kiri, Teks di Kanan) */}
+          {/* TAB 3: THE SPIRIT (Image 35% Nempel Kiri, Teks Kanan) */}
           {activeTab === "the-spirit" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-20 items-center animate-in fade-in duration-500">
-              <div className="relative w-full aspect-[2/3] bg-gray-100 overflow-hidden">
+            <div className="flex flex-col md:flex-row items-center animate-in fade-in duration-500 overflow-hidden">
+              <div className="w-full md:w-[35%] relative aspect-[2/3] bg-gray-100 order-first">
                 <Image src="/images/the-spirit.jpg" alt="The Spirit" fill className="object-cover" />
               </div>
-              <div className="space-y-6">
-                <h2 className="text-xl md:text-2xl font-light tracking-[0.15em] uppercase text-gray-900 text-left">
-                  [JUDUL TAB 3]
-                </h2>
-                <div className="text-gray-600 font-light leading-relaxed text-sm md:text-base text-left space-y-4">
-                  <p>[PARAGRAF TAB 3]</p>
+              <div className="w-full md:w-[65%] px-6 md:pr-20 md:pl-16 py-10">
+                <div className="text-gray-700 font-normal leading-relaxed text-base md:text-lg space-y-6">
+                  <p>We design for confidence and individuality.</p>
+                  <p>Our collections celebrate all body shapes, blending playful femininity with timeless island style.</p>
+                  <p>Whether it’s a sunrise swim or a sunset cocktail, Niconico is made to make you feel beautiful in your own skin.</p>
                 </div>
               </div>
             </div>
           )}
 
-          {/* TAB 4: OUR HERITAGE (Gambar 1:5 di atas, Teks di bawah) */}
+          {/* TAB 4: OUR HERITAGE (Landscape 1:6 Full Width) */}
           {activeTab === "our-heritage" && (
-            <div className="flex flex-col gap-10 md:gap-12 animate-in fade-in duration-500">
-              <div className="relative w-full aspect-[3/1] md:aspect-[5/1] bg-gray-100 overflow-hidden">
+            <div className="flex flex-col gap-10 md:gap-14 animate-in fade-in duration-500">
+              <div className="relative w-full aspect-[4/1] md:aspect-[6/1] bg-gray-100 overflow-hidden">
                 <Image src="/images/our-heritage.jpg" alt="Our Heritage" fill className="object-cover" />
               </div>
-              <div className="w-full space-y-6">
-                <h2 className="text-xl md:text-2xl font-light tracking-[0.15em] uppercase text-gray-900 text-left">
-                  [JUDUL TAB 4]
-                </h2>
-                <div className="text-gray-600 font-light leading-relaxed text-sm md:text-base text-left space-y-4 max-w-4xl">
-                  <p>[PARAGRAF TAB 4]</p>
+              <div className="max-w-5xl mx-auto px-6 text-left space-y-6">
+                <div className="text-gray-700 font-normal leading-relaxed text-base md:text-lg space-y-6">
+                  <p>With over two decades of expertise, our roots run deep.</p>
+                  <p>
+                    Designer Nico Genze, whose background includes time at Victoria’s Secret in New York—has called Indonesia home for most of his life. 
+                    Since 2010, we have proudly provided the swimwear for Miss Indonesia on the global stage. 
+                    From the shores of Bali to beaches worldwide, Niconico continues to capture the joy of sunshine, salt water, and self-expression.
+                  </p>
                 </div>
               </div>
             </div>
@@ -144,26 +160,27 @@ export default function AboutUsPage() {
       </section>
 
       {/* ================= DYNAMIC LOGO SECTION ================= */}
-      <section className="w-full py-16 mb-12 bg-white">
+      {/* Muat minimal 4 logo kesamping */}
+      <section className="w-full py-20 bg-white">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="flex items-center justify-center mb-12 opacity-70">
-            <span className="h-[1px] w-16 bg-gray-300"></span>
-            <h3 className="px-6 text-[10px] md:text-xs tracking-widest uppercase text-gray-500">
+          <div className="flex items-center justify-center mb-14 opacity-60">
+            <span className="h-[1px] w-20 bg-gray-300"></span>
+            <h3 className="px-6 text-[10px] md:text-xs tracking-widest uppercase text-gray-500 font-bold">
               FEATURED IN
             </h3>
-            <span className="h-[1px] w-16 bg-gray-300"></span>
+            <span className="h-[1px] w-20 bg-gray-300"></span>
           </div>
           
-          <div className="flex flex-wrap items-center justify-center gap-12 md:gap-16">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-10 md:gap-16 items-center justify-items-center">
             {brandLogos.map((logo, index) => (
               <div 
                 key={index} 
-                className="h-8 md:h-10 w-auto filter grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-300 flex items-center justify-center"
+                className="h-8 md:h-10 w-full flex items-center justify-center grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-500"
               >
                 <img
                   src={logo.src}
                   alt={logo.alt}
-                  className="h-full w-auto object-contain"
+                  className="max-h-full w-auto object-contain"
                 />
               </div>
             ))}
@@ -171,12 +188,12 @@ export default function AboutUsPage() {
         </div>
       </section>
 
-      {/* ================= SECTION BAWAH DARI COMPONENTS ================= */}
+      {/* ================= SECTION COMPONENTS ================= */}
       <section className="w-full">
         <OurStoryTeller />
       </section>
 
-      <section className="w-full">
+      <section className="w-full mt-10">
         <StoreSection />
       </section>
 
