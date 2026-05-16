@@ -7,7 +7,6 @@ import { useParams, useRouter } from "next/navigation"
 import { updateCustomerWishlist } from "@lib/data/customer"
 
 import { useCart } from "@/context/cart-context"
-import { prepareCheckoutCart } from "@lib/util/checkout-util"
 
 interface SizeData {
   label: string
@@ -19,7 +18,7 @@ interface SizeData {
 const ProductActions = ({ product, region, customer }: { product: any, region: any, customer: any }) => {
   const countryCode = useParams().countryCode as string
   const router = useRouter() 
-  const { cart: mainCart } = useCart() 
+  const { cart: mainCart, addToCart: refreshCartCount } = useCart() 
 
   // 🌟 LOGIKA WARNA
   const colorName = product?.metadata?.color_name || "White"
@@ -234,66 +233,51 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
     setIsWishlisted(!isWishlisted)
   }
 
-  const handleBuyNow = async (isSetBundle = false, redirectToCheckout = false) => {
+  // 🌟 LOGIKA BUY NOW YANG SUDAH DIUBAH (Langsung Lempar ke Cart)
+  const handleBuyNow = async (isSetBundle = false, redirectToCart = false) => {
     setIsAdding(true)
     try {
-      if (redirectToCheckout) {
-        if (!mainCart) return alert("Sistem keranjang sedang disiapkan, tunggu sebentar ya say.")
-
-        let itemsToBuy = [];
-        const uniqueSetId = `BUNDLE-${Date.now()}`;
-
-        if (isSetBundle) {
-          if (!selectedModalTopVariant || !selectedModalBottomVariant) return alert("Pilih size Top & Bottom dulu say!")
-          itemsToBuy = [
-            { variant_id: selectedModalTopVariant.id, quantity: setQuantity, metadata: { is_bundle: true, bundle_id: uniqueSetId, bundle_type: "TOP", size: topSize, color: colorName } },
-            { variant_id: selectedModalBottomVariant.id, quantity: setQuantity, metadata: { is_bundle: true, bundle_id: uniqueSetId, bundle_type: "BOTTOM", size: bottomSize, color: colorName } }
-          ];
-        } else {
-          if (!selectedRegulerVariant?.id) return alert("Pilih size dulu ya say!")
-          itemsToBuy = [
-            { variant_id: selectedRegulerVariant.id, quantity: 1, metadata: { color: colorName } }
-          ];
-        }
-
-        const newCartId = await prepareCheckoutCart(mainCart, itemsToBuy);
+      if (isSetBundle) {
+        if (!selectedModalTopVariant || !selectedModalBottomVariant) return alert("Pilih size Top & Bottom dulu say!")
+        const uniqueSetId = `BUNDLE-${Date.now()}`
         
-        if (newCartId) {
-          router.push(`/${countryCode}/checkout?cart_id=${newCartId}`);
+        await addToCart({ 
+          variantId: selectedModalTopVariant.id, 
+          quantity: setQuantity, 
+          countryCode: countryCode || "id",
+          metadata: { is_bundle: true, bundle_id: uniqueSetId, bundle_type: "TOP", size: topSize, color: colorName }
+        })
+        await addToCart({ 
+          variantId: selectedModalBottomVariant.id, 
+          quantity: setQuantity, 
+          countryCode: countryCode || "id",
+          metadata: { is_bundle: true, bundle_id: uniqueSetId, bundle_type: "BOTTOM", size: bottomSize, color: colorName }
+        })
+
+        if (refreshCartCount) refreshCartCount();
+
+        if (redirectToCart) {
+          router.push(`/${countryCode}/cart`);
         } else {
-          alert("Gagal memproses Buy Now. Coba lagi ya say.");
+          alert(`Berhasil masuk keranjang!`);
+          setIsSetModalOpen(false);
         }
 
       } else {
-        if (isSetBundle) {
-          if (!selectedModalTopVariant || !selectedModalBottomVariant) return alert("Pilih size Top & Bottom dulu say!")
-          const uniqueSetId = `BUNDLE-${Date.now()}`
-          
-          await addToCart({ 
-            variantId: selectedModalTopVariant.id, 
-            quantity: setQuantity, 
-            countryCode: countryCode || "id",
-            metadata: { is_bundle: true, bundle_id: uniqueSetId, bundle_type: "TOP", size: topSize, color: colorName }
-          })
-          await addToCart({ 
-            variantId: selectedModalBottomVariant.id, 
-            quantity: setQuantity, 
-            countryCode: countryCode || "id",
-            metadata: { is_bundle: true, bundle_id: uniqueSetId, bundle_type: "BOTTOM", size: bottomSize, color: colorName }
-          })
+        if (!selectedRegulerVariant?.id) return alert("Pilih size dulu ya say!")
+        await addToCart({ 
+          variantId: selectedRegulerVariant.id, 
+          quantity: 1, 
+          countryCode: countryCode || "id",
+          metadata: { color: colorName }
+        })
+        
+        if (refreshCartCount) refreshCartCount();
 
-          alert(`Berhasil masuk keranjang!`)
-          setIsSetModalOpen(false)
+        if (redirectToCart) {
+          router.push(`/${countryCode}/cart`);
         } else {
-          if (!selectedRegulerVariant?.id) return alert("Pilih size dulu ya say!")
-          await addToCart({ 
-            variantId: selectedRegulerVariant.id, 
-            quantity: 1, 
-            countryCode: countryCode || "id",
-            metadata: { color: colorName }
-          })
-          
-          alert(`Berhasil masuk keranjang!`)
+          alert(`Berhasil masuk keranjang!`);
         }
       }
     } catch (error) {
