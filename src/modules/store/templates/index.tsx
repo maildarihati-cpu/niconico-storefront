@@ -16,7 +16,7 @@ const topCategories = [
   { name: "SWIMSUIT", handle: "swimsuit", img: "/category/swimsuit.png" },
   { name: "RESORT WEAR", handle: "resort-wear", img: "/category/resort-wear.png" },
   { name: "MEN'S WEAR", handle: "mens-wear", img: "/category/mens-wear.png" },
-  { name: "ACCESORIES", handle: "accesories", img: "/category/accessories.png" },
+  { name: "ACCESSORIES", handle: "accessories", img: "/category/accessories.png" },
 ];
 
 // 🌟 KAMUS WARNA UNTUK DRAWER FILTER
