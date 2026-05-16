@@ -237,7 +237,8 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
     }
   }, [product.id])
 
-  const toggleWishlist = () => {
+  // 🌟 PERBAIKAN 1: SINKRONISASI DATABASE DI TOMBOL MODAL
+  const toggleWishlist = async () => {
     const localWishlist = JSON.parse(localStorage.getItem("wishlist") || "[]")
     let updatedWishlist = []
     if (isWishlisted) {
@@ -245,8 +246,36 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
     } else {
       updatedWishlist = [...localWishlist, product.id]
     }
+    
     localStorage.setItem("wishlist", JSON.stringify(updatedWishlist))
     setIsWishlisted(!isWishlisted)
+
+    // JURUS UPDATE DATABASE MEDUSA
+    const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://niconico-backend-production.up.railway.app"
+    try {
+      const customerRes = await fetch(`${backendUrl}/store/customers/me`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include"
+      }).catch(() => null)
+
+      if (customerRes && customerRes.ok) {
+        const { customer } = await customerRes.json()
+        await fetch(`${backendUrl}/store/customers/me`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            metadata: {
+              ...customer.metadata,
+              wishlist: updatedWishlist
+            }
+          })
+        })
+      }
+    } catch (err) {
+      console.error("Gagal sinkronisasi wishlist ke database:", err)
+    }
   }
 
   const handleAddToCart = async (isSetBundle = false) => {
@@ -542,7 +571,7 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
 export default function StoreTemplate() {
   const { countryCode } = useParams();
   const searchParams = useSearchParams(); 
-  const router = useRouter(); // 👈 INI DIA MOBILNYA BOS! SUDAH SAYA TAMBAHKAN
+  const router = useRouter(); 
   
   // STATE UTAMA
   const [products, setProducts] = useState<any[]>([]);
@@ -557,7 +586,7 @@ export default function StoreTemplate() {
   // STATE POPUP VARIAN
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   
-  // 🌟 STATE FILTER (Sinkronisasi Category Luar & Dalam Drawer)
+  // 🌟 STATE FILTER
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all"); 
   const [minPrice, setMinPrice] = useState(200000);
@@ -566,10 +595,9 @@ export default function StoreTemplate() {
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedCollection, setSelectedCollection] = useState("");
   
-  // State untuk menangani New Release (Sort By Newest secara paksa)
+  // State untuk menangani New Release
   const [forceSortNewest, setForceSortNewest] = useState(false);
 
-  // 🌟 JURUS SINKRONISASI URL (Membaca perintah dari NavDrawer)
   useEffect(() => {
     const urlQuery = searchParams.get("q");
     if (urlQuery) setSearchQuery(urlQuery);
@@ -643,7 +671,6 @@ export default function StoreTemplate() {
       if (data && data.response) {
         let fetched = data.response.products;
 
-        // 🌟 EKSTRA FILTER PENCARIAN (Biar ketik 'bikin' langsung dapet 'bikini')
         if (searchQuery) {
           const queryLower = searchQuery.toLowerCase();
           fetched = fetched.filter((p: any) => 
@@ -658,7 +685,6 @@ export default function StoreTemplate() {
            );
         }
 
-        // 🌟 PERBAIKAN 1: Filter Collections via Category
         if (selectedCollection) {
           const collectionHandle = selectedCollection.toLowerCase().replace(/ /g, '-');
           fetched = fetched.filter((p: any) => 
@@ -678,15 +704,12 @@ export default function StoreTemplate() {
           return finalPrice >= minPrice && finalPrice <= maxPrice;
         });
 
-        // 🌟 PERBAIKAN 2: Filter Size yang Tervalidasi dengan Data Stok (Inventory)
         if (selectedSize) {
           fetched = fetched.filter((p: any) => 
             p.variants?.some((v: any) => {
-              // Cek kecocokan nama size
               const matchSize = v.title.toLowerCase().includes(selectedSize.toLowerCase()) || 
                                 v.options?.some((opt: any) => opt.value?.toLowerCase() === selectedSize.toLowerCase());
               
-              // Cek ketersediaan stok
               const qty = v.inventory_quantity || 0;
               const hasStock = v.manage_inventory === false || v.allow_backorder === true || qty > 0;
 
@@ -733,7 +756,6 @@ export default function StoreTemplate() {
     setSelectedCollection("");
     setSearchQuery("");
     
-    // 🌟 SEKARANG ROUTER.PUSH SUDAH BISA JALAN DENGAN AMAN!
     router.push(`/${countryCode}/store`);
   };
 
@@ -747,17 +769,47 @@ export default function StoreTemplate() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const toggleWishlist = (e: React.MouseEvent, productId: string) => {
+  // 🌟 PERBAIKAN 2: SINKRONISASI DATABASE DI TOMBOL GRID UTAMA
+  const toggleWishlist = async (e: React.MouseEvent, productId: string) => {
     e.preventDefault();
     e.stopPropagation();
+    
     let updatedWishlist = [];
     if (wishlist.includes(productId)) {
       updatedWishlist = wishlist.filter(id => id !== productId);
     } else {
       updatedWishlist = [...wishlist, productId];
     }
+    
     setWishlist(updatedWishlist);
     localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
+
+    // JURUS UPDATE DATABASE MEDUSA
+    const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://niconico-backend-production.up.railway.app"
+    try {
+      const customerRes = await fetch(`${backendUrl}/store/customers/me`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include"
+      }).catch(() => null)
+
+      if (customerRes && customerRes.ok) {
+        const { customer } = await customerRes.json()
+        await fetch(`${backendUrl}/store/customers/me`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            metadata: {
+              ...customer.metadata,
+              wishlist: updatedWishlist
+            }
+          })
+        })
+      }
+    } catch (err) {
+      console.error("Gagal sinkronisasi wishlist ke database:", err)
+    }
   };
 
   const closeAndRefreshWishlist = () => {

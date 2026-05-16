@@ -14,13 +14,34 @@ export default function WishlistPage() {
   const [wishlistItems, setWishlistItems] = useState<HttpTypes.StoreProduct[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
-  // 1. Ambil ID dari LocalStorage & Tarik Data dari Medusa
+  // 1. Ambil ID (Gabungan LocalStorage + Database jika Login) & Tarik Data dari Medusa
   const fetchWishlistProducts = async () => {
     setIsLoading(true)
     try {
-      const savedWishlist = JSON.parse(localStorage.getItem("wishlist") || "[]")
+      let activeWishlist = JSON.parse(localStorage.getItem("wishlist") || "[]")
+      const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://niconico-backend-production.up.railway.app"
+
+      // 🌟 JURUS SINKRONISASI: Cek apakah user sedang login
+      try {
+        const customerRes = await fetch(`${backendUrl}/store/customers/me`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include"
+        }).catch(() => null)
+
+        if (customerRes && customerRes.ok) {
+          const { customer } = await customerRes.json()
+          const backendWishlist = customer?.metadata?.wishlist || []
+          
+          // Gabungkan data lokal dengan database (antisipasi jika ada update dari perangkat lain)
+          activeWishlist = Array.from(new Set([...activeWishlist, ...backendWishlist]))
+          localStorage.setItem("wishlist", JSON.stringify(activeWishlist))
+        }
+      } catch (e) {
+        console.error("Gagal sinkronisasi data dengan server, fallback ke lokal.", e)
+      }
       
-      if (savedWishlist.length === 0) {
+      if (activeWishlist.length === 0) {
         setWishlistItems([])
         setIsLoading(false)
         return
@@ -29,16 +50,16 @@ export default function WishlistPage() {
       // Ambil produk dalam jumlah besar dari Medusa
       const { response } = await listProducts({
         queryParams: { 
-          limit: 100, // Ambil banyak produk sekaligus
+          limit: 100, 
           fields: "*variants.calculated_price" 
         },
         countryCode: countryCode as string,
       })
 
-      // Filter produk HANYA JIKA ID-nya ada di dalam savedWishlist
+      // Filter produk HANYA JIKA ID-nya ada di dalam activeWishlist
       if (response && response.products) {
         const matchedProducts = response.products.filter(product => 
-          product.id && savedWishlist.includes(product.id)
+          product.id && activeWishlist.includes(product.id)
         );
         setWishlistItems(matchedProducts)
       } else {
@@ -47,7 +68,7 @@ export default function WishlistPage() {
 
     } catch (error) {
       console.error("Gagal mengambil wishlist:", error)
-    } finally {
+    } finally { // 👈 INI YANG TADI TYPO JADI file-sharing BOS 😂
       setIsLoading(false)
     }
   }
@@ -56,14 +77,42 @@ export default function WishlistPage() {
     fetchWishlistProducts()
   }, [countryCode])
 
-  // 2. Hapus dari Wishlist
-  const removeFromWishlist = (productId: string) => {
+  // 2. Hapus dari Wishlist (Lokal & Database)
+  const removeFromWishlist = async (productId: string) => {
     const savedWishlist = JSON.parse(localStorage.getItem("wishlist") || "[]")
     const updatedWishlist = savedWishlist.filter((id: string) => id !== productId)
     localStorage.setItem("wishlist", JSON.stringify(updatedWishlist))
     
     // Update state biar langsung hilang dari layar
     setWishlistItems(prev => prev.filter(p => p.id !== productId))
+
+    // 🌟 JURUS UPDATE DATABASE: Jika user login, hapus juga data di database Medusa
+    const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://niconico-backend-production.up.railway.app"
+    try {
+      const customerRes = await fetch(`${backendUrl}/store/customers/me`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include"
+      }).catch(() => null)
+
+      if (customerRes && customerRes.ok) {
+        const { customer } = await customerRes.json()
+        
+        await fetch(`${backendUrl}/store/customers/me`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            metadata: {
+              ...customer.metadata,
+              wishlist: updatedWishlist
+            }
+          })
+        })
+      }
+    } catch (err) {
+      console.error("Gagal memperbarui database wishlist setelah dihapus:", err)
+    }
   }
 
   const formatPrice = (amount: number) => {

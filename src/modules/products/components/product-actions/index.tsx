@@ -209,28 +209,47 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
     }
   }, [product.id])
 
+  // 🌟 LOGIKA WISHLIST YANG SUDAH DIPERBAIKI (SINKRONISASI AKTIF)
   const toggleWishlist = async () => {
     const localWishlist = JSON.parse(localStorage.getItem("wishlist") || "[]")
     let updatedWishlist = []
 
-    if (customer) {
-      const cloudWishlist = customer.metadata?.wishlist || []
-      if (isWishlisted) {
-        updatedWishlist = cloudWishlist.filter((id: string) => id !== product.id)
-      } else {
-        updatedWishlist = [...cloudWishlist, product.id]
-      }
-      await updateCustomerWishlist(updatedWishlist)
+    if (isWishlisted) {
+      updatedWishlist = localWishlist.filter((id: string) => id !== product.id)
     } else {
-      if (isWishlisted) {
-        updatedWishlist = localWishlist.filter((id: string) => id !== product.id)
-      } else {
-        updatedWishlist = [...localWishlist, product.id]
-      }
-      localStorage.setItem("wishlist", JSON.stringify(updatedWishlist))
+      updatedWishlist = [...localWishlist, product.id]
     }
     
+    // 1. Selalu simpan di Local Storage agar responsif di sisi kustomer
+    localStorage.setItem("wishlist", JSON.stringify(updatedWishlist))
     setIsWishlisted(!isWishlisted)
+
+    // 2. Jurus Update Database Medusa Jika Login
+    const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://niconico-backend-production.up.railway.app"
+    try {
+      const customerRes = await fetch(`${backendUrl}/store/customers/me`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include"
+      }).catch(() => null)
+
+      if (customerRes && customerRes.ok) {
+        const { customer } = await customerRes.json()
+        await fetch(`${backendUrl}/store/customers/me`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            metadata: {
+              ...customer.metadata,
+              wishlist: updatedWishlist
+            }
+          })
+        })
+      }
+    } catch (err) {
+      console.error("Gagal sinkronisasi wishlist ke database:", err)
+    }
   }
 
   // 🌟 LOGIKA BUY NOW YANG SUDAH DIUBAH (Langsung Lempar ke Cart)
