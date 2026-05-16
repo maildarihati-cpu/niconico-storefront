@@ -47,7 +47,6 @@ export default function AboutUsPage() {
       </section>
 
       {/* ================= TAB NAVIGATION ================= */}
-      {/* Pakai flex-nowrap dan overflow-x-auto biar fix 1 baris */}
       <section className="w-full max-w-full mx-auto py-10 md:py-14">
         <div className="flex justify-center border-b border-gray-200 mb-8 md:mb-12 px-4 overflow-x-auto no-scrollbar">
           <div className="flex flex-nowrap justify-center space-x-6 md:space-x-16 w-max">
@@ -71,7 +70,8 @@ export default function AboutUsPage() {
         </div>
 
         {/* ================= TAB CONTENT VIEW ================= */}
-        <div className="w-full transition-all duration-500">
+        <div className="w-full transition-all duration-500 pb-8"> 
+          {/* pb-8 memangkas jarak bawah konten tab sebelum logo */}
           
           {/* TAB 1: OUR STORY */}
           {activeTab === "our-story" && (
@@ -97,11 +97,11 @@ export default function AboutUsPage() {
             </div>
           )}
 
-          {/* TAB 2: THE CRAFT */}
+          {/* TAB 2: THE CRAFT (HARGA MATI KANAN-KIRI: Teks 65% Kiri, Image 35% Kanan) */}
           {activeTab === "the-craft" && (
-            <div className="flex flex-col md:flex-row items-center animate-in fade-in duration-500">
-              <div className="w-full md:w-[65%] px-6 md:pl-20 md:pr-16 py-10 order-last md:order-first">
-                <div className="text-gray-700 font-normal leading-relaxed text-base md:text-lg space-y-6">
+            <div className="flex flex-row items-center animate-in fade-in duration-500 w-full">
+              <div className="w-[65%] px-6 md:pl-20 md:pr-16 py-10">
+                <div className="text-gray-700 font-normal leading-relaxed text-sm md:text-lg space-y-6">
                   <p>
                     Today, Niconico remains independent and founder-led. 
                     Every piece is designed by Nico and produced entirely in-house
@@ -114,20 +114,20 @@ export default function AboutUsPage() {
                   </p>
                 </div>
               </div>
-              <div className="w-full md:w-[35%] relative aspect-[2/3] bg-gray-100">
+              <div className="w-[35%] relative aspect-[2/3] bg-gray-100">
                 <Image src="/images/the-craft.jpg" alt="The Craft" fill className="object-cover" />
               </div>
             </div>
           )}
 
-          {/* TAB 3: THE SPIRIT */}
+          {/* TAB 3: THE SPIRIT (HARGA MATI KANAN-KIRI: Image 35% Kiri, Teks 65% Kanan) */}
           {activeTab === "the-spirit" && (
-            <div className="flex flex-col md:flex-row items-center animate-in fade-in duration-500">
-              <div className="w-full md:w-[35%] relative aspect-[2/3] bg-gray-100">
+            <div className="flex flex-row items-center animate-in fade-in duration-500 w-full">
+              <div className="w-[35%] relative aspect-[2/3] bg-gray-100">
                 <Image src="/images/the-spirit.jpg" alt="The Spirit" fill className="object-cover" />
               </div>
-              <div className="w-full md:w-[65%] px-6 md:pr-20 md:pl-16 py-10">
-                <div className="text-gray-700 font-normal leading-relaxed text-base md:text-lg space-y-6">
+              <div className="w-[65%] px-6 md:pr-20 md:pl-16 py-10">
+                <div className="text-gray-700 font-normal leading-relaxed text-sm md:text-lg space-y-6">
                   <p>We design for confidence and individuality.</p>
                   <p>Our collections celebrate all body shapes, blending playful femininity with timeless island style.</p>
                   <p>Whether it’s a sunrise swim or a sunset cocktail, Niconico is made to make you feel beautiful in your own skin.</p>
@@ -159,10 +159,10 @@ export default function AboutUsPage() {
       </section>
 
       {/* ================= DYNAMIC LOGO SECTION ================= */}
-      {/* Menggunakan flex + gap konstan untuk tampilan mengalir dengan tinggi sama rata */}
-      <section className="w-full py-20 bg-white">
+      {/* Jarak dipangkas dari py-20 jadi py-8 */}
+      <section className="w-full py-8 bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="flex items-center justify-center mb-14 opacity-60">
+          <div className="flex items-center justify-center mb-8 opacity-60">
             <span className="h-[1px] w-20 bg-gray-300"></span>
             <h3 className="px-6 text-[10px] md:text-xs tracking-widest uppercase text-gray-500 font-bold">
               FEATURED IN
@@ -174,7 +174,7 @@ export default function AboutUsPage() {
             {brandLogos.map((logo, index) => (
               <div 
                 key={index} 
-                className="h-8 md:h-12 w-auto flex items-center justify-center grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-500"
+                className="h-8 md:h-10 w-auto flex items-center justify-center grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-500"
               >
                 <img
                   src={logo.src}
