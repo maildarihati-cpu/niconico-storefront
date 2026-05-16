@@ -6,7 +6,7 @@ import { X, Search, ChevronRight, ChevronDown, Star, Zap, Loader2 } from "lucide
 import Image from "next/image";
 import LocalizedClientLink from "@modules/common/components/localized-client-link";
 import { listProducts } from "@lib/data/products";
-import { listCategories } from "@lib/data/categories";
+// ❌ IMPORT listCategories SUDAH DIHAPUS AGAR TIDAK ERROR SERVER-ONLY DI VERCEL
 
 interface Props {
   isOpen: boolean;
@@ -43,15 +43,24 @@ export default function NavDrawer({ isOpen, onClose, view, setView }: Props) {
 
       setIsLoadingData(true);
       try {
-        // 1. Tarik Category ID untuk Best Seller & New Arrivals
-        const categories = await listCategories({ 
-          queryParams: { handle: ["best-seller", "new-arrivals"] } 
-        }).catch(() => null);
+        const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000";
+        const apiKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "";
 
-        const bsCategory = categories?.find((c: any) => c.handle === "best-seller");
-        const naCategory = categories?.find((c: any) => c.handle === "new-arrivals");
+        // 🌟 1. Tarik Category ID pakai Native Fetch (Bypass "Server-Only" Error)
+        const fetchCategory = async (handle: string) => {
+          const res = await fetch(`${backendUrl}/store/product-categories?handle=${handle}`, {
+            headers: { "x-publishable-api-key": apiKey }
+          }).catch(() => null);
+          
+          if (!res) return null;
+          const data = await res.json();
+          return data.product_categories?.[0];
+        };
 
-        // 2. Jika ketemu, tarik produk berdasarkan CATEGORY_ID
+        const bsCategory = await fetchCategory("best-seller");
+        const naCategory = await fetchCategory("new-arrivals");
+
+        // 🌟 2. Jika ketemu, tarik produk berdasarkan CATEGORY_ID
         if (bsCategory) {
           const bsData = await listProducts({
             queryParams: { category_id: [bsCategory.id], limit: 2, fields: "*variants,*variants.prices" },
