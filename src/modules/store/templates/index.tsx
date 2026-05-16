@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { useParams, useRouter, useSearchParams } from "next/navigation"; // 👈 Ada tambahan useSearchParams di sini
+import { useParams, useRouter, useSearchParams } from "next/navigation"; 
 import { Heart, Search, X, ChevronDown, ArrowUp, ShoppingCart, Ruler } from "lucide-react";
 import LocalizedClientLink from "@modules/common/components/localized-client-link";
 import { listProducts } from "@lib/data/products";
@@ -541,7 +541,7 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
 // ==========================================
 export default function StoreTemplate() {
   const { countryCode } = useParams();
-  const searchParams = useSearchParams(); // 👈 TANGKAP PARAMETER URL DARI DRAWER
+  const searchParams = useSearchParams(); 
   
   // STATE UTAMA
   const [products, setProducts] = useState<any[]>([]);
@@ -556,7 +556,7 @@ export default function StoreTemplate() {
   // STATE POPUP VARIAN
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   
-  // STATE FILTER
+  // 🌟 STATE FILTER (Sinkronisasi Category Luar & Dalam Drawer)
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all"); 
   const [minPrice, setMinPrice] = useState(200000);
@@ -648,6 +648,7 @@ export default function StoreTemplate() {
            );
         }
 
+        // 🌟 PERBAIKAN 1: Filter Collections via Category
         if (selectedCollection) {
           const collectionHandle = selectedCollection.toLowerCase().replace(/ /g, '-');
           fetched = fetched.filter((p: any) => 
@@ -667,9 +668,20 @@ export default function StoreTemplate() {
           return finalPrice >= minPrice && finalPrice <= maxPrice;
         });
 
+        // 🌟 PERBAIKAN 2: Filter Size yang Tervalidasi dengan Data Stok (Inventory)
         if (selectedSize) {
           fetched = fetched.filter((p: any) => 
-            p.variants?.some((v: any) => v.title.toLowerCase().includes(selectedSize.toLowerCase()))
+            p.variants?.some((v: any) => {
+              // Cek kecocokan nama size
+              const matchSize = v.title.toLowerCase().includes(selectedSize.toLowerCase()) || 
+                                v.options?.some((opt: any) => opt.value?.toLowerCase() === selectedSize.toLowerCase());
+              
+              // Cek ketersediaan stok
+              const qty = v.inventory_quantity || 0;
+              const hasStock = v.manage_inventory === false || v.allow_backorder === true || qty > 0;
+
+              return matchSize && hasStock;
+            })
           );
         }
 
