@@ -47,8 +47,8 @@ export default function AboutUsPage() {
       </section>
 
       {/* ================= TAB NAVIGATION ================= */}
-      <section className="w-full max-w-full mx-auto py-10 md:py-14">
-        <div className="flex justify-center border-b border-gray-200 mb-8 md:mb-12 px-4 overflow-x-auto no-scrollbar">
+      <section className="w-full max-w-full mx-auto pt-10 pb-0">
+        <div className="flex justify-center border-b border-gray-200 mb-6 px-4 overflow-x-auto no-scrollbar">
           <div className="flex flex-nowrap justify-center space-x-6 md:space-x-16 w-max">
             {tabs.map((tab) => (
               <button
@@ -70,17 +70,17 @@ export default function AboutUsPage() {
         </div>
 
         {/* ================= TAB CONTENT VIEW ================= */}
-        <div className="w-full transition-all duration-500 pb-8"> 
-          {/* pb-8 memangkas jarak bawah konten tab sebelum logo */}
+        {/* pb-0 untuk memangkas jarak bawah kontainer tab */}
+        <div className="w-full transition-all duration-500 pb-0"> 
           
           {/* TAB 1: OUR STORY */}
           {activeTab === "our-story" && (
-            <div className="flex flex-col gap-10 md:gap-14 animate-in fade-in duration-500">
+            <div className="flex flex-col gap-8 animate-in fade-in duration-500">
               <div className="relative w-full aspect-[4/1] md:aspect-[6/1] bg-gray-100">
                 <Image src="/images/our-story.jpg" alt="Our Story" fill className="object-cover" />
               </div>
-              <div className="max-w-5xl mx-auto px-6 text-left space-y-6">
-                <div className="text-gray-700 font-normal leading-relaxed text-base md:text-lg space-y-6">
+              <div className="max-w-5xl mx-auto px-6 text-left pb-4">
+                <div className="text-gray-700 font-normal leading-relaxed text-sm md:text-base space-y-4">
                   <p>
                     Founded in Jakarta in 2002 by designer <strong className="font-bold border-b border-black">Nico Genze</strong>, Niconico 
                     was born from a passion for tropical living and thoughtful design.
@@ -97,11 +97,11 @@ export default function AboutUsPage() {
             </div>
           )}
 
-          {/* TAB 2: THE CRAFT (HARGA MATI KANAN-KIRI: Teks 65% Kiri, Image 35% Kanan) */}
+          {/* TAB 2: THE CRAFT (Teks & Image Baku Samping, Tinggi Sejajar & Mengikuti Teks) */}
           {activeTab === "the-craft" && (
-            <div className="flex flex-row items-center animate-in fade-in duration-500 w-full">
-              <div className="w-[65%] px-6 md:pl-20 md:pr-16 py-10">
-                <div className="text-gray-700 font-normal leading-relaxed text-sm md:text-lg space-y-6">
+            <div className="flex flex-row items-stretch animate-in fade-in duration-500 w-full bg-white">
+              <div className="w-[65%] px-6 md:pl-20 md:pr-16 py-6 flex flex-col justify-center">
+                <div className="text-gray-700 font-normal leading-relaxed text-sm md:text-base space-y-4">
                   <p>
                     Today, Niconico remains independent and founder-led. 
                     Every piece is designed by Nico and produced entirely in-house
@@ -114,20 +114,20 @@ export default function AboutUsPage() {
                   </p>
                 </div>
               </div>
-              <div className="w-[35%] relative aspect-[2/3] bg-gray-100">
+              <div className="w-[35%] relative bg-gray-100">
                 <Image src="/images/the-craft.jpg" alt="The Craft" fill className="object-cover" />
               </div>
             </div>
           )}
 
-          {/* TAB 3: THE SPIRIT (HARGA MATI KANAN-KIRI: Image 35% Kiri, Teks 65% Kanan) */}
+          {/* TAB 3: THE SPIRIT (Teks & Image Baku Samping, Tinggi Sejajar & Mengikuti Teks) */}
           {activeTab === "the-spirit" && (
-            <div className="flex flex-row items-center animate-in fade-in duration-500 w-full">
-              <div className="w-[35%] relative aspect-[2/3] bg-gray-100">
+            <div className="flex flex-row items-stretch animate-in fade-in duration-500 w-full bg-white">
+              <div className="w-[35%] relative bg-gray-100">
                 <Image src="/images/the-spirit.jpg" alt="The Spirit" fill className="object-cover" />
               </div>
-              <div className="w-[65%] px-6 md:pr-20 md:pl-16 py-10">
-                <div className="text-gray-700 font-normal leading-relaxed text-sm md:text-lg space-y-6">
+              <div className="w-[65%] px-6 md:pr-20 md:pl-16 py-6 flex flex-col justify-center">
+                <div className="text-gray-700 font-normal leading-relaxed text-sm md:text-base space-y-4">
                   <p>We design for confidence and individuality.</p>
                   <p>Our collections celebrate all body shapes, blending playful femininity with timeless island style.</p>
                   <p>Whether it’s a sunrise swim or a sunset cocktail, Niconico is made to make you feel beautiful in your own skin.</p>
@@ -138,12 +138,12 @@ export default function AboutUsPage() {
 
           {/* TAB 4: OUR HERITAGE */}
           {activeTab === "our-heritage" && (
-            <div className="flex flex-col gap-10 md:gap-14 animate-in fade-in duration-500">
+            <div className="flex flex-col gap-8 animate-in fade-in duration-500">
               <div className="relative w-full aspect-[4/1] md:aspect-[6/1] bg-gray-100">
                 <Image src="/images/our-heritage.jpg" alt="Our Heritage" fill className="object-cover" />
               </div>
-              <div className="max-w-5xl mx-auto px-6 text-left space-y-6">
-                <div className="text-gray-700 font-normal leading-relaxed text-base md:text-lg space-y-6">
+              <div className="max-w-5xl mx-auto px-6 text-left pb-4">
+                <div className="text-gray-700 font-normal leading-relaxed text-sm md:text-base space-y-4">
                   <p>With over two decades of expertise, our roots run deep.</p>
                   <p>
                     Designer Nico Genze, whose background includes time at Victoria’s Secret in New York—has called Indonesia home for most of his life. 
@@ -159,10 +159,10 @@ export default function AboutUsPage() {
       </section>
 
       {/* ================= DYNAMIC LOGO SECTION ================= */}
-      {/* Jarak dipangkas dari py-20 jadi py-8 */}
-      <section className="w-full py-8 bg-white border-b border-gray-100">
+      {/* pt-4 memotong jarak kosong atas agar mepet ke tab content */}
+      <section className="w-full pt-4 pb-8 bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="flex items-center justify-center mb-8 opacity-60">
+          <div className="flex items-center justify-center mb-6 opacity-60">
             <span className="h-[1px] w-20 bg-gray-300"></span>
             <h3 className="px-6 text-[10px] md:text-xs tracking-widest uppercase text-gray-500 font-bold">
               FEATURED IN
@@ -170,11 +170,11 @@ export default function AboutUsPage() {
             <span className="h-[1px] w-20 bg-gray-300"></span>
           </div>
           
-          <div className="flex flex-wrap items-center justify-center gap-8 md:gap-14">
+          <div className="flex flex-wrap items-center justify-center gap-6 md:gap-12">
             {brandLogos.map((logo, index) => (
               <div 
                 key={index} 
-                className="h-8 md:h-10 w-auto flex items-center justify-center grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-500"
+                className="h-7 md:h-9 w-auto flex items-center justify-center grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-500"
               >
                 <img
                   src={logo.src}
