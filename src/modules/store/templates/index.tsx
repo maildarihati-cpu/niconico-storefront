@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation"; // 👈 Ada tambahan useSearchParams di sini
 import { Heart, Search, X, ChevronDown, ArrowUp, ShoppingCart, Ruler } from "lucide-react";
 import LocalizedClientLink from "@modules/common/components/localized-client-link";
 import { listProducts } from "@lib/data/products";
@@ -19,7 +19,7 @@ const topCategories = [
   { name: "ACCESORIES", handle: "accesories", img: "/category/accessories.png" },
 ];
 
-// 🌟 KAMUS WARNA UNTUK DRAWER FILTER (BOS BISA TAMBAH WARNA DI SINI!)
+// 🌟 KAMUS WARNA UNTUK DRAWER FILTER
 const COLOR_IDENTITY: Record<string, string> = {
   black: "#222222",
   white: "#FFFFFF",
@@ -541,6 +541,7 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
 // ==========================================
 export default function StoreTemplate() {
   const { countryCode } = useParams();
+  const searchParams = useSearchParams(); // 👈 TANGKAP PARAMETER URL DARI DRAWER
   
   // STATE UTAMA
   const [products, setProducts] = useState<any[]>([]);
@@ -555,7 +556,7 @@ export default function StoreTemplate() {
   // STATE POPUP VARIAN
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   
-  // 🌟 STATE FILTER (Sinkronisasi Category Luar & Dalam Drawer)
+  // STATE FILTER
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all"); 
   const [minPrice, setMinPrice] = useState(200000);
@@ -563,8 +564,33 @@ export default function StoreTemplate() {
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedCollection, setSelectedCollection] = useState("");
+  
+  // State untuk menangani New Release (Sort By Newest secara paksa)
+  const [forceSortNewest, setForceSortNewest] = useState(false);
 
-  // Ambil Wishlist dari LocalStorage saat Load
+  // 🌟 JURUS SINKRONISASI URL (Membaca perintah dari NavDrawer)
+  useEffect(() => {
+    const urlQuery = searchParams.get("q");
+    if (urlQuery) setSearchQuery(urlQuery);
+
+    const urlCategory = searchParams.get("category");
+    if (urlCategory) {
+      if (urlCategory === "new-arrivals") {
+         setForceSortNewest(true);
+         setActiveCategory("all"); 
+         setSelectedCollection("New Arrivals"); 
+      } 
+      else if (urlCategory === "discount") {
+         setActiveCategory("all");
+         setSelectedCollection("Discount");
+      }
+      else {
+         setActiveCategory(urlCategory);
+      }
+    }
+  }, [searchParams]);
+
+  // Ambil Wishlist dari LocalStorage
   useEffect(() => {
     if (typeof window !== "undefined") {
       const stored = JSON.parse(localStorage.getItem("wishlist") || "[]");
@@ -572,7 +598,7 @@ export default function StoreTemplate() {
     }
   }, []);
 
-  // Kunci scroll body saat popup atau filter terbuka
+  // Kunci scroll body
   useEffect(() => {
     if (selectedProduct || isFilterOpen) {
       document.body.style.overflow = "hidden";
@@ -595,7 +621,7 @@ export default function StoreTemplate() {
     return countryCode === "id" ? price : price / 100;
   };
 
-  // 1. FUNGSI FETCH PRODUK
+  // FUNGSI FETCH PRODUK
   const fetchStoreProducts = useCallback(async (pageNumber: number, reset = false) => {
     setIsLoading(true);
     try {
@@ -607,7 +633,6 @@ export default function StoreTemplate() {
           limit,
           offset,
           order: "-created_at",
-          // 🌟 Ditambah *categories untuk filter category & collections
           fields: "*collection,*categories,*variants,*variants.prices,*variants.inventory_quantity,*variants.manage_inventory,*variants.allow_backorder",
           q: searchQuery || undefined 
         }, 
@@ -617,23 +642,19 @@ export default function StoreTemplate() {
       if (data && data.response) {
         let fetched = data.response.products;
 
-        // 🌟 1. FILTER CATEGORY (Sinkron Luar & Dalam Drawer)
         if (activeCategory !== "all") {
            fetched = fetched.filter((p: any) => 
              p.categories?.some((c: any) => c.handle?.toLowerCase() === activeCategory.toLowerCase())
            );
         }
 
-        // 🌟 2. FILTER COLLECTION (Dari tombol Collection di Drawer - tetap filter by Category)
         if (selectedCollection) {
-          // Format nama tombol "New Release" -> handle "new-release"
           const collectionHandle = selectedCollection.toLowerCase().replace(/ /g, '-');
           fetched = fetched.filter((p: any) => 
              p.categories?.some((c: any) => c.handle?.toLowerCase() === collectionHandle)
            );
         }
 
-        // 🌟 3. FILTER WARNA (Murni memotong Handle!)
         if (selectedColor) {
            fetched = fetched.filter((p: any) => {
               const handle = p.handle?.toLowerCase() || "";
@@ -641,13 +662,11 @@ export default function StoreTemplate() {
            });
         }
 
-        // 4. FILTER HARGA
         fetched = fetched.filter((p: any) => {
           const finalPrice = getProductPrice(p);
           return finalPrice >= minPrice && finalPrice <= maxPrice;
         });
 
-        // 5. FILTER SIZE
         if (selectedSize) {
           fetched = fetched.filter((p: any) => 
             p.variants?.some((v: any) => v.title.toLowerCase().includes(selectedSize.toLowerCase()))
@@ -669,14 +688,13 @@ export default function StoreTemplate() {
     }
   }, [countryCode, searchQuery, activeCategory, minPrice, maxPrice, selectedSize, selectedCollection, selectedColor]);
 
-  // Eksekusi setiap kali ada perubahan di luar Drawer
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchStoreProducts(1, true);
       setPage(1);
     }, 500);
     return () => clearTimeout(timer);
-  }, [searchQuery, activeCategory]);
+  }, [searchQuery, activeCategory, selectedCollection]);
 
   const handleApplyFilter = () => {
     setIsFilterOpen(false);
@@ -689,8 +707,9 @@ export default function StoreTemplate() {
     setMaxPrice(5000000);
     setSelectedSize("");
     setSelectedColor("");
-    setActiveCategory("all"); // Sinkron Reset
+    setActiveCategory("all"); 
     setSelectedCollection("");
+    setSearchQuery("");
   };
 
   const handleLoadMore = () => {
@@ -736,6 +755,11 @@ export default function StoreTemplate() {
             className="w-full bg-gray-50/80 border border-gray-100 rounded-full py-3 pl-12 pr-4 text-sm font-medium focus:outline-none focus:border-[#EF7044] transition-colors shadow-inner"
           />
           <Search className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery("")} className="absolute right-4 top-3.5 text-gray-400 hover:text-gray-900">
+               <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
 
         <div className="flex justify-between items-center mb-6">
@@ -751,7 +775,7 @@ export default function StoreTemplate() {
         {/* 🌟 KATEGORI LUAR */}
         <div className="flex overflow-x-auto gap-5 scrollbar-hide pb-2">
           {topCategories.map((cat) => (
-            <button key={cat.handle} onClick={() => setActiveCategory(cat.handle)} className="flex flex-col items-center min-w-[70px] gap-2 group">
+            <button key={cat.handle} onClick={() => { setActiveCategory(cat.handle); setSelectedCollection(""); }} className="flex flex-col items-center min-w-[70px] gap-2 group">
               <div className={`w-[72px] h-[72px] rounded-full overflow-hidden border-2 transition-all p-0.5 ${activeCategory === cat.handle ? "border-[#EF7044]" : "border-transparent"}`}>
                 <div className="w-full h-full rounded-full overflow-hidden bg-gray-100">
                    <img src={cat.img} alt={cat.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
@@ -896,7 +920,7 @@ export default function StoreTemplate() {
                 {topCategories.map(cat => (
                   <button 
                     key={cat.handle} 
-                    onClick={() => setActiveCategory(activeCategory === cat.handle ? "all" : cat.handle)} 
+                    onClick={() => { setActiveCategory(activeCategory === cat.handle ? "all" : cat.handle); setSelectedCollection(""); }} 
                     className={`px-5 py-1.5 rounded-full border transition-colors text-sm ${activeCategory === cat.handle ? "border-[#EF7044] text-[#EF7044]" : "border-gray-300 text-gray-700 bg-white"}`}
                   >
                     {cat.name}
@@ -912,7 +936,7 @@ export default function StoreTemplate() {
                 {["New Arrivals", "Best Seller", "Signature", "Island Escape", "Discount"].map(col => (
                   <button 
                     key={col} 
-                    onClick={() => setSelectedCollection(selectedCollection === col ? "" : col)}
+                    onClick={() => { setSelectedCollection(selectedCollection === col ? "" : col); setActiveCategory("all"); }}
                     className={`px-5 py-1.5 rounded-full border transition-colors text-sm ${selectedCollection === col ? "border-[#EF7044] text-[#EF7044]" : "border-gray-300 text-gray-700 bg-white hover:border-[#EF7044] hover:text-[#EF7044]"}`}
                   >
                     {col}

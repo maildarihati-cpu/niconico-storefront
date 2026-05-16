@@ -1,12 +1,11 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { useParams } from "next/navigation";
-import { X, Search, ChevronRight, ChevronDown, Star, Zap, Loader2 } from "lucide-react";
+import { useParams, useRouter } from "next/navigation"; // 👈 Tambah useRouter
+import { X, Search, ChevronDown, Star, Zap, Loader2 } from "lucide-react";
 import Image from "next/image";
 import LocalizedClientLink from "@modules/common/components/localized-client-link";
 import { listProducts } from "@lib/data/products";
-// ❌ IMPORT listCategories SUDAH DIHAPUS AGAR TIDAK ERROR SERVER-ONLY DI VERCEL
 
 interface Props {
   isOpen: boolean;
@@ -18,10 +17,14 @@ interface Props {
 export default function NavDrawer({ isOpen, onClose, view, setView }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const { countryCode } = useParams();
+  const router = useRouter(); // 👈 Panggil useRouter
 
   // State untuk Menu Accordion
   const [isShopsOpen, setIsShopsOpen] = useState(true);
   const [isCollectionsOpen, setIsCollectionsOpen] = useState(true);
+
+  // State untuk Pencarian
+  const [searchKeyword, setSearchKeyword] = useState("");
 
   // State untuk Data Database
   const [bestSellers, setBestSellers] = useState<any[]>([]);
@@ -35,10 +38,17 @@ export default function NavDrawer({ isOpen, onClose, view, setView }: Props) {
     }
   }, [isOpen, view]);
 
+  // FUNGSI LEMPAR PENCARIAN KE HALAMAN STORE
+  const handleSearchSubmit = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && searchKeyword.trim()) {
+      router.push(`/${countryCode}/store?q=${encodeURIComponent(searchKeyword.trim())}`);
+      onClose(); // Tutup drawer setelah enter
+    }
+  };
+
   // FUNGSI TARIK DATA DARI MEDUSA (REKOMENDASI SEARCH)
   useEffect(() => {
     async function fetchRecommendations() {
-      // Biar nggak narik data berkali-kali kalau udah ada
       if (!isOpen || view !== "search" || (bestSellers.length > 0 && newArrivals.length > 0)) return; 
 
       setIsLoadingData(true);
@@ -46,7 +56,7 @@ export default function NavDrawer({ isOpen, onClose, view, setView }: Props) {
         const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000";
         const apiKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "";
 
-        // 🌟 1. Tarik Category ID pakai Native Fetch (Bypass "Server-Only" Error)
+        // Tarik Category ID pakai Native Fetch
         const fetchCategory = async (handle: string) => {
           const res = await fetch(`${backendUrl}/store/product-categories?handle=${handle}`, {
             headers: { "x-publishable-api-key": apiKey }
@@ -60,7 +70,7 @@ export default function NavDrawer({ isOpen, onClose, view, setView }: Props) {
         const bsCategory = await fetchCategory("best-seller");
         const naCategory = await fetchCategory("new-arrivals");
 
-        // 🌟 2. Jika ketemu, tarik produk berdasarkan CATEGORY_ID
+        // Jika ketemu, tarik produk berdasarkan CATEGORY_ID
         if (bsCategory) {
           const bsData = await listProducts({
             queryParams: { category_id: [bsCategory.id], limit: 2, fields: "*variants,*variants.prices" },
@@ -143,9 +153,9 @@ export default function NavDrawer({ isOpen, onClose, view, setView }: Props) {
 
               <hr className="border-gray-100 my-1" />
 
-              <LocalizedClientLink href="/store?category=new-arrivals" onClick={onClose} className="flex justify-between items-center text-[#ef7044] font-medium text-[13px] uppercase tracking-wide group mb-2">
+              {/* Tanda Panah Dihapus */}
+              <LocalizedClientLink href="/store?category=new-arrivals" onClick={onClose} className="block text-[#ef7044] font-medium text-[13px] uppercase tracking-wide group">
                 NEW RELEASE.!
-                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </LocalizedClientLink>
 
               {/* ACCORDION: SHOPS */}
@@ -156,7 +166,7 @@ export default function NavDrawer({ isOpen, onClose, view, setView }: Props) {
                 </button>
                 <div className={`flex flex-col gap-3.5 pl-4 overflow-hidden transition-all duration-300 origin-top ${isShopsOpen ? "max-h-[500px] opacity-100 mb-2" : "max-h-0 opacity-0 mb-0"}`}>
                   {[
-                    { label: "Bikini", handle: "bikinis" },
+                    { label: "Bikinis", handle: "bikinis" }, // 👈 Sudah diubah jadi Bikinis
                     { label: "Swimsuit", handle: "swimsuit" },
                     { label: "Resort Wear", handle: "resort-wear" },
                     { label: "Men's Wear", handle: "mens-wear" },
@@ -185,7 +195,7 @@ export default function NavDrawer({ isOpen, onClose, view, setView }: Props) {
                 </div>
               </div>
 
-              {/* MENU LINKS BAWAH */}
+              {/* MENU LINKS BAWAH (Tanda Panah Dihapus) */}
               <div className="flex flex-col gap-5 mt-2">
                 {[
                   { label: "MAKE YOUR OWN BRAND", link: "/make-your-own-brand" },
@@ -193,7 +203,7 @@ export default function NavDrawer({ isOpen, onClose, view, setView }: Props) {
                   { label: "ABOUT US", link: "/about" },
                   { label: "CONTACT US", link: "/contact" }
                 ].map(item => (
-                  <LocalizedClientLink key={item.label} href={item.link} onClick={onClose} className="block text-[#ef7044] font-medium text-[13px] uppercase tracking-wide group">
+                  <LocalizedClientLink key={item.label} href={item.link} onClick={onClose} className="block text-[#ef7044] font-medium text-[13px] uppercase tracking-wide">
                     {item.label}
                   </LocalizedClientLink>
                 ))}
@@ -207,6 +217,9 @@ export default function NavDrawer({ isOpen, onClose, view, setView }: Props) {
                 <input 
                   ref={inputRef}
                   type="text" 
+                  value={searchKeyword}
+                  onChange={(e) => setSearchKeyword(e.target.value)}
+                  onKeyDown={handleSearchSubmit} // 👈 Eksekusi saat tekan Enter
                   placeholder="What are you looking for?" 
                   className="w-full border-b-2 border-gray-100 py-3 pl-10 focus:outline-none focus:border-[#ef7044] text-lg transition-all placeholder:text-gray-300 font-medium"
                 />
@@ -256,7 +269,6 @@ export default function NavDrawer({ isOpen, onClose, view, setView }: Props) {
                                <Image src={product.thumbnail || "/placeholder.png"} alt={product.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
                             </div>
                             <span className="text-xs font-bold text-gray-800 group-hover:text-[#ef7044] transition-colors line-clamp-1">{product.title}</span>
-                            <ChevronRight className="w-4 h-4 ml-auto text-gray-300 group-hover:text-[#ef7044] transition-colors flex-shrink-0" />
                           </LocalizedClientLink>
                         ))}
                       </div>
@@ -265,7 +277,7 @@ export default function NavDrawer({ isOpen, onClose, view, setView }: Props) {
 
                   {bestSellers.length === 0 && newArrivals.length === 0 && (
                     <div className="text-center py-10 text-gray-400 italic text-sm">
-                      Mulai mengetik untuk mencari produk...
+                      Silakan periksa kategori produk Anda di Admin Medusa.
                     </div>
                   )}
 
