@@ -29,8 +29,8 @@ export default function AboutUsPage() {
     <main className="w-full min-h-screen bg-white text-[#111111]" style={{ fontFamily: '"Inter", sans-serif' }}>
       
       {/* ================= HERO SECTION ================= */}
-      {/* "ABOUT US" Posisis Tengah & Bold */}
-      <section className="relative w-full h-[60vh] md:h-[70vh] flex items-center justify-center bg-black overflow-hidden">
+      {/* "ABOUT US" diposisikan di bawah (items-end) */}
+      <section className="relative w-full h-[60vh] md:h-[70vh] flex items-end justify-center bg-black pb-16 md:pb-20">
         <div className="absolute inset-0 w-full h-full opacity-60">
           <Image
             src="/images/about-hero.jpg"
@@ -40,7 +40,7 @@ export default function AboutUsPage() {
             priority
           />
         </div>
-        <div className="relative z-10 text-center px-6">
+        <div className="relative z-10 text-center px-6 w-full">
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-[0.2em] text-white uppercase leading-tight">
             ABOUT US
           </h1>
@@ -48,17 +48,17 @@ export default function AboutUsPage() {
       </section>
 
       {/* ================= TAB NAVIGATION ================= */}
-      {/* Jarak Konten Lebih Naik (py-10) & Tab Bold saat Aktif */}
+      {/* Menggunakan flex-wrap agar tab tidak kepotong/bablas keluar layar */}
       <section className="w-full max-w-full mx-auto py-10 md:py-14">
-        <div className="flex justify-center border-b border-gray-200 overflow-x-auto no-scrollbar mb-8 md:mb-12">
-          <div className="flex space-x-8 md:space-x-16 whitespace-nowrap px-6">
+        <div className="flex justify-center border-b border-gray-200 mb-8 md:mb-12 px-4">
+          <div className="flex flex-wrap justify-center gap-x-6 md:gap-x-16 gap-y-4">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`pb-4 text-xs md:text-sm tracking-[0.15em] uppercase transition-all duration-300 relative focus:outline-none ${
+                className={`pb-4 text-sm md:text-base tracking-[0.15em] uppercase transition-all duration-300 relative focus:outline-none ${
                   activeTab === tab.id
-                    ? "text-[#EF7044] font-bold" // Active: Bold + Orange
+                    ? "text-[#EF7044] font-bold"
                     : "text-gray-400 hover:text-gray-900 font-medium"
                 }`}
               >
@@ -72,12 +72,13 @@ export default function AboutUsPage() {
         </div>
 
         {/* ================= TAB CONTENT VIEW ================= */}
+        {/* Dihilangkan overflow-hidden agar teks aman tidak terpotong */}
         <div className="w-full transition-all duration-500">
           
-          {/* TAB 1: OUR STORY (Landscape 1:6 Full Width) */}
+          {/* TAB 1: OUR STORY */}
           {activeTab === "our-story" && (
             <div className="flex flex-col gap-10 md:gap-14 animate-in fade-in duration-500">
-              <div className="relative w-full aspect-[4/1] md:aspect-[6/1] bg-gray-100 overflow-hidden">
+              <div className="relative w-full aspect-[4/1] md:aspect-[6/1] bg-gray-100">
                 <Image src="/images/our-story.jpg" alt="Our Story" fill className="object-cover" />
               </div>
               <div className="max-w-5xl mx-auto px-6 text-left space-y-6">
@@ -98,10 +99,10 @@ export default function AboutUsPage() {
             </div>
           )}
 
-          {/* TAB 2: THE CRAFT (Teks Kiri, Image 35% Nempel Kanan) */}
+          {/* TAB 2: THE CRAFT */}
           {activeTab === "the-craft" && (
-            <div className="flex flex-col md:flex-row items-center animate-in fade-in duration-500 overflow-hidden">
-              <div className="w-full md:w-[65%] px-6 md:pl-20 md:pr-16 py-10">
+            <div className="flex flex-col md:flex-row items-center animate-in fade-in duration-500">
+              <div className="w-full md:w-[65%] px-6 md:pl-20 md:pr-16 py-10 order-last md:order-first">
                 <div className="text-gray-700 font-normal leading-relaxed text-base md:text-lg space-y-6">
                   <p>
                     Today, Niconico remains independent and founder-led. 
@@ -121,10 +122,10 @@ export default function AboutUsPage() {
             </div>
           )}
 
-          {/* TAB 3: THE SPIRIT (Image 35% Nempel Kiri, Teks Kanan) */}
+          {/* TAB 3: THE SPIRIT */}
           {activeTab === "the-spirit" && (
-            <div className="flex flex-col md:flex-row items-center animate-in fade-in duration-500 overflow-hidden">
-              <div className="w-full md:w-[35%] relative aspect-[2/3] bg-gray-100 order-first">
+            <div className="flex flex-col md:flex-row items-center animate-in fade-in duration-500">
+              <div className="w-full md:w-[35%] relative aspect-[2/3] bg-gray-100">
                 <Image src="/images/the-spirit.jpg" alt="The Spirit" fill className="object-cover" />
               </div>
               <div className="w-full md:w-[65%] px-6 md:pr-20 md:pl-16 py-10">
@@ -137,10 +138,10 @@ export default function AboutUsPage() {
             </div>
           )}
 
-          {/* TAB 4: OUR HERITAGE (Landscape 1:6 Full Width) */}
+          {/* TAB 4: OUR HERITAGE */}
           {activeTab === "our-heritage" && (
             <div className="flex flex-col gap-10 md:gap-14 animate-in fade-in duration-500">
-              <div className="relative w-full aspect-[4/1] md:aspect-[6/1] bg-gray-100 overflow-hidden">
+              <div className="relative w-full aspect-[4/1] md:aspect-[6/1] bg-gray-100">
                 <Image src="/images/our-heritage.jpg" alt="Our Heritage" fill className="object-cover" />
               </div>
               <div className="max-w-5xl mx-auto px-6 text-left space-y-6">
@@ -160,7 +161,7 @@ export default function AboutUsPage() {
       </section>
 
       {/* ================= DYNAMIC LOGO SECTION ================= */}
-      {/* Muat minimal 4 logo kesamping */}
+      {/* grid-cols-4 memaksa minimal ada 4 kolom secara horizontal, walaupun di layar HP */}
       <section className="w-full py-20 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex items-center justify-center mb-14 opacity-60">
@@ -171,11 +172,11 @@ export default function AboutUsPage() {
             <span className="h-[1px] w-20 bg-gray-300"></span>
           </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-10 md:gap-16 items-center justify-items-center">
+          <div className="grid grid-cols-4 md:grid-cols-5 gap-4 md:gap-16 items-center justify-items-center">
             {brandLogos.map((logo, index) => (
               <div 
                 key={index} 
-                className="h-8 md:h-10 w-full flex items-center justify-center grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-500"
+                className="h-6 md:h-10 w-full flex items-center justify-center grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-500"
               >
                 <img
                   src={logo.src}
