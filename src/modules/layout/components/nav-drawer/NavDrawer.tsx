@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { useParams, useRouter } from "next/navigation"; // 👈 Tambah useRouter
+import { useParams, useRouter } from "next/navigation"; 
 import { X, Search, ChevronDown, Star, Zap, Loader2 } from "lucide-react";
 import Image from "next/image";
 import LocalizedClientLink from "@modules/common/components/localized-client-link";
@@ -17,7 +17,7 @@ interface Props {
 export default function NavDrawer({ isOpen, onClose, view, setView }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const { countryCode } = useParams();
-  const router = useRouter(); // 👈 Panggil useRouter
+  const router = useRouter(); 
 
   // State untuk Menu Accordion
   const [isShopsOpen, setIsShopsOpen] = useState(true);

@@ -542,6 +542,7 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
 export default function StoreTemplate() {
   const { countryCode } = useParams();
   const searchParams = useSearchParams(); 
+  const router = useRouter(); // 👈 INI DIA MOBILNYA BOS! SUDAH SAYA TAMBAHKAN
   
   // STATE UTAMA
   const [products, setProducts] = useState<any[]>([]);
@@ -642,6 +643,15 @@ export default function StoreTemplate() {
       if (data && data.response) {
         let fetched = data.response.products;
 
+        // 🌟 EKSTRA FILTER PENCARIAN (Biar ketik 'bikin' langsung dapet 'bikini')
+        if (searchQuery) {
+          const queryLower = searchQuery.toLowerCase();
+          fetched = fetched.filter((p: any) => 
+            p.title?.toLowerCase().includes(queryLower) || 
+            p.handle?.toLowerCase().includes(queryLower)
+          );
+        }
+
         if (activeCategory !== "all") {
            fetched = fetched.filter((p: any) => 
              p.categories?.some((c: any) => c.handle?.toLowerCase() === activeCategory.toLowerCase())
@@ -722,6 +732,9 @@ export default function StoreTemplate() {
     setActiveCategory("all"); 
     setSelectedCollection("");
     setSearchQuery("");
+    
+    // 🌟 SEKARANG ROUTER.PUSH SUDAH BISA JALAN DENGAN AMAN!
+    router.push(`/${countryCode}/store`);
   };
 
   const handleLoadMore = () => {
