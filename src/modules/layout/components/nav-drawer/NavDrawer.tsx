@@ -5,7 +5,8 @@ import { useParams } from "next/navigation";
 import { X, Search, ChevronRight, ChevronDown, Star, Zap, Loader2 } from "lucide-react";
 import Image from "next/image";
 import LocalizedClientLink from "@modules/common/components/localized-client-link";
-import { listProducts } from "@lib/data/products"; // 👈 Import fungsi panggil database
+import { listProducts } from "@lib/data/products";
+import { listCategories } from "@lib/data/categories";
 
 interface Props {
   isOpen: boolean;
@@ -34,29 +35,39 @@ export default function NavDrawer({ isOpen, onClose, view, setView }: Props) {
     }
   }, [isOpen, view]);
 
-  // FUNGSI TARIK DATA DARI MEDUSA
+  // FUNGSI TARIK DATA DARI MEDUSA (REKOMENDASI SEARCH)
   useEffect(() => {
     async function fetchRecommendations() {
       // Biar nggak narik data berkali-kali kalau udah ada
-      if (!isOpen || view !== "search" || bestSellers.length > 0) return; 
+      if (!isOpen || view !== "search" || (bestSellers.length > 0 && newArrivals.length > 0)) return; 
 
       setIsLoadingData(true);
       try {
-        const data = await listProducts({
-          queryParams: {
-            limit: 5, // Ambil 5 produk
-            order: "-created_at", // Urutkan dari yang paling baru
-            fields: "*variants,*variants.prices",
-          },
-          countryCode: countryCode as string,
-        });
+        // 1. Tarik Category ID untuk Best Seller & New Arrivals
+        const categories = await listCategories({ 
+          queryParams: { handle: ["best-seller", "new-arrivals"] } 
+        }).catch(() => null);
 
-        if (data && data.response) {
-          const products = data.response.products;
-          // Kita pecah: 2 buat Best Seller, sisanya buat New Arrival
-          setBestSellers(products.slice(0, 2));
-          setNewArrivals(products.slice(2, 5));
+        const bsCategory = categories?.find((c: any) => c.handle === "best-seller");
+        const naCategory = categories?.find((c: any) => c.handle === "new-arrivals");
+
+        // 2. Jika ketemu, tarik produk berdasarkan CATEGORY_ID
+        if (bsCategory) {
+          const bsData = await listProducts({
+            queryParams: { category_id: [bsCategory.id], limit: 2, fields: "*variants,*variants.prices" },
+            countryCode: countryCode as string,
+          }).catch(() => null);
+          if (bsData && bsData.response) setBestSellers(bsData.response.products);
         }
+
+        if (naCategory) {
+          const naData = await listProducts({
+            queryParams: { category_id: [naCategory.id], limit: 3, fields: "*variants,*variants.prices" },
+            countryCode: countryCode as string,
+          }).catch(() => null);
+          if (naData && naData.response) setNewArrivals(naData.response.products);
+        }
+
       } catch (error) {
         console.error("Gagal ambil rekomendasi:", error);
       } finally {
@@ -86,7 +97,7 @@ export default function NavDrawer({ isOpen, onClose, view, setView }: Props) {
       <div className={`fixed top-0 left-0 h-full w-[85%] max-w-[380px] bg-white z-[101] shadow-2xl transform transition-transform duration-500 ease-out flex flex-col ${isOpen ? "translate-x-0" : "-translate-x-full"}`}>
         
         {/* HEADER DRAWER */}
-        <div className="p-6 flex justify-between items-center border-b border-gray-50">
+        <div className="p-6 flex justify-between items-center border-b border-gray-50 flex-shrink-0">
           <div className="flex gap-4">
             <button onClick={() => setView("menu")} className={`text-xs font-bold tracking-widest uppercase transition-all ${view === "menu" ? "text-[#ef7044] border-b-2 border-[#ef7044]" : "text-gray-400 hover:text-gray-600"}`}>Menu</button>
             <button onClick={() => setView("search")} className={`text-xs font-bold tracking-widest uppercase transition-all ${view === "search" ? "text-[#ef7044] border-b-2 border-[#ef7044]" : "text-gray-400 hover:text-gray-600"}`}>Search</button>
@@ -97,7 +108,7 @@ export default function NavDrawer({ isOpen, onClose, view, setView }: Props) {
         </div>
 
         {/* KONTEN DRAWER */}
-        <div className="flex-1 overflow-y-auto scrollbar-hide p-6">
+        <div className="flex-1 overflow-y-auto scrollbar-hide p-6 pb-20">
           {view === "menu" ? (
             /* --- TAB: HAMBURGER MENU --- */
             <div className="flex flex-col gap-5 pt-1 animate-in fade-in slide-in-from-left-4 duration-300">
@@ -106,13 +117,13 @@ export default function NavDrawer({ isOpen, onClose, view, setView }: Props) {
               <div>
                 <p className="text-[#ef7044] text-[13px] font-medium mb-3">Featured</p>
                 <div className="grid grid-cols-2 gap-3">
-                  <LocalizedClientLink href="/store" onClick={onClose} className="relative h-14 rounded-xl overflow-hidden group block shadow-sm">
+                  <LocalizedClientLink href="/store?category=discount" onClick={onClose} className="relative h-14 rounded-xl overflow-hidden group block shadow-sm">
                     <Image src="/today-offer.png" alt="Today's Offers" fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center transition-colors group-hover:bg-black/50">
                       <span className="text-white text-xs font-bold">Today's Offers</span>
                     </div>
                   </LocalizedClientLink>
-                  <LocalizedClientLink href="/store" onClick={onClose} className="relative h-14 rounded-xl overflow-hidden group block shadow-sm">
+                  <LocalizedClientLink href="/make-your-own-brand" onClick={onClose} className="relative h-14 rounded-xl overflow-hidden group block shadow-sm">
                     <Image src="/myob.png" alt="Make Your Own Brand" fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center transition-colors group-hover:bg-black/50">
                       <span className="text-white text-xs font-bold text-center leading-tight">Make Your<br/>Own Brand</span>
@@ -123,7 +134,7 @@ export default function NavDrawer({ isOpen, onClose, view, setView }: Props) {
 
               <hr className="border-gray-100 my-1" />
 
-              <LocalizedClientLink href="/store" onClick={onClose} className="flex justify-between items-center text-[#ef7044] font-medium text-[13px] uppercase tracking-wide group">
+              <LocalizedClientLink href="/store?category=new-arrivals" onClick={onClose} className="flex justify-between items-center text-[#ef7044] font-medium text-[13px] uppercase tracking-wide group mb-2">
                 NEW RELEASE.!
                 <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </LocalizedClientLink>
@@ -135,8 +146,14 @@ export default function NavDrawer({ isOpen, onClose, view, setView }: Props) {
                   <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isShopsOpen ? "rotate-180" : ""}`} />
                 </button>
                 <div className={`flex flex-col gap-3.5 pl-4 overflow-hidden transition-all duration-300 origin-top ${isShopsOpen ? "max-h-[500px] opacity-100 mb-2" : "max-h-0 opacity-0 mb-0"}`}>
-                  {["Bikini", "Swimsuit", "Resort Wear", "Men's Wear", "Accesories"].map(item => (
-                    <LocalizedClientLink key={item} href="/store" onClick={onClose} className="text-[13px] text-gray-900 font-medium hover:text-[#ef7044] transition-colors">{item}</LocalizedClientLink>
+                  {[
+                    { label: "Bikini", handle: "bikinis" },
+                    { label: "Swimsuit", handle: "swimsuit" },
+                    { label: "Resort Wear", handle: "resort-wear" },
+                    { label: "Men's Wear", handle: "mens-wear" },
+                    { label: "Accesories", handle: "accesories" }
+                  ].map(item => (
+                    <LocalizedClientLink key={item.handle} href={`/store?category=${item.handle}`} onClick={onClose} className="text-[13px] text-gray-900 font-medium hover:text-[#ef7044] transition-colors">{item.label}</LocalizedClientLink>
                   ))}
                 </div>
               </div>
@@ -148,18 +165,27 @@ export default function NavDrawer({ isOpen, onClose, view, setView }: Props) {
                   <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isCollectionsOpen ? "rotate-180" : ""}`} />
                 </button>
                 <div className={`flex flex-col gap-3.5 pl-4 overflow-hidden transition-all duration-300 origin-top ${isCollectionsOpen ? "max-h-[500px] opacity-100 mb-2" : "max-h-0 opacity-0 mb-0"}`}>
-                  {["New Arrivals", "Signature", "Island Escape", "Bali Summer"].map(item => (
-                    <LocalizedClientLink key={item} href="/store" onClick={onClose} className="text-[13px] text-gray-900 font-medium hover:text-[#ef7044] transition-colors">{item}</LocalizedClientLink>
+                  {[
+                    { label: "Best Seller", handle: "best-seller" },
+                    { label: "New Arrivals", handle: "new-arrivals" },
+                    { label: "Signature", handle: "signature" },
+                    { label: "Island Escape", handle: "island-escape" }
+                  ].map(item => (
+                    <LocalizedClientLink key={item.handle} href={`/collections/${item.handle}`} onClick={onClose} className="text-[13px] text-gray-900 font-medium hover:text-[#ef7044] transition-colors">{item.label}</LocalizedClientLink>
                   ))}
                 </div>
               </div>
 
               {/* MENU LINKS BAWAH */}
-              <div className="flex flex-col gap-4 mt-2">
-                {["BEST SELLER", "MAKE YOUR OWN BRAND", "OUR STORE", "ABOUT US", "CONTACT US"].map(item => (
-                  <LocalizedClientLink key={item} href="/store" onClick={onClose} className="flex justify-between items-center text-[#ef7044] font-medium text-[13px] uppercase tracking-wide group">
-                    {item}
-                    <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              <div className="flex flex-col gap-5 mt-2">
+                {[
+                  { label: "MAKE YOUR OWN BRAND", link: "/make-your-own-brand" },
+                  { label: "OUR STORE", link: "/our-store" },
+                  { label: "ABOUT US", link: "/about" },
+                  { label: "CONTACT US", link: "/contact" }
+                ].map(item => (
+                  <LocalizedClientLink key={item.label} href={item.link} onClick={onClose} className="block text-[#ef7044] font-medium text-[13px] uppercase tracking-wide group">
+                    {item.label}
                   </LocalizedClientLink>
                 ))}
               </div>
@@ -168,7 +194,7 @@ export default function NavDrawer({ isOpen, onClose, view, setView }: Props) {
           ) : (
             /* --- TAB: SEARCH & REKOMENDASI --- */
             <div className="flex flex-col h-full animate-in fade-in slide-in-from-right-4 duration-300">
-              <div className="relative mb-10">
+              <div className="relative mb-10 flex-shrink-0">
                 <input 
                   ref={inputRef}
                   type="text" 
@@ -218,13 +244,19 @@ export default function NavDrawer({ isOpen, onClose, view, setView }: Props) {
                         {newArrivals.map((product) => (
                           <LocalizedClientLink key={product.id} href={`/products/${product.handle}`} onClick={onClose} className="flex items-center gap-4 p-2 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer group">
                             <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden relative shadow-sm flex-shrink-0">
-                               <Image src={product.thumbnail || "/placeholder.png"} alt={product.title} fill className="object-cover group-hover:scale-110 transition-transform duration-500" />
+                               <Image src={product.thumbnail || "/placeholder.png"} alt={product.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
                             </div>
                             <span className="text-xs font-bold text-gray-800 group-hover:text-[#ef7044] transition-colors line-clamp-1">{product.title}</span>
                             <ChevronRight className="w-4 h-4 ml-auto text-gray-300 group-hover:text-[#ef7044] transition-colors flex-shrink-0" />
                           </LocalizedClientLink>
                         ))}
                       </div>
+                    </div>
+                  )}
+
+                  {bestSellers.length === 0 && newArrivals.length === 0 && (
+                    <div className="text-center py-10 text-gray-400 italic text-sm">
+                      Mulai mengetik untuk mencari produk...
                     </div>
                   )}
 
@@ -235,7 +267,7 @@ export default function NavDrawer({ isOpen, onClose, view, setView }: Props) {
         </div>
 
         {/* FOOTER DRAWER */}
-        <div className="p-8 bg-gray-50 mt-auto border-t border-gray-100 flex-shrink-0">
+        <div className="p-8 bg-gray-50 mt-auto border-t border-gray-100 flex-shrink-0 absolute bottom-0 left-0 w-full z-10">
           <p className="text-[10px] text-gray-400 text-center italic">© 2026 Niconico Resort. Crafted for your island escape.</p>
         </div>
       </div>
