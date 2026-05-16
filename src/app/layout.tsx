@@ -6,6 +6,8 @@ import { retrieveCustomer } from "@lib/data/customer"
 import WishlistSync from "@modules/common/components/wishlist-sync"
 // 🌟 Import komponen tombol melayang yang baru dibuat
 import FloatingButtons from "@modules/common/components/floating-buttons"
+// 🌟 IMPORT KOMPONEN GAIB KITA DI SINI
+import WishlistAutoSync from "@/components/WishlistAutoSync"
 
 // 1. Inisialisasi font Inter
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -26,6 +28,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         
         {/* Panggil komponen satpam kita di sini */}
         <WishlistSync customer={customer} />
+        
+        {/* 🌟 PASANG KOMPONEN INTEL UNTUK GOOGLE LOGIN DI SINI */}
+        <WishlistAutoSync />
 
         <main className="relative">{children}</main>
 
