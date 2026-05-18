@@ -4,12 +4,13 @@ import React, { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { ChevronLeft, MapPin, ChevronRight, Loader2, Tag, CheckCircle2 } from "lucide-react"
 
-// 🌟 KITA PANGGIL MESIN DARI FILE UTILS TADI
+// 🌟 IMPORT INITIATE PAYMENT DITAMBAHKAN DI SINI
 import { 
   updateCartAddressAction, 
   getShippingOptionsAction, 
   setShippingMethodAction, 
-  applyPromoCodeAction 
+  applyPromoCodeAction,
+  initiatePaymentAction 
 } from "@lib/util/checkout-util"
 
 interface CheckoutFormProps {
@@ -57,12 +58,12 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
     }
   }
 
-  // 2. FUNGSI GANTI ALAMAT (PASTI BISA DIKLIK SEKARANG)
+  // 2. FUNGSI GANTI ALAMAT
   const handleUpdateAddress = async (address: any) => {
     try {
       const updatedCart = await updateCartAddressAction(cart.id, address)
-      setCart(updatedCart) // 🌟 Update UI dengan keranjang baru
-      setShowAddressList(false) // 🌟 Tutup laci otomatis
+      setCart(updatedCart) // Update UI dengan keranjang baru
+      setShowAddressList(false) // Tutup laci otomatis
     } catch (error) {
       alert("Gagal mengganti alamat, silakan coba lagi.")
     }
@@ -84,10 +85,42 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
     }
   }
 
+  // 🌟 4. FUNGSI BAYAR (XENDIT REDIRECT)
   const handlePayNow = async () => {
     setIsPaying(true)
-    // Logika Xendit Invoice Redirect nanti di sini
-    setTimeout(() => setIsPaying(false), 2000)
+    
+    try {
+      // Validasi: Pastikan alamat & pengiriman sudah beres
+      if (!cart.shipping_methods || cart.shipping_methods.length === 0) {
+        alert("Pilih metode pengiriman dulu ya!")
+        setIsPaying(false)
+        return
+      }
+
+      // Tembak action ke backend untuk inisiasi Xendit
+      const updatedCart = await initiatePaymentAction(cart.id, "xendit")
+
+      // Ekstrak URL Invoice dari response Xendit
+      const xenditSession = updatedCart?.payment_collection?.payment_sessions?.find(
+        (session: any) => session.provider_id === "xendit"
+      )
+      
+      const invoiceUrl = xenditSession?.data?.invoice_url
+
+      // Redirect kustomer ke layar pembayaran Xendit!
+      if (invoiceUrl) {
+        window.location.href = invoiceUrl 
+      } else {
+        console.error("Session Data Xendit Error:", xenditSession)
+        alert("Gagal mendapatkan link pembayaran dari gateway. Silakan coba lagi.")
+        setIsPaying(false)
+      }
+
+    } catch (error) {
+      console.error("Gagal inisiasi pembayaran:", error)
+      alert("Terjadi kesalahan jaringan, silakan coba lagi.")
+      setIsPaying(false)
+    }
   }
 
   return (

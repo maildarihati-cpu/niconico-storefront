@@ -79,3 +79,33 @@ export const applyPromoCodeAction = async (cartId: string, code: string) => {
     throw error
   }
 }
+
+// 🌟 6. Fungsi Inisiasi Pembayaran (Xendit)
+export const initiatePaymentAction = async (cartId: string, providerId: string = "xendit") => {
+  try {
+    // Cari URL backend (fleksibel untuk local maupun production)
+    const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
+    
+    // Nembak API Medusa v2 untuk membuat payment session
+    const response = await fetch(`${backendUrl}/store/carts/${cartId}/payment-sessions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        // "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "", // Buka komen ini jika API butuh Publishable Key
+      },
+      body: JSON.stringify({ 
+        provider_id: providerId 
+      }),
+    })
+
+    if (!response.ok) {
+      throw new Error("Gagal menyambung ke Payment Gateway")
+    }
+
+    const data = await response.json()
+    return data.cart 
+  } catch (error) {
+    console.error("Error initiate payment:", error)
+    throw error
+  }
+}
