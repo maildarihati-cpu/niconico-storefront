@@ -80,11 +80,10 @@ export const applyPromoCodeAction = async (cartId: string, code: string) => {
   }
 }
 
-/// 🌟 6. Fungsi Inisiasi Pembayaran (Xendit) - PAKAI SDK BAWAAN MEDUSA
+// 🌟 6. Fungsi Inisiasi Pembayaran (Xendit) - PAKAI SDK BAWAAN
 export const initiatePaymentAction = async (cartId: string, providerId: string = "xendit") => {
   try {
-    // Kita panggil client fetch dari sdk. 
-    // Ini otomatis akan menempelkan Publishable Key Bos di belakang layar!
+    // Panggil client fetch dari sdk. Ini otomatis menempelkan Publishable Key Bos!
     const response = await sdk.client.fetch(`/store/carts/${cartId}/payment-sessions`, {
       method: "POST",
       body: { 
@@ -93,14 +92,6 @@ export const initiatePaymentAction = async (cartId: string, providerId: string =
     })
 
     return response.cart 
-  } catch (error) {
-    console.error("Error initiate payment:", error)
-    throw error
-  }
-}
-
-    const data = await response.json()
-    return data.cart 
   } catch (error) {
     console.error("Error initiate payment:", error)
     throw error
