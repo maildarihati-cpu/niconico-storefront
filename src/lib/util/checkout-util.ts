@@ -80,20 +80,43 @@ export const applyPromoCodeAction = async (cartId: string, code: string) => {
   }
 }
 
-// 🌟 6. Fungsi Inisiasi Pembayaran (Xendit) - PAKAI SDK BAWAAN
+// 🌟 6. Fungsi Inisiasi Pembayaran (Xendit) - KHUSUS MEDUSA V2
 export const initiatePaymentAction = async (cartId: string, providerId: string = "xendit") => {
   try {
-    // Panggil client fetch dari sdk. Ini otomatis menempelkan Publishable Key Bos!
-    const response = await sdk.client.fetch(`/store/carts/${cartId}/payment-sessions`, {
-      method: "POST",
-      body: { 
-        provider_id: providerId 
-      },
-    })
+    // 1. Tarik cart terbaru untuk dapetin ID Payment Collection bawaan v2
+    const { cart } = await sdk.store.cart.retrieve(cartId, {
+      fields: "*payment_collection"
+    });
 
-    return response.cart 
-  } catch (error) {
-    console.error("Error initiate payment:", error)
-    throw error
+    let paymentCollectionId = cart.payment_collection?.id;
+
+    // 2. Aturan baru v2: Jika Payment Collection belum ada, wajib dibuat dulu!
+    if (!paymentCollectionId) {
+      const collectionRes = await sdk.client.fetch(`/store/payment-collections`, {
+        method: "POST",
+        body: { cart_id: cartId }
+      });
+      // Antisipasi format respons dari Medusa
+      paymentCollectionId = collectionRes.payment_collection?.id || collectionRes.id;
+    }
+
+    // 3. Tembak API Payment Collection (Jalur VIP Medusa v2)
+    await sdk.client.fetch(`/store/payment-collections/${paymentCollectionId}/payment-sessions`, {
+      method: "POST",
+      body: { provider_id: providerId }
+    });
+
+    // 4. Tarik cart final yang sudah disuntik URL Invoice Xendit
+    const finalCartRes = await sdk.store.cart.retrieve(cartId, {
+      fields: "*payment_collection,*payment_collection.payment_sessions"
+    });
+
+    return finalCartRes.cart;
+
+  } catch (error: any) {
+    // Menangkap pesan asli jika masih ada yang menolak
+    const errMsg = error?.response?.data || error.message;
+    console.error("🔥 Error V2 Medusa:", errMsg);
+    throw new Error("Gagal menyambung ke Xendit, silakan coba lagi.");
   }
 }
