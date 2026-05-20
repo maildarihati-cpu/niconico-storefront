@@ -96,21 +96,36 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
         return
       }
 
-      // 🌟 PERBAIKAN UTAMA: Tembak action ke wujud asli ID Medusa v2 (pp_identifier_id)
+      // 🌟 Tembak action ke wujud asli ID Medusa v2 (pp_identifier_id)
       const updatedCart = await initiatePaymentAction(cart.id, "pp_xendit_xendit")
 
-      // 🌟 Ekstrak URL Invoice dari provider yang sama
+      // 🌟 Ekstrak dari provider yang sama
       const xenditSession = updatedCart?.payment_collection?.payment_sessions?.find(
         (session: any) => session.provider_id === "pp_xendit_xendit"
       )
       
-      const invoiceUrl = xenditSession?.data?.invoice_url
+      const sessionData: any = xenditSession?.data || {}
 
-      // PERBAIKAN TYPESCRIPT: Pakai String() untuk memastikan data adalah teks
+      // 🚨 Deteksi kalau ternyata Xendit menolak pembuatan tagihan (misal: Secret Key salah)
+      if (sessionData.error) {
+        console.error("Xendit Error Details:", sessionData.error)
+        alert(`Xendit menolak pesanan: ${sessionData.error}`)
+        setIsPaying(false)
+        return
+      }
+
+      // 🌟 JURUS SAPU JAGAT: Cari URL di semua kemungkinan posisi!
+      const invoiceUrl = sessionData.invoice_url 
+                      || sessionData.invoiceUrl 
+                      || sessionData.data?.invoice_url 
+                      || sessionData.data?.invoiceUrl
+                      || sessionData.invoice?.invoiceUrl; 
+
       if (invoiceUrl) {
         window.location.href = String(invoiceUrl) 
       } else {
-        console.error("Session Data Xendit Error:", xenditSession)
+        // Kalau URL beneran nggak ada, kita log isinya biar ketahuan!
+        console.error("Isi Data Xendit Sebenarnya:", sessionData)
         alert("Gagal mendapatkan link pembayaran dari gateway. Silakan coba lagi.")
         setIsPaying(false)
       }
