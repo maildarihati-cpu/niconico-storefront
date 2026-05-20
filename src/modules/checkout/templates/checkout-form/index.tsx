@@ -96,17 +96,17 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
         return
       }
 
-      // Tembak action ke backend menggunakan ID yang baru!
-      const updatedCart = await initiatePaymentAction(cart.id, "xenditPaymentProvider")
+      // 🌟 PERBAIKAN UTAMA: Tembak action ke wujud asli ID Medusa v2 (pp_identifier_id)
+      const updatedCart = await initiatePaymentAction(cart.id, "pp_xendit_xendit")
 
-      // Ekstrak URL Invoice dari response provider yang baru
+      // 🌟 Ekstrak URL Invoice dari provider yang sama
       const xenditSession = updatedCart?.payment_collection?.payment_sessions?.find(
-        (session: any) => session.provider_id === "xenditPaymentProvider"
+        (session: any) => session.provider_id === "pp_xendit_xendit"
       )
       
       const invoiceUrl = xenditSession?.data?.invoice_url
 
-      // 🌟 PERBAIKAN TYPESCRIPT: Pakai String() untuk memastikan data adalah teks
+      // PERBAIKAN TYPESCRIPT: Pakai String() untuk memastikan data adalah teks
       if (invoiceUrl) {
         window.location.href = String(invoiceUrl) 
       } else {
