@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { ChevronLeft, MapPin, ChevronRight, Loader2, Tag, CheckCircle2 } from "lucide-react"
+import { ChevronLeft, MapPin, Loader2, Tag, CheckCircle2 } from "lucide-react"
 
-// 🌟 IMPORT INITIATE PAYMENT DITAMBAHKAN DI SINI
+// 🌟 IMPORT INITIATE PAYMENT
 import { 
   updateCartAddressAction, 
   getShippingOptionsAction, 
@@ -62,8 +62,8 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   const handleUpdateAddress = async (address: any) => {
     try {
       const updatedCart = await updateCartAddressAction(cart.id, address)
-      setCart(updatedCart) // Update UI dengan keranjang baru
-      setShowAddressList(false) // Tutup laci otomatis
+      setCart(updatedCart) 
+      setShowAddressList(false) 
     } catch (error) {
       alert("Gagal mengganti alamat, silakan coba lagi.")
     }
@@ -90,26 +90,25 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
     setIsPaying(true)
     
     try {
-      // Validasi: Pastikan alamat & pengiriman sudah beres
       if (!cart.shipping_methods || cart.shipping_methods.length === 0) {
         alert("Pilih metode pengiriman dulu ya!")
         setIsPaying(false)
         return
       }
 
-      // Tembak action ke backend untuk inisiasi Xendit
-      const updatedCart = await initiatePaymentAction(cart.id, "xendit")
+      // Tembak action ke backend menggunakan ID yang baru!
+      const updatedCart = await initiatePaymentAction(cart.id, "xenditPaymentProvider")
 
-      // Ekstrak URL Invoice dari response Xendit
+      // Ekstrak URL Invoice dari response provider yang baru
       const xenditSession = updatedCart?.payment_collection?.payment_sessions?.find(
-        (session: any) => session.provider_id === "xendit"
+        (session: any) => session.provider_id === "xenditPaymentProvider"
       )
       
       const invoiceUrl = xenditSession?.data?.invoice_url
 
-      // Redirect kustomer ke layar pembayaran Xendit!
+      // 🌟 PERBAIKAN TYPESCRIPT: Pakai String() untuk memastikan data adalah teks
       if (invoiceUrl) {
-        window.location.href = invoiceUrl 
+        window.location.href = String(invoiceUrl) 
       } else {
         console.error("Session Data Xendit Error:", xenditSession)
         alert("Gagal mendapatkan link pembayaran dari gateway. Silakan coba lagi.")
