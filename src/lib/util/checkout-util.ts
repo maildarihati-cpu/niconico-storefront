@@ -1,6 +1,7 @@
 "use server"
 
 import { sdk } from "@lib/config"
+import { cookies } from "next/headers"
 
 // 1. Fungsi Pemisah Keranjang (Cart)
 export const prepareCheckoutCart = async (mainCart: any, selectedItems: any[]) => {
@@ -92,10 +93,12 @@ export const initiatePaymentAction = async (cartId: string, providerId: string =
 
     // 2. Aturan baru v2: Jika Payment Collection belum ada, wajib dibuat dulu!
     if (!paymentCollectionId) {
+      // 🌟 JURUS TUTUP MATA: Tambahkan 'as any' di sini!
       const collectionRes = await sdk.client.fetch(`/store/payment-collections`, {
         method: "POST",
         body: { cart_id: cartId }
-      });
+      }) as any; 
+      
       // Antisipasi format respons dari Medusa
       paymentCollectionId = collectionRes.payment_collection?.id || collectionRes.id;
     }
@@ -118,5 +121,62 @@ export const initiatePaymentAction = async (cartId: string, providerId: string =
     const errMsg = error?.response?.data || error.message;
     console.error("🔥 Error V2 Medusa:", errMsg);
     throw new Error("Gagal menyambung ke Xendit, silakan coba lagi.");
+  }
+}
+
+// 🌟 7. FUNGSI BARU: Suntik Email & Customer ID ke Keranjang
+export const updateCartInfoAction = async (cartId: string, email: string, customerId?: string) => {
+  try {
+    const payload: any = { email };
+    
+    // Kalau kustomer punya ID (sudah login), masukkan ke payload biar sinkron ke riwayat!
+    if (customerId) {
+      payload.customer_id = customerId;
+    }
+
+    // Gunakan SDK bawaan v2 persis seperti fungsi-fungsi di atas
+    const { cart } = await sdk.store.cart.update(cartId, payload);
+    
+    return cart;
+  } catch (error) {
+    console.error("❌ Gagal update info kontak & ID keranjang:", error);
+    throw error;
+  }
+}
+
+// 🌟 8. FUNGSI BARU: Hapus barang yang sudah lunas dari Keranjang Utama
+export const cleanUpMainCartAction = async (purchasedVariantIds: string[]) => {
+  try {
+    const cookieStore = await cookies();
+    
+    // Ambil ID dari cookie
+    const rawCartId = cookieStore.get("_medusa_cart_id")?.value || cookieStore.get("cart_id")?.value;
+
+    // Kalau kosong, langsung stop (Biar TypeScript nggak cerewet 'undefined')
+    if (!rawCartId) return false;
+    
+    // Kita deklarasikan secara paksa bahwa ini pasti teks (string)
+    const mainCartId = rawCartId as string; 
+
+    // Tarik isi Keranjang Utama
+    const { cart } = await sdk.store.cart.retrieve(mainCartId, { fields: "*items" });
+    
+    // Pastikan cart.items itu ADA sebelum digeledah (Penangkal 'cart.items is possibly undefined')
+    if (!cart || !cart.items) return false;
+
+    // Geledah keranjang: Kalau ada barang yang ID-nya cocok dengan yang baru dibayar, HAPUS!
+    for (const item of cart.items) {
+      // Pastikan item punya variant_id sebelum di-cek
+      if (item.variant_id && purchasedVariantIds.includes(item.variant_id)) {
+        await sdk.client.fetch(`/store/carts/${mainCartId}/line-items/${item.id}`, {
+          method: "DELETE"
+        });
+      }
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("❌ Gagal membersihkan barang yang sudah dibayar:", error);
+    return false;
   }
 }

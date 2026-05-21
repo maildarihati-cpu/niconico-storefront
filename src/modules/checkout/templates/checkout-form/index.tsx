@@ -2,15 +2,16 @@
 
 import React, { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { ChevronLeft, MapPin, Loader2, Tag, CheckCircle2 } from "lucide-react"
+import { ChevronLeft, MapPin, Loader2, Tag, CheckCircle2, Mail } from "lucide-react"
 
-// 🌟 IMPORT INITIATE PAYMENT
+// 🌟 SINKRONISASI UPDATE ACTION BARU
 import { 
   updateCartAddressAction, 
   getShippingOptionsAction, 
   setShippingMethodAction, 
   applyPromoCodeAction,
-  initiatePaymentAction 
+  initiatePaymentAction,
+  updateCartInfoAction // 👈 Menggunakan fungsi terpadu (Email + Customer ID)
 } from "@lib/util/checkout-util"
 
 interface CheckoutFormProps {
@@ -24,6 +25,9 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   const [promoCode, setPromoCode] = useState("")
   const [isApplyingPromo, setIsApplyingPromo] = useState(false)
   const [isPaying, setIsPaying] = useState(false)
+  
+  // 🌟 AMBIL EMAIL OTOMATIS DARI KUSTOMER YANG SUDAH LOGIN
+  const [email, setEmail] = useState(initialCart?.email || customer?.email || "")
   
   const [shippingMethods, setShippingMethods] = useState<any[]>([])
   const [isLoadingShipping, setIsLoadingShipping] = useState(true)
@@ -85,8 +89,15 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
     }
   }
 
-  // 🌟 4. FUNGSI BAYAR (XENDIT REDIRECT)
+  // 🌟 4. FUNGSI BAYAR (XENDIT REDIRECT DENGAN SINKRONISASI DATA)
   const handlePayNow = async () => {
+    const targetEmail = email || customer?.email;
+    
+    if (!targetEmail || !targetEmail.includes("@")) {
+      alert("Please provide a valid email address for your order receipt.")
+      return
+    }
+
     setIsPaying(true)
     
     try {
@@ -96,17 +107,19 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
         return
       }
 
-      // 🌟 Tembak action ke wujud asli ID Medusa v2 (pp_identifier_id)
+      // 🌟 SEBELUM BAYAR: Ikat Email dan Customer ID ke Cart agar riwayat & email di Admin muncul sempurna
+      await updateCartInfoAction(cart.id, targetEmail.toLowerCase(), customer?.id)
+
+      // Tembak action ke wujud asli ID Medusa v2
       const updatedCart = await initiatePaymentAction(cart.id, "pp_xendit_xendit")
 
-      // 🌟 Ekstrak dari provider yang sama
+      // Ekstrak dari provider yang sama
       const xenditSession = updatedCart?.payment_collection?.payment_sessions?.find(
         (session: any) => session.provider_id === "pp_xendit_xendit"
       )
       
       const sessionData: any = xenditSession?.data || {}
 
-      // 🚨 Deteksi kalau ternyata Xendit menolak pembuatan tagihan (misal: Secret Key salah)
       if (sessionData.error) {
         console.error("Xendit Error Details:", sessionData.error)
         alert(`Xendit menolak pesanan: ${sessionData.error}`)
@@ -114,7 +127,6 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
         return
       }
 
-      // 🌟 JURUS SAPU JAGAT: Cari URL di semua kemungkinan posisi!
       const invoiceUrl = sessionData.invoice_url 
                       || sessionData.invoiceUrl 
                       || sessionData.data?.invoice_url 
@@ -122,9 +134,12 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                       || sessionData.invoice?.invoiceUrl; 
 
       if (invoiceUrl) {
+
+      const purchasedVariants = cart.items.map((item: any) => item.variant_id);
+              localStorage.setItem("niconico_purchased_variants", JSON.stringify(purchasedVariants));
+
         window.location.href = String(invoiceUrl) 
       } else {
-        // Kalau URL beneran nggak ada, kita log isinya biar ketahuan!
         console.error("Isi Data Xendit Sebenarnya:", sessionData)
         alert("Gagal mendapatkan link pembayaran dari gateway. Silakan coba lagi.")
         setIsPaying(false)
@@ -151,6 +166,23 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
       </div>
 
       <div className="px-5 py-6 space-y-6 pb-32">
+
+        {/* 🌟 CONTACT INFO (EMAIL INPUT - AUTO PREFILLED JIKA SUDAH LOGIN) */}
+        <div className="space-y-3">
+          <h3 className="text-[10px] font-black text-[#DF714B] uppercase tracking-[0.2em] px-1">Contact Info</h3>
+          <div className="bg-gray-50 rounded-3xl p-5 border border-gray-100 flex items-center gap-4 transition-all focus-within:border-[#DF714B] focus-within:bg-white">
+            <div className="bg-white p-2.5 rounded-2xl shadow-sm">
+              <Mail className="w-5 h-5 text-[#DF714B]" />
+            </div>
+            <input 
+              type="email" 
+              placeholder="YOUR EMAIL ADDRESS" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full bg-transparent text-[11px] font-black text-gray-900 outline-none uppercase tracking-widest placeholder:text-gray-300"
+            />
+          </div>
+        </div>
         
         {/* SHIPPING ADDRESS */}
         <div className="space-y-3">
@@ -207,7 +239,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
           )}
         </div>
 
-        {/* ITEMS (QTY LOCKED) */}
+        {/* ITEMS */}
         <div className="space-y-4 pt-2">
           {cart.items?.map((item: any) => (
             <div key={item.id} className="flex gap-4 items-center">
