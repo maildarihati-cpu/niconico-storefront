@@ -4,34 +4,15 @@ import React, { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { ChevronLeft, ShoppingBag, CheckCircle2 } from "lucide-react"
 
-// 🌟 IMPORT ROBOT PEMBERSIH DARI UTIL BOS
-import { cleanUpMainCartAction } from "@lib/util/checkout-util" 
-
 export default function OrderSuccessPage() {
   const router = useRouter()
 
-  // 🌟 JURUS PARTIAL CHECKOUT: Bersihkan sisa barang yang sudah dibayar
   useEffect(() => {
-    const cleanCart = async () => {
-      // 1. Baca catatan barang yang barusan dibayar dari localStorage
-      const pendingStr = localStorage.getItem("niconico_purchased_variants");
-      
-      if (pendingStr) {
-        try {
-          const purchasedVariants = JSON.parse(pendingStr);
-          
-          // 2. Suruh robot bersihkan barang tersebut dari Keranjang Utama
-          await cleanUpMainCartAction(purchasedVariants);
-          
-          // 3. Hapus catatan biar tidak tereksekusi dua kali kalau web di-refresh
-          localStorage.removeItem("niconico_purchased_variants");
-        } catch (error) {
-          console.error("Gagal membersihkan keranjang utama:", error);
-        }
-      }
-    }
-    
-    cleanCart();
+    // 🌟 KITA PECAT ROBOTNYA SEMENTARA BIAR TIDAK MENSABOTASE WEBHOOK!
+    // Cukup hapus id keranjang dari browser, agar kustomer dapat keranjang kosong baru.
+    document.cookie = "_medusa_cart_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    document.cookie = "cart_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    localStorage.removeItem("niconico_purchased_variants");
   }, [])
 
   return (
@@ -59,7 +40,6 @@ export default function OrderSuccessPage() {
         <div className="relative mb-8 animate-in zoom-in duration-500">
           <ShoppingBag className="w-24 h-24 text-gray-800 stroke-[1.5]" />
           <div className="absolute -bottom-2 -right-2 bg-white rounded-full p-1 shadow-sm">
-            {/* 🌟 ICON CENTANG MENGGUNAKAN #EF7044 */}
             <CheckCircle2 className="w-10 h-10 text-[#EF7044] fill-white stroke-[2]" />
           </div>
         </div>
@@ -75,7 +55,6 @@ export default function OrderSuccessPage() {
         {/* BUTTON */}
         <button 
           onClick={() => router.push("/store")}
-          // 🌟 TOMBOL UTAMA MENGGUNAKAN #EF7044
           className="w-full max-w-sm mt-16 bg-[#EF7044] text-white py-5 rounded-full font-black text-[13px] tracking-[0.2em] uppercase hover:bg-[#d66139] active:scale-[0.98] transition-all shadow-xl flex items-center justify-center"
         >
           Continue Shopping
