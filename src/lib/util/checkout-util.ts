@@ -127,19 +127,15 @@ export const initiatePaymentAction = async (cartId: string, providerId: string =
 // 🌟 7. FUNGSI BARU: Suntik Email & Customer ID ke Keranjang
 export const updateCartInfoAction = async (cartId: string, email: string, customerId?: string) => {
   try {
-    const payload: any = { email };
+    // 🚨 KITA CABUT customer_id DARI SINI KARENA DILARANG OLEH MEDUSA V2
+    // Cukup kirim email saja. Karena kustomer sudah login, Medusa otomatis 
+    // menyambungkan pesanan ini ke riwayat mereka berdasarkan Sesi & Email!
     
-    // Kalau kustomer punya ID (sudah login), masukkan ke payload biar sinkron ke riwayat!
-    if (customerId) {
-      payload.customer_id = customerId;
-    }
-
-    // Gunakan SDK bawaan v2 persis seperti fungsi-fungsi di atas
-    const { cart } = await sdk.store.cart.update(cartId, payload);
+    const { cart } = await sdk.store.cart.update(cartId, { email });
     
     return cart;
   } catch (error) {
-    console.error("❌ Gagal update info kontak & ID keranjang:", error);
+    console.error("❌ Gagal update info kontak keranjang:", error);
     throw error;
   }
 }
