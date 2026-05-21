@@ -89,7 +89,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
     }
   }
 
-  // 🌟 4. FUNGSI BAYAR (XENDIT REDIRECT DENGAN SINKRONISASI DATA)
+  // 🌟 4. FUNGSI BAYAR (XENDIT REDIRECT DENGAN JURUS ANTI-RESET MEDUSA)
   const handlePayNow = async () => {
     const targetEmail = email || customer?.email;
     
@@ -107,13 +107,18 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
         return
       }
 
-      // 🌟 SEBELUM BAYAR: Ikat Email dan Customer ID ke Cart agar riwayat & email di Admin muncul sempurna
-      await updateCartInfoAction(cart.id, targetEmail.toLowerCase(), customer?.id)
+      // 1. Simpan ID ongkos kirim yang lagi dipilih kustomer saat ini
+      const currentShippingOptionId = cart.shipping_methods[0].shipping_option_id;
 
-      // Tembak action ke wujud asli ID Medusa v2
+      // 2. Suntik Email (Ini akan memicu Medusa menghapus ongkir secara diam-diam)
+      await updateCartInfoAction(cart.id, targetEmail.toLowerCase())
+
+      // 3. PASANG ULANG ONGKIRNYA! (Biar Medusa nggak ngambek pas Xendit lunas)
+      await setShippingMethodAction(cart.id, currentShippingOptionId)
+
+      // 4. Baru tembak ke Xendit dengan keranjang yang sudah utuh 100%
       const updatedCart = await initiatePaymentAction(cart.id, "pp_xendit_xendit")
 
-      // Ekstrak dari provider yang sama
       const xenditSession = updatedCart?.payment_collection?.payment_sessions?.find(
         (session: any) => session.provider_id === "pp_xendit_xendit"
       )
@@ -134,10 +139,6 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                       || sessionData.invoice?.invoiceUrl; 
 
       if (invoiceUrl) {
-
-      const purchasedVariants = cart.items.map((item: any) => item.variant_id);
-              localStorage.setItem("niconico_purchased_variants", JSON.stringify(purchasedVariants));
-
         window.location.href = String(invoiceUrl) 
       } else {
         console.error("Isi Data Xendit Sebenarnya:", sessionData)
