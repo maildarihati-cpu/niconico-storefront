@@ -4,14 +4,13 @@ import React, { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { ChevronLeft, MapPin, Loader2, Tag, CheckCircle2, Mail } from "lucide-react"
 
-// 🌟 SINKRONISASI UPDATE ACTION BARU
 import { 
   updateCartAddressAction, 
   getShippingOptionsAction, 
   setShippingMethodAction, 
   applyPromoCodeAction,
   initiatePaymentAction,
-  updateCartInfoAction // 👈 Menggunakan fungsi terpadu (Email + Customer ID)
+  updateCartInfoAction 
 } from "@lib/util/checkout-util"
 
 interface CheckoutFormProps {
@@ -26,14 +25,30 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   const [isApplyingPromo, setIsApplyingPromo] = useState(false)
   const [isPaying, setIsPaying] = useState(false)
   
-  // 🌟 AMBIL EMAIL OTOMATIS DARI KUSTOMER YANG SUDAH LOGIN
   const [email, setEmail] = useState(initialCart?.email || customer?.email || "")
   
   const [shippingMethods, setShippingMethods] = useState<any[]>([])
   const [isLoadingShipping, setIsLoadingShipping] = useState(true)
   const [showAddressList, setShowAddressList] = useState(false)
 
-  // 1. AMBIL SHIPPING METHOD
+  // 🌟 1. SINKRONISASI EMAIL DI AWAL (Biar aman dari Race Condition)
+  useEffect(() => {
+    const syncEmailAtStart = async () => {
+      const targetEmail = initialCart?.email || customer?.email || ""
+      if (targetEmail && !initialCart?.email) {
+        try {
+          console.log("🌟 Menyinkronkan email kustomer ke keranjang di awal...");
+          const updatedCart = await updateCartInfoAction(initialCart.id, targetEmail.toLowerCase())
+          setCart(updatedCart)
+        } catch (error) {
+          console.error("Gagal sinkronisasi email di awal:", error)
+        }
+      }
+    }
+    syncEmailAtStart()
+  }, [initialCart.id, initialCart?.email, customer?.email])
+
+  // 2. AMBIL SHIPPING METHOD
   useEffect(() => {
     const fetchShippingMethods = async () => {
       try {
@@ -62,7 +77,22 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
     }
   }
 
-  // 2. FUNGSI GANTI ALAMAT
+  // 3. FUNGSI SINKRONISASI JIKA EMAIL DIKETIK MANUAL (SAAT BLUR)
+  const handleEmailBlur = async () => {
+    if (email && email.includes("@") && email !== cart.email) {
+      try {
+        const updatedCart = await updateCartInfoAction(cart.id, email.toLowerCase())
+        setCart(updatedCart)
+        // Ambil ulang opsi pengiriman jika email/grup kustomer memengaruhi ongkir
+        const options = await getShippingOptionsAction(cart.id)
+        setShippingMethods(options)
+      } catch (error) {
+        console.error("Gagal update email:", error)
+      }
+    }
+  }
+
+  // 4. FUNGSI GANTI ALAMAT
   const handleUpdateAddress = async (address: any) => {
     try {
       const updatedCart = await updateCartAddressAction(cart.id, address)
@@ -73,7 +103,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
     }
   }
 
-  // 3. FUNGSI APPLY PROMO
+  // 5. FUNGSI APPLY PROMO
   const handleApplyPromo = async () => {
     if (!promoCode) return
     setIsApplyingPromo(true)
@@ -89,15 +119,8 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
     }
   }
 
-  // 🌟 4. FUNGSI BAYAR (XENDIT REDIRECT DENGAN JURUS ANTI-RESET MEDUSA)
+  // 🌟 6. FUNGSI BAYAR (KEMBALI KE WUJUD ASLI YANG 100% AMAN DAN LOLOS ORDER)
   const handlePayNow = async () => {
-    const targetEmail = email || customer?.email;
-    
-    if (!targetEmail || !targetEmail.includes("@")) {
-      alert("Please provide a valid email address for your order receipt.")
-      return
-    }
-
     setIsPaying(true)
     
     try {
@@ -107,16 +130,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
         return
       }
 
-      // 1. Simpan ID ongkos kirim yang lagi dipilih kustomer saat ini
-      const currentShippingOptionId = cart.shipping_methods[0].shipping_option_id;
-
-      // 2. Suntik Email (Ini akan memicu Medusa menghapus ongkir secara diam-diam)
-      await updateCartInfoAction(cart.id, targetEmail.toLowerCase())
-
-      // 3. PASANG ULANG ONGKIRNYA! (Biar Medusa nggak ngambek pas Xendit lunas)
-      await setShippingMethodAction(cart.id, currentShippingOptionId)
-
-      // 4. Baru tembak ke Xendit dengan keranjang yang sudah utuh 100%
+      // LANGSUNG TEMBAK INITIATE PAYMENT TANPA SIKUT-SIKUTAN DATA LAGI
       const updatedCart = await initiatePaymentAction(cart.id, "pp_xendit_xendit")
 
       const xenditSession = updatedCart?.payment_collection?.payment_sessions?.find(
@@ -168,18 +182,19 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
 
       <div className="px-5 py-6 space-y-6 pb-32">
 
-        {/* 🌟 CONTACT INFO (EMAIL INPUT - AUTO PREFILLED JIKA SUDAH LOGIN) */}
+        {/* CONTACT INFO */}
         <div className="space-y-3">
-          <h3 className="text-[10px] font-black text-[#DF714B] uppercase tracking-[0.2em] px-1">Contact Info</h3>
-          <div className="bg-gray-50 rounded-3xl p-5 border border-gray-100 flex items-center gap-4 transition-all focus-within:border-[#DF714B] focus-within:bg-white">
+          <h3 className="text-[10px] font-black text-[#EF7044] uppercase tracking-[0.2em] px-1">Contact Info</h3>
+          <div className="bg-gray-50 rounded-3xl p-5 border border-gray-100 flex items-center gap-4 transition-all focus-within:border-[#EF7044] focus-within:bg-white">
             <div className="bg-white p-2.5 rounded-2xl shadow-sm">
-              <Mail className="w-5 h-5 text-[#DF714B]" />
+              <Mail className="w-5 h-5 text-[#EF7044]" />
             </div>
             <input 
               type="email" 
               placeholder="YOUR EMAIL ADDRESS" 
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              onBlur={handleEmailBlur} // Sync data otomatis ke Medusa saat kustomer selesai mengetik
               className="w-full bg-transparent text-[11px] font-black text-gray-900 outline-none uppercase tracking-widest placeholder:text-gray-300"
             />
           </div>
@@ -188,10 +203,10 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
         {/* SHIPPING ADDRESS */}
         <div className="space-y-3">
           <div className="flex justify-between items-end px-1">
-            <h3 className="text-[10px] font-black text-[#DF714B] uppercase tracking-[0.2em]">Shipping Address</h3>
+            <h3 className="text-[10px] font-black text-[#EF7044] uppercase tracking-[0.2em]">Shipping Address</h3>
             <button 
               onClick={() => setShowAddressList(!showAddressList)}
-              className="text-[10px] font-bold text-gray-400 hover:text-[#DF714B] underline uppercase italic"
+              className="text-[10px] font-bold text-gray-400 hover:text-[#EF7044] underline uppercase italic"
             >
               {showAddressList ? "Cancel" : "Change Address"}
             </button>
@@ -205,7 +220,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                   onClick={() => handleUpdateAddress(addr)}
                   className={`p-4 rounded-3xl border-2 transition-all cursor-pointer ${
                     cart.shipping_address?.address_1 === addr.address_1 
-                    ? "border-[#DF714B] bg-[#DF714B]/5 shadow-sm" 
+                    ? "border-[#EF7044] bg-[#EF7044]/5 shadow-sm" 
                     : "border-gray-50 hover:border-gray-200"
                   }`}
                 >
@@ -214,7 +229,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                       {addr.first_name} {addr.last_name}
                     </p>
                     {cart.shipping_address?.address_1 === addr.address_1 && (
-                      <CheckCircle2 className="w-4 h-4 text-[#DF714B]" />
+                      <CheckCircle2 className="w-4 h-4 text-[#EF7044]" />
                     )}
                   </div>
                   <p className="text-[10px] text-gray-400 uppercase leading-relaxed font-medium">
@@ -226,7 +241,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
           ) : (
             <div className="bg-gray-50 rounded-3xl p-5 border border-gray-100 flex items-center gap-4">
               <div className="bg-white p-2.5 rounded-2xl shadow-sm">
-                <MapPin className="w-5 h-5 text-[#DF714B]" />
+                <MapPin className="w-5 h-5 text-[#EF7044]" />
               </div>
               <div className="flex-1">
                 {cart.shipping_address ? (
@@ -250,7 +265,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
               <div className="flex-1">
                 <div className="flex justify-between items-start">
                   <h4 className="text-[12px] font-black text-gray-900 uppercase italic leading-tight">{item.title}</h4>
-                  <span className="text-[10px] font-black text-[#DF714B] bg-[#DF714B]/10 px-2 py-1 rounded-lg">x{item.quantity}</span>
+                  <span className="text-[10px] font-black text-[#EF7044] bg-[#EF7044]/10 px-2 py-1 rounded-lg">x{item.quantity}</span>
                 </div>
                 <p className="text-[14px] font-black mt-2 tracking-tight">Rp {item.unit_price.toLocaleString("id-ID")}</p>
                 <p className="text-[9px] text-gray-400 mt-1 uppercase font-black tracking-widest">{item.variant?.title}</p>
@@ -268,7 +283,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
               placeholder="HAVE A PROMO CODE?" 
               value={promoCode}
               onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-              className="w-full bg-gray-50 border border-gray-200 rounded-2xl pl-11 pr-4 py-4 text-[10px] font-black focus:border-[#DF714B] outline-none transition-all tracking-[0.2em]"
+              className="w-full bg-gray-50 border border-gray-200 rounded-2xl pl-11 pr-4 py-4 text-[10px] font-black focus:border-[#EF7044] outline-none transition-all tracking-[0.2em]"
             />
           </div>
           <button 
