@@ -31,42 +31,43 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   const [isLoadingShipping, setIsLoadingShipping] = useState(true)
   const [showAddressList, setShowAddressList] = useState(false)
 
-  // 🌟 1. SINKRONISASI EMAIL DI AWAL (Biar aman dari Race Condition)
+  // 🌟 1. ALUR ANTREAN BERANTAI (Anti Race Condition Saat Halaman Dibuka)
   useEffect(() => {
-    const syncEmailAtStart = async () => {
-      const targetEmail = initialCart?.email || customer?.email || ""
-      if (targetEmail && !initialCart?.email) {
-        try {
-          console.log("🌟 Menyinkronkan email kustomer ke keranjang di awal...");
-          const updatedCart = await updateCartInfoAction(initialCart.id, targetEmail.toLowerCase())
-          setCart(updatedCart)
-        } catch (error) {
-          console.error("Gagal sinkronisasi email di awal:", error)
-        }
-      }
-    }
-    syncEmailAtStart()
-  }, [initialCart.id, initialCart?.email, customer?.email])
+    const initializeCheckoutFlow = async () => {
+      setIsLoadingShipping(true)
+      let currentCart = initialCart
 
-  // 2. AMBIL SHIPPING METHOD
-  useEffect(() => {
-    const fetchShippingMethods = async () => {
       try {
-        const options = await getShippingOptionsAction(cart.id)
+        // LANGKAH A: Ambil email kustomer yang login
+        const targetEmail = initialCart?.email || customer?.email || ""
+        
+        // LANGKAH B: Jika di keranjang belum ada email, suntik duluan sampai beres!
+        if (targetEmail && !initialCart?.email) {
+          console.log("🌟 [Checkout]: Menyuntikkan email kontak ke keranjang...")
+          currentCart = await updateCartInfoAction(initialCart.id, targetEmail.toLowerCase())
+          setCart(currentCart)
+        }
+
+        // LANGKAH C: Ambil opsi pengiriman SETELAH email dipastikan aman terpasang
+        console.log("🌟 [Checkout]: Mengambil opsi pengiriman resmi...")
+        const options = await getShippingOptionsAction(currentCart.id)
         setShippingMethods(options)
         
-        if (options.length > 0 && !cart.shipping_methods?.length) {
-          handleSelectShipping(options[0].id)
+        // LANGKAH D: Pasang metode pengiriman pertama secara otomatis ke backend jika belum ada
+        if (options.length > 0 && (!currentCart.shipping_methods || currentCart.shipping_methods.length === 0)) {
+          console.log("🌟 [Checkout]: Mengunci opsi pengiriman pertama ke database...")
+          const finalCart = await setShippingMethodAction(currentCart.id, options[0].id)
+          setCart(finalCart)
         }
       } catch (error) {
-        console.error("Gagal ambil shipping:", error)
+        console.error("❌ Gagal menginisialisasi alur checkout:", error)
       } finally {
         setIsLoadingShipping(false)
       }
     }
-    fetchShippingMethods()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cart.id])
+
+    initializeCheckoutFlow()
+  }, [initialCart.id, initialCart?.email, customer?.email])
 
   const handleSelectShipping = async (optionId: string) => {
     try {
@@ -77,33 +78,62 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
     }
   }
 
-  // 3. FUNGSI SINKRONISASI JIKA EMAIL DIKETIK MANUAL (SAAT BLUR)
+  // 🌟 2. FUNGSI GANTI ALAMAT (Otomatis Ambil & Pasang Ulang Kurir Baru)
+  const handleUpdateAddress = async (address: any) => {
+    try {
+      setIsLoadingShipping(true)
+      setShowAddressList(false) 
+
+      // Update alamat ke Medusa
+      const updatedCart = await updateCartAddressAction(cart.id, address)
+      
+      // Ambil opsi kurir baru untuk alamat baru ini
+      const options = await getShippingOptionsAction(cart.id)
+      setShippingMethods(options)
+      
+      // Pasang otomatis opsi kurir pertama ke alamat baru
+      if (options.length > 0) {
+        const finalCart = await setShippingMethodAction(cart.id, options[0].id)
+        setCart(finalCart)
+      } else {
+        setCart(updatedCart)
+      }
+    } catch (error) {
+      alert("Gagal mengganti alamat, silakan coba lagi.")
+    } finally {
+      setIsLoadingShipping(false)
+    }
+  }
+
+  // 🌟 3. FUNGSI JIKA EMAIL DIKETIK MANUAL (Otomatis Ambil & Pasang Ulang Kurir)
   const handleEmailBlur = async () => {
     if (email && email.includes("@") && email !== cart.email) {
       try {
+        setIsLoadingShipping(true)
+        
+        // Suntik email baru (Medusa otomatis menghapus kurir lama)
         const updatedCart = await updateCartInfoAction(cart.id, email.toLowerCase())
-        setCart(updatedCart)
-        // Ambil ulang opsi pengiriman jika email/grup kustomer memengaruhi ongkir
+        
+        // Ambil ulang kurir pasca direset Medusa
         const options = await getShippingOptionsAction(cart.id)
         setShippingMethods(options)
+        
+        // Pasang kembali kurir pertama
+        if (options.length > 0) {
+          const finalCart = await setShippingMethodAction(cart.id, options[0].id)
+          setCart(finalCart)
+        } else {
+          setCart(updatedCart)
+        }
       } catch (error) {
-        console.error("Gagal update email:", error)
+        console.error("Gagal mengamankan email:", error)
+      } finally {
+        setIsLoadingShipping(false)
       }
     }
   }
 
-  // 4. FUNGSI GANTI ALAMAT
-  const handleUpdateAddress = async (address: any) => {
-    try {
-      const updatedCart = await updateCartAddressAction(cart.id, address)
-      setCart(updatedCart) 
-      setShowAddressList(false) 
-    } catch (error) {
-      alert("Gagal mengganti alamat, silakan coba lagi.")
-    }
-  }
-
-  // 5. FUNGSI APPLY PROMO
+  // 4. FUNGSI APPLY PROMO
   const handleApplyPromo = async () => {
     if (!promoCode) return
     setIsApplyingPromo(true)
@@ -119,7 +149,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
     }
   }
 
-  // 🌟 6. FUNGSI BAYAR (KEMBALI KE WUJUD ASLI YANG 100% AMAN DAN LOLOS ORDER)
+  // 🌟 5. FUNGSI BAYAR (100% AMAN TANPA RESTU-RESET DATA MENDADAK)
   const handlePayNow = async () => {
     setIsPaying(true)
     
@@ -130,7 +160,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
         return
       }
 
-      // LANGSUNG TEMBAK INITIATE PAYMENT TANPA SIKUT-SIKUTAN DATA LAGI
+      // LANGSUNG TEMBAK XENDIT KARENA DATA KERANJANG SUDAH DIKUNCI SEMPURNA DI ATAS
       const updatedCart = await initiatePaymentAction(cart.id, "pp_xendit_xendit")
 
       const xenditSession = updatedCart?.payment_collection?.payment_sessions?.find(
@@ -194,7 +224,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
               placeholder="YOUR EMAIL ADDRESS" 
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              onBlur={handleEmailBlur} // Sync data otomatis ke Medusa saat kustomer selesai mengetik
+              onBlur={handleEmailBlur} 
               className="w-full bg-transparent text-[11px] font-black text-gray-900 outline-none uppercase tracking-widest placeholder:text-gray-300"
             />
           </div>
@@ -354,8 +384,8 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
 
         <button 
           onClick={handlePayNow}
-          disabled={isPaying}
-          className="w-full bg-[#EF7044] text-white py-5 rounded-full font-black text-[15px] shadow-2xl active:scale-95 transition-all flex items-center justify-center gap-3 uppercase tracking-[0.2em]"
+          disabled={isPaying || isLoadingShipping}
+          className="w-full bg-[#EF7044] text-white py-5 rounded-full font-black text-[15px] shadow-2xl active:scale-95 transition-all flex items-center justify-center gap-3 uppercase tracking-[0.2em] disabled:opacity-50"
         >
           {isPaying ? <Loader2 className="w-5 h-5 animate-spin" /> : "Pay Now"}
         </button>
