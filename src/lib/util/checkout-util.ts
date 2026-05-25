@@ -24,22 +24,30 @@ export const prepareCheckoutCart = async (mainCart: any, selectedItems: any[]) =
   }
 }
 
-// 2. Fungsi Update Alamat Checkout
-export const updateCartAddressAction = async (cartId: string, address: any) => {
+// 🌟 2. Fungsi Update Alamat (SEKALIGUS SUNTIK EMAIL BIAR AMAN)
+export const updateCartAddressAction = async (cartId: string, address: any, email?: string) => {
   try {
-    const { cart } = await sdk.store.cart.update(cartId, {
+    const payload: any = {
       shipping_address: {
         first_name: address.first_name || "",
         last_name: address.last_name || "",
         address_1: address.address_1 || "",
         city: address.city || "",
-        country_code: address.country_code || "id", // 🌟 Wajib ada "id"
+        country_code: address.country_code || "id", 
         postal_code: address.postal_code || "",
         province: address.province || "",
         phone: address.phone || ""
       }
-    }, {
-      fields: "*shipping_address,*items,*shipping_methods" // 🌟 Minta data lengkap balikannya
+    };
+
+    // 🌟 Rahasia Lolos: Email disuntik bersamaan dengan alamat, 
+    // jadi Medusa tidak akan mereset ongkir kustomer!
+    if (email) {
+      payload.email = email;
+    }
+
+    const { cart } = await sdk.store.cart.update(cartId, payload, {
+      fields: "*shipping_address,*items,*shipping_methods" 
     })
     return cart
   } catch (error) {

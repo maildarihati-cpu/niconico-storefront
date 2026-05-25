@@ -9,8 +9,7 @@ import {
   getShippingOptionsAction, 
   setShippingMethodAction, 
   applyPromoCodeAction,
-  initiatePaymentAction,
-  updateCartInfoAction 
+  initiatePaymentAction
 } from "@lib/util/checkout-util"
 
 interface CheckoutFormProps {
@@ -31,43 +30,25 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   const [isLoadingShipping, setIsLoadingShipping] = useState(true)
   const [showAddressList, setShowAddressList] = useState(false)
 
-  // 🌟 1. ALUR ANTREAN BERANTAI (Anti Race Condition Saat Halaman Dibuka)
+  // 1. AMBIL SHIPPING METHOD
   useEffect(() => {
-    const initializeCheckoutFlow = async () => {
-      setIsLoadingShipping(true)
-      let currentCart = initialCart
-
+    const fetchShippingMethods = async () => {
       try {
-        // LANGKAH A: Ambil email kustomer yang login
-        const targetEmail = initialCart?.email || customer?.email || ""
-        
-        // LANGKAH B: Jika di keranjang belum ada email, suntik duluan sampai beres!
-        if (targetEmail && !initialCart?.email) {
-          console.log("🌟 [Checkout]: Menyuntikkan email kontak ke keranjang...")
-          currentCart = await updateCartInfoAction(initialCart.id, targetEmail.toLowerCase())
-          setCart(currentCart)
-        }
-
-        // LANGKAH C: Ambil opsi pengiriman SETELAH email dipastikan aman terpasang
-        console.log("🌟 [Checkout]: Mengambil opsi pengiriman resmi...")
-        const options = await getShippingOptionsAction(currentCart.id)
+        const options = await getShippingOptionsAction(cart.id)
         setShippingMethods(options)
         
-        // LANGKAH D: Pasang metode pengiriman pertama secara otomatis ke backend jika belum ada
-        if (options.length > 0 && (!currentCart.shipping_methods || currentCart.shipping_methods.length === 0)) {
-          console.log("🌟 [Checkout]: Mengunci opsi pengiriman pertama ke database...")
-          const finalCart = await setShippingMethodAction(currentCart.id, options[0].id)
-          setCart(finalCart)
+        if (options.length > 0 && !cart.shipping_methods?.length) {
+          handleSelectShipping(options[0].id)
         }
       } catch (error) {
-        console.error("❌ Gagal menginisialisasi alur checkout:", error)
+        console.error("Gagal ambil shipping:", error)
       } finally {
         setIsLoadingShipping(false)
       }
     }
-
-    initializeCheckoutFlow()
-  }, [initialCart.id, initialCart?.email, customer?.email])
+    fetchShippingMethods()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cart.id])
 
   const handleSelectShipping = async (optionId: string) => {
     try {
@@ -78,62 +59,20 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
     }
   }
 
-  // 🌟 2. FUNGSI GANTI ALAMAT (Otomatis Ambil & Pasang Ulang Kurir Baru)
+  // 🌟 2. FUNGSI GANTI ALAMAT SEKALIGUS SUNTIK EMAIL
   const handleUpdateAddress = async (address: any) => {
     try {
-      setIsLoadingShipping(true)
+      const targetEmail = email || customer?.email || "";
+      // Email masuk bareng alamat, dijamin lolos inspeksi Medusa!
+      const updatedCart = await updateCartAddressAction(cart.id, address, targetEmail)
+      setCart(updatedCart) 
       setShowAddressList(false) 
-
-      // Update alamat ke Medusa
-      const updatedCart = await updateCartAddressAction(cart.id, address)
-      
-      // Ambil opsi kurir baru untuk alamat baru ini
-      const options = await getShippingOptionsAction(cart.id)
-      setShippingMethods(options)
-      
-      // Pasang otomatis opsi kurir pertama ke alamat baru
-      if (options.length > 0) {
-        const finalCart = await setShippingMethodAction(cart.id, options[0].id)
-        setCart(finalCart)
-      } else {
-        setCart(updatedCart)
-      }
     } catch (error) {
       alert("Gagal mengganti alamat, silakan coba lagi.")
-    } finally {
-      setIsLoadingShipping(false)
     }
   }
 
-  // 🌟 3. FUNGSI JIKA EMAIL DIKETIK MANUAL (Otomatis Ambil & Pasang Ulang Kurir)
-  const handleEmailBlur = async () => {
-    if (email && email.includes("@") && email !== cart.email) {
-      try {
-        setIsLoadingShipping(true)
-        
-        // Suntik email baru (Medusa otomatis menghapus kurir lama)
-        const updatedCart = await updateCartInfoAction(cart.id, email.toLowerCase())
-        
-        // Ambil ulang kurir pasca direset Medusa
-        const options = await getShippingOptionsAction(cart.id)
-        setShippingMethods(options)
-        
-        // Pasang kembali kurir pertama
-        if (options.length > 0) {
-          const finalCart = await setShippingMethodAction(cart.id, options[0].id)
-          setCart(finalCart)
-        } else {
-          setCart(updatedCart)
-        }
-      } catch (error) {
-        console.error("Gagal mengamankan email:", error)
-      } finally {
-        setIsLoadingShipping(false)
-      }
-    }
-  }
-
-  // 4. FUNGSI APPLY PROMO
+  // 3. FUNGSI APPLY PROMO
   const handleApplyPromo = async () => {
     if (!promoCode) return
     setIsApplyingPromo(true)
@@ -149,7 +88,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
     }
   }
 
-  // 🌟 5. FUNGSI BAYAR (100% AMAN TANPA RESTU-RESET DATA MENDADAK)
+  // 🌟 4. FUNGSI BAYAR (Kembali ke versi 100% aman)
   const handlePayNow = async () => {
     setIsPaying(true)
     
@@ -160,7 +99,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
         return
       }
 
-      // LANGSUNG TEMBAK XENDIT KARENA DATA KERANJANG SUDAH DIKUNCI SEMPURNA DI ATAS
+      // LANGSUNG TEMBAK XENDIT, JANGAN ADA UPDATE-UPDATE LAGI!
       const updatedCart = await initiatePaymentAction(cart.id, "pp_xendit_xendit")
 
       const xenditSession = updatedCart?.payment_collection?.payment_sessions?.find(
@@ -170,28 +109,25 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
       const sessionData: any = xenditSession?.data || {}
 
       if (sessionData.error) {
-        console.error("Xendit Error Details:", sessionData.error)
         alert(`Xendit menolak pesanan: ${sessionData.error}`)
         setIsPaying(false)
         return
       }
 
-      const invoiceUrl = sessionData.invoice_url 
-                      || sessionData.invoiceUrl 
-                      || sessionData.data?.invoice_url 
-                      || sessionData.data?.invoiceUrl
-                      || sessionData.invoice?.invoiceUrl; 
+      const invoiceUrl = sessionData.invoice_url || sessionData.invoiceUrl || sessionData.data?.invoice_url; 
 
       if (invoiceUrl) {
+        // 🌟 JURUS PARTIAL CHECKOUT: Catat barang yang dibayar untuk dihapus nanti
+        const purchasedVariants = cart.items.map((item: any) => item.variant_id);
+        localStorage.setItem("niconico_purchased_variants", JSON.stringify(purchasedVariants));
+
         window.location.href = String(invoiceUrl) 
       } else {
-        console.error("Isi Data Xendit Sebenarnya:", sessionData)
         alert("Gagal mendapatkan link pembayaran dari gateway. Silakan coba lagi.")
         setIsPaying(false)
       }
 
     } catch (error) {
-      console.error("Gagal inisiasi pembayaran:", error)
       alert("Terjadi kesalahan jaringan, silakan coba lagi.")
       setIsPaying(false)
     }
@@ -224,7 +160,6 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
               placeholder="YOUR EMAIL ADDRESS" 
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              onBlur={handleEmailBlur} 
               className="w-full bg-transparent text-[11px] font-black text-gray-900 outline-none uppercase tracking-widest placeholder:text-gray-300"
             />
           </div>
