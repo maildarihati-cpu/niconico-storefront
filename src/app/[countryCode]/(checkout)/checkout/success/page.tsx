@@ -3,16 +3,25 @@
 import React, { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { ChevronLeft, ShoppingBag, CheckCircle2 } from "lucide-react"
+import { cleanUpMainCartAction } from "@lib/util/checkout-util" 
 
 export default function OrderSuccessPage() {
   const router = useRouter()
 
   useEffect(() => {
-    // 🌟 KITA PECAT ROBOTNYA SEMENTARA BIAR TIDAK MENSABOTASE WEBHOOK!
-    // Cukup hapus id keranjang dari browser, agar kustomer dapat keranjang kosong baru.
-    document.cookie = "_medusa_cart_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-    document.cookie = "cart_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-    localStorage.removeItem("niconico_purchased_variants");
+    const cleanCart = async () => {
+      const pendingStr = localStorage.getItem("niconico_purchased_variants");
+      if (pendingStr) {
+        try {
+          const purchasedVariants = JSON.parse(pendingStr);
+          await cleanUpMainCartAction(purchasedVariants);
+          localStorage.removeItem("niconico_purchased_variants");
+        } catch (error) {
+          console.error("Gagal membersihkan keranjang utama:", error);
+        }
+      }
+    }
+    cleanCart();
   }, [])
 
   return (
