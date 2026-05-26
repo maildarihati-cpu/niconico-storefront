@@ -7,16 +7,26 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 
 interface Props {
   onClose: () => void;
-  setView: (view: "menu" | "login" | "signup" | "profile") => void;
+  // 🌟 Tambahkan "orders" ke dalam tipe setView
+  setView: (view: "menu" | "login" | "signup" | "profile" | "orders") => void;
   customer: any;
 }
 
 export default function MenuView({ onClose, setView, customer }: Props) {
   
-  // Logic Pintu Masuk: Ke Profile kalau sudah login, ke Login kalau belum
+  // Logic Pintu Masuk Profile
   const handleProfileClick = () => {
     if (customer) {
       setView("profile");
+    } else {
+      setView("login");
+    }
+  };
+
+  // 🌟 Logic Pintu Masuk Order (Wajib Login)
+  const handleOrderClick = () => {
+    if (customer) {
+      setView("orders");
     } else {
       setView("login");
     }
@@ -43,7 +53,7 @@ export default function MenuView({ onClose, setView, customer }: Props) {
         {/* Daftar Menu List */}
         <div className="flex flex-col gap-7">
           
-          {/* Menu My Profile (Logic Login/Profile) */}
+          {/* Menu My Profile */}
           <button 
             onClick={handleProfileClick}
             className="flex justify-between items-center w-full group transition-all"
@@ -54,17 +64,16 @@ export default function MenuView({ onClose, setView, customer }: Props) {
             <ChevronRight className="w-5 h-5 text-[#ED5725]" />
           </button>
 
-          {/* Menu Order */}
-          <LocalizedClientLink 
-            href="/account/orders" 
-            onClick={onClose}
+          {/* 🌟 Menu Order (Sudah Diubah Jadi Button & Panggil OrderHistory) */}
+          <button 
+            onClick={handleOrderClick}
             className="flex justify-between items-center w-full group transition-all"
           >
             <span className="text-[#ED5725] text-lg font-medium tracking-tight group-hover:translate-x-1 transition-transform">
               Order
             </span>
             <ChevronRight className="w-5 h-5 text-[#ED5725]" />
-          </LocalizedClientLink>
+          </button>
 
           {/* Menu Cart */}
           <LocalizedClientLink 
@@ -112,18 +121,16 @@ export default function MenuView({ onClose, setView, customer }: Props) {
         <div className="flex flex-col items-center gap-4 animate-in fade-in zoom-in duration-700">
           <div className="relative w-40 h-40 md:w-60 md:h-60 mb-4">
             <Image 
-              src="/logo-niconico-white.png" // Pastikan kamu punya file pineapple putih di folder public
+              src="/logo-niconico-white.png" 
               alt="Logo Niconico" 
               fill
               unoptimized 
               className="object-contain"
             />
           </div>
-          
-          
         </div>
 
-        {/* Dekorasi tipis agar tidak kaku (Opsional) */}
+        {/* Dekorasi tipis agar tidak kaku */}
         <div className="absolute bottom-10 text-white/20 text-[10px] font-bold tracking-[0.5em] uppercase">
           Est. 2026
         </div>

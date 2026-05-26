@@ -9,9 +9,10 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localh
 
 interface Props {
   onClose: () => void;
-  setView: (view: "menu" | "login" | "signup" | "profile" | "address" | "reset-password") => void;
+  // 🌟 Pastikan "orders" ada di list setView
+  setView: (view: "menu" | "login" | "signup" | "profile" | "address" | "reset-password" | "orders") => void;
   customer: any; 
-  onSuccess?: () => Promise<void>; // Tambahin ini biar bisa lapor ke induk
+  onSuccess?: () => Promise<void>; 
 }
 
 export default function ProfileView({ onClose, setView, customer, onSuccess }: Props) {
@@ -61,18 +62,16 @@ export default function ProfileView({ onClose, setView, customer, onSuccess }: P
         throw new Error(err.message || "Update failed");
       }
 
-      // JURUS ANTI CACHE & ANTI RELOAD
       setShowSuccess(true);
       
-      // 1. Lapor ke induk buat download data terbaru secara diam-diam (tanpa reload)
       if (onSuccess) {
         await onSuccess();
       }
 
       setTimeout(() => {
         setShowSuccess(false);
-        setIsEditOpen(false); // Balik ke halaman ProfileView (kartu detail)
-        router.refresh(); // Beresin cache server-side Next.js
+        setIsEditOpen(false); 
+        router.refresh(); 
       }, 2000);
 
     } catch (error: any) {
@@ -88,11 +87,6 @@ export default function ProfileView({ onClose, setView, customer, onSuccess }: P
     document.cookie = "_medusa_jwt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     await fetch(`${BACKEND_URL}/store/auth`, { method: "DELETE" }).catch(() => null);
     window.location.reload(); 
-  };
-
-  const navigateTo = (path: string) => {
-    onClose();
-    router.push(path);
   };
 
   const defaultAddress = customer?.addresses?.[0];
@@ -177,18 +171,36 @@ export default function ProfileView({ onClose, setView, customer, onSuccess }: P
           </div>
         </div>
 
-        {/* MAIN NAVIGATION BUTTONS */}
+        {/* 🌟 MAIN NAVIGATION BUTTONS (Cart, Order, Wishlist) */}
         <div className="flex flex-col gap-2.5 mb-10 mt-4">
-          {["My Cart", "My Order", "My Wishlist"].map((item, idx) => (
-            <button 
-              key={item}
-              onClick={() => item === "My Cart" && navigateTo("/cart")}
-              className={`w-full bg-[#ef7044] text-white py-3 rounded-xl font-bold tracking-wide border border-[#ef7044] hover:bg-white hover:text-[#ef7044] transition-all flex justify-between px-6 items-center ${idx === 1 ? 'opacity-40 cursor-not-allowed' : ''}`}
-            >
-              <span className="text-sm">{item}</span>
-              <ChevronRight className="w-4 h-4 opacity-50" />
-            </button>
-          ))}
+          
+          {/* Button My Cart */}
+          <button 
+            onClick={() => { onClose(); router.push("/cart"); }}
+            className="w-full bg-[#ef7044] text-white py-3 rounded-xl font-bold tracking-wide border border-[#ef7044] hover:bg-white hover:text-[#ef7044] transition-all flex justify-between px-6 items-center"
+          >
+            <span className="text-sm">My Cart</span>
+            <ChevronRight className="w-4 h-4 opacity-50" />
+          </button>
+
+          {/* 🌟 Button My Order (Sudah Diaktifkan & Mengarah ke setView) */}
+          <button 
+            onClick={() => setView("orders")}
+            className="w-full bg-[#ef7044] text-white py-3 rounded-xl font-bold tracking-wide border border-[#ef7044] hover:bg-white hover:text-[#ef7044] transition-all flex justify-between px-6 items-center"
+          >
+            <span className="text-sm">My Order</span>
+            <ChevronRight className="w-4 h-4 opacity-50" />
+          </button>
+
+          {/* Button My Wishlist */}
+          <button 
+            onClick={() => { onClose(); router.push("/wishlist"); }}
+            className="w-full bg-[#ef7044] text-white py-3 rounded-xl font-bold tracking-wide border border-[#ef7044] hover:bg-white hover:text-[#ef7044] transition-all flex justify-between px-6 items-center"
+          >
+            <span className="text-sm">My Wishlist</span>
+            <ChevronRight className="w-4 h-4 opacity-50" />
+          </button>
+
         </div>
 
         {/* LOGOUT */}
