@@ -1,38 +1,34 @@
 "use client"
 
 import React, { useState } from "react"
-import { X, Package, CheckCircle2, Loader2 } from "lucide-react"
+import { X, Package, CheckCircle2, Loader2, ChevronLeft } from "lucide-react"
 
-// Import jembatan API yang sudah dibuat di atas (Sesuaikan path-nya)
+// Import jembatan API yang sudah dibuat (Sesuaikan path-nya jika ada)
 // import { markOrderDeliveredAction } from "@lib/util/order-util"
 
+// 🌟 INI DIA KUNCINYA: Tambahkan setView di Interface agar TypeScript minggir!
 interface OrderHistoryProps {
-  orders: any[]; // Data murni ditarik dari riwayat customer Medusa
+  orders: any[];
+  setView?: (view: string) => void; 
 }
 
-export default function OrderHistory({ orders = [] }: OrderHistoryProps) {
+export default function OrderHistory({ orders = [], setView }: OrderHistoryProps) {
   const [activeTab, setActiveTab] = useState("Pending")
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null)
   
-  // State untuk Optimistic UI (Biar loadingnya mulus saat tombol diklik)
   const [isUpdating, setIsUpdating] = useState(false)
   const [optimisticCompletedIds, setOptimisticCompletedIds] = useState<string[]>([])
 
   const tabs = ["Pending", "Prepared", "On The Way", "Delivered"]
 
-  // 🌟 1. LOGIKA KATEGORISASI (Berdasarkan Data Asli + Aturan 7 Hari)
   const getOrderCategory = (order: any) => {
-    // A. Cek apakah kustomer barusan klik tombol (Biar tab langsung pindah tanpa nunggu refresh)
     if (optimisticCompletedIds.includes(order.id)) return "Delivered"
 
     const fStatus = order.fulfillment_status
 
-    // B. Cek Status Asli dari Admin Dashboard
     if (fStatus === "delivered" || order.status === "completed") return "Delivered"
 
     if (fStatus === "shipped") {
-      // C. LOGIKA 7 HARI OTOMATIS DELIVERED
-      // Cari kapan paket diserahkan ke kurir
       const shipment = order.fulfillments?.find((f: any) => f.shipped_at)
       const shippedDateStr = shipment?.shipped_at || order.updated_at 
       const shippedDate = new Date(shippedDateStr)
@@ -41,29 +37,23 @@ export default function OrderHistory({ orders = [] }: OrderHistoryProps) {
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
 
       if (shippedDate < sevenDaysAgo) {
-        return "Delivered" // Otomatis pindah ke Delivered jika sudah lewat 7 hari
+        return "Delivered" 
       }
       return "On The Way"
     }
 
     if (fStatus === "fulfilled" || fStatus === "partially_shipped") return "Prepared"
 
-    // Default: Jika belum diapa-apain oleh admin
     return "Pending"
   }
 
-  // 🌟 2. FUNGSI KLIK TOMBOL "ORDER DELIVERED"
   const handleMarkAsDelivered = async (orderId: string) => {
     setIsUpdating(true)
     try {
-      // 1. Tembak API untuk mengubah status di Dashboard Admin (Buka comment ini nanti)
       // await markOrderDeliveredAction(orderId);
-
-      // 2. Kasih ilusi UI instan pindah tab agar kustomer tidak menunggu loading lama
       setOptimisticCompletedIds(prev => [...prev, orderId])
       setSelectedOrder(null)
       setActiveTab("Delivered")
-      
     } catch (error) {
       alert("Gagal memperbarui pesanan. Silakan coba lagi.")
     } finally {
@@ -71,14 +61,26 @@ export default function OrderHistory({ orders = [] }: OrderHistoryProps) {
     }
   }
 
-  // Filter pesanan sesuai tab yang sedang dilihat
   const filteredOrders = orders.filter(order => getOrderCategory(order) === activeTab)
 
   return (
     <div className="flex flex-col h-full bg-gray-50 font-sans">
       
+      {/* 🌟 HEADER DENGAN TOMBOL BACK */}
+      <div className="bg-white px-6 pt-10 pb-4 border-b border-gray-100 flex items-center gap-3 shrink-0">
+        {setView && (
+          <button 
+            onClick={() => setView("profile")} 
+            className="p-1.5 bg-gray-50 hover:bg-gray-100 rounded-full transition-all"
+          >
+            <ChevronLeft className="w-5 h-5 text-gray-600" />
+          </button>
+        )}
+        <h2 className="text-gray-900 text-lg font-black uppercase italic tracking-wide">My Orders</h2>
+      </div>
+
       {/* TABS NAVIGATION */}
-      <div className="bg-white px-4 pt-4 shadow-sm z-10 sticky top-0">
+      <div className="bg-white px-4 pt-2 shadow-sm z-10 sticky top-0 shrink-0">
         <div className="flex justify-between border-b border-gray-100 overflow-x-auto hide-scrollbar">
           {tabs.map((tab) => (
             <button
@@ -118,7 +120,6 @@ export default function OrderHistory({ orders = [] }: OrderHistoryProps) {
                 </span>
               </div>
 
-              {/* Thumbnail Gambar Produk */}
               <div className="flex gap-3 mb-5 overflow-x-auto hide-scrollbar pb-2">
                 {order.items?.map((item: any, idx: number) => (
                   <div key={idx} className="w-16 h-20 flex-shrink-0 bg-gray-50 rounded-xl overflow-hidden border border-gray-100 relative">
@@ -143,17 +144,14 @@ export default function OrderHistory({ orders = [] }: OrderHistoryProps) {
         )}
       </div>
 
-      {/* 🌟 POPUP MODAL DETAILS */}
+      {/* POPUP MODAL DETAILS */}
       {selectedOrder && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
           
-          {/* Backdrop Click to Close */}
           <div className="absolute inset-0 cursor-pointer" onClick={() => !isUpdating && setSelectedOrder(null)}></div>
           
-          {/* Modal Content */}
           <div className="bg-white w-full max-w-sm rounded-[32px] overflow-hidden relative z-10 animate-in zoom-in-95 duration-200 shadow-2xl flex flex-col max-h-[85vh]">
             
-            {/* Header Popup */}
             <div className="flex justify-between items-center p-6 border-b border-gray-100">
               <div>
                 <h3 className="text-[14px] font-black text-gray-900 uppercase italic">Order Details</h3>
@@ -168,7 +166,6 @@ export default function OrderHistory({ orders = [] }: OrderHistoryProps) {
               </button>
             </div>
 
-            {/* Items List (Scrollable) */}
             <div className="overflow-y-auto p-6 space-y-5">
               {selectedOrder.items?.map((item: any) => (
                 <div key={item.id} className="flex gap-4">
@@ -196,7 +193,6 @@ export default function OrderHistory({ orders = [] }: OrderHistoryProps) {
               </div>
             </div>
 
-            {/* Action Area (Hanya muncul jika status "On The Way") */}
             {getOrderCategory(selectedOrder) === "On The Way" && (
               <div className="p-6 bg-gray-50 border-t border-gray-100">
                 <button 
@@ -220,7 +216,6 @@ export default function OrderHistory({ orders = [] }: OrderHistoryProps) {
         </div>
       )}
       
-      {/* Global Style untuk Hide Scrollbar tapi tetap bisa scroll */}
       <style dangerouslySetInnerHTML={{__html: `
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

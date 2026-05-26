@@ -4,12 +4,9 @@ import React, { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { useRouter, useParams } from "next/navigation";
 import { ChevronLeft, Check, Trash2, Loader2 } from "lucide-react";
-// 🌟 KITA PANGGIL LAGI USECART-NYA BIAR SINKRON
 import { useCart } from "@/context/cart-context";
 import { updateLineItem, deleteLineItem } from "@lib/data/cart";
-import { listProducts } from "@lib/data/products";
 import { StoreCart, StoreCustomer } from "@medusajs/types";
-// 🌟 IMPORT FUNGSI SAKTI PEMISAH CART
 import { prepareCheckoutCart } from "@lib/util/checkout-util"; 
 
 interface CartTemplateProps {
@@ -21,19 +18,18 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
   const router = useRouter();
   const { countryCode } = useParams();
   
-  // 🌟 PAKE CONTEXT LAGI BIAR GAK ERROR ID BASI
+  // 🌟 LOGIC SINKRONISASI CART (Context Priority)
+  // useCartContext selalu mengambil data cart terbaru yang ditarik oleh sistem auth Medusa
   const { cart: contextCart, addToCart: refreshCart } = useCart();
-  const cart = contextCart || initialCart;
+  
+  // Jika contextCart punya barang, pakai itu (artinya hasil sinkronisasi database akun sukses).
+  // Kalau tidak, mundur pakai initialCart (hasil SSR dari cookie HP).
+  const cart = contextCart && contextCart.items?.length > 0 ? contextCart : initialCart;
 
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [isLoadingItem, setIsLoadingItem] = useState<string | null>(null);
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false); 
   
-  const [editingItem, setEditingItem] = useState<any>(null);
-  const [editProductData, setEditProductData] = useState<any>(null);
-  const [selectedNewVariant, setSelectedNewVariant] = useState<any>(null);
-
-  // 🌟 ILMU SULAP GROUPING (TETAP SAMA)
   const groupedItems = useMemo(() => {
     const groups: any[] = [];
     const bundles: Record<string, any[]> = {};
@@ -145,29 +141,23 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
 
   const totals = calculateTotals();
 
-  // 🌟 PERBAIKAN LOGIKA CHECKOUT (CEK LOGIN & BIKIN URL FLAG)
   const handleCheckout = async () => {
     if (selectedItems.length === 0) return;
     
-    // 1. CEGATAN LOGIN: Cek apakah ada data customer dari props
+    // CEGATAN LOGIN 
     if (!customer || !customer.id) {
-      // User belum login. Jangan pindah halaman, tapi modifikasi URL-nya saja
-      // Pushing state dengan ?auth=login agar komponen Drawer nanti merespon
       router.push(`/${countryCode}/cart?auth=login`, { scroll: false });
       return; 
     }
 
-    // 2. JIKA SUDAH LOGIN, LANJUT PROSES CHECKOUT
     setIsCheckoutLoading(true);
 
     try {
       const isAllSelected = cart?.items?.length === selectedItems.length;
 
       if (isAllSelected) {
-        // Kalau beli semua, gas langsung ke checkout
         router.push(`/${countryCode}/checkout`);
       } else {
-        // Kalau partial, pisahin keranjang dulu
         const itemsToCheckout = cart.items.filter((item: any) => selectedItems.includes(item.id));
         const checkoutCartId = await prepareCheckoutCart(cart, itemsToCheckout);
 
