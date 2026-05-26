@@ -3,7 +3,7 @@
 import { sdk } from "@lib/config"
 import { cookies } from "next/headers"
 
-// 🌟 HELPER SAKTI: Ambil Cookie (Wajib Async untuk Next 14/15)
+// 🌟 HELPER SAKTI
 const getAuthHeaders = async () => {
   try {
     const cookieStore = await cookies(); 
@@ -14,72 +14,53 @@ const getAuthHeaders = async () => {
   }
 }
 
-// 🌟 1. FUNGSI PEMISAH KERANJANG (TEKNIK MANUAL 3 TAHAP ANTI BUG MEDUSA)
+// 🌟 1. METODE PANGKAS & SIMPAN (ANTI DITOLAK MEDUSA)
 export const prepareCheckoutCart = async (mainCart: any, selectedItems: any[]) => {
   try {
     const headers = await getAuthHeaders();
-
-    // ==========================================
-    // TAHAP 1: BIKIN KERANJANG KOSONG POLOS
-    // ==========================================
-    const cartPayload: any = {
-      region_id: mainCart.region_id,
-      sales_channel_id: mainCart.sales_channel_id,
-    };
-    if (mainCart.email) cartPayload.email = mainCart.email;
-
-    const cartRes = await (sdk.client as any).fetch(`/store/carts`, {
-      method: "POST",
-      body: cartPayload,
-      headers
-    });
+    const cookieStore = await cookies();
     
-    const checkoutCartId = cartRes.cart?.id || cartRes.id;
-    if (!checkoutCartId) throw new Error("Gagal membuat keranjang dasar");
+    // Ambil ID barang yang dipilih untuk dibeli
+    const selectedVariantIds = selectedItems.map((i: any) => i.variant_id);
 
-    // ==========================================
-    // TAHAP 2: MASUKKAN BARANG (Memicu Mesin Profile Medusa)
-    // ==========================================
-    for (const item of selectedItems) {
-      await (sdk.client as any).fetch(`/store/carts/${checkoutCartId}/line-items`, {
-        method: "POST",
-        body: { variant_id: item.variant_id, quantity: item.quantity },
-        headers
-      });
-    }
+    // A. Cari barang yang TIDAK dicentang (yang mau ditinggal)
+    const unselectedItems = mainCart.items.filter(
+      (item: any) => !selectedVariantIds.includes(item.variant_id)
+    ).map((item: any) => ({
+      variant_id: item.variant_id,
+      quantity: item.quantity
+    }));
 
-    // ==========================================
-    // TAHAP 3: SUNTIK ALAMAT (Memicu Mesin Ongkir Medusa)
-    // ==========================================
-    if (mainCart.shipping_address) {
-      const addressPayload = {
-        shipping_address: {
-          first_name: mainCart.shipping_address.first_name || "",
-          last_name: mainCart.shipping_address.last_name || "",
-          address_1: mainCart.shipping_address.address_1 || "",
-          city: mainCart.shipping_address.city || "",
-          country_code: mainCart.shipping_address.country_code || "id",
-          postal_code: mainCart.shipping_address.postal_code || "",
-          province: mainCart.shipping_address.province || "",
-          phone: mainCart.shipping_address.phone || ""
-        }
+    // B. Simpan barang yang tertinggal ke dalam "Brankas Cookie"
+    if (unselectedItems.length > 0) {
+      const savedData = {
+        region_id: mainCart.region_id,
+        sales_channel_id: mainCart.sales_channel_id,
+        items: unselectedItems
       };
-      
-      await (sdk.client as any).fetch(`/store/carts/${checkoutCartId}`, {
-        method: "POST", // Di Medusa v2 Update Cart pakai POST
-        body: addressPayload,
-        headers
-      });
+      // Simpan dengan nama niconico_saved_cart
+      cookieStore.set("niconico_saved_cart", JSON.stringify(savedData), { path: "/" });
     }
 
-    return checkoutCartId;
+    // C. PANGKAS barang yang tidak dicentang dari Keranjang Orisinil
+    for (const item of mainCart.items) {
+      if (!selectedVariantIds.includes(item.variant_id)) {
+        await (sdk.client as any).fetch(`/store/carts/${mainCart.id}/line-items/${item.id}`, {
+          method: "DELETE",
+          headers
+        });
+      }
+    }
+
+    // D. Kembalikan ID Keranjang Orisinil! (Medusa tidak akan bisa menolak keranjang ini)
+    return mainCart.id;
   } catch (error) {
-    console.error("❌ Gagal memisahkan keranjang:", error);
+    console.error("❌ Gagal memangkas keranjang:", error);
     return null;
   }
 }
 
-// 2. Fungsi Update Alamat Checkout 
+// 2. Fungsi Update Alamat 
 export const updateCartAddressAction = async (cartId: string, address: any, email?: string) => {
   try {
     const headers = await getAuthHeaders();
@@ -95,144 +76,106 @@ export const updateCartAddressAction = async (cartId: string, address: any, emai
         phone: address.phone || ""
       }
     };
-
     if (email) payload.email = email;
-
     const { cart } = await (sdk.store.cart as any).update(
-      cartId, 
-      payload, 
-      { fields: "*shipping_address,*items,*shipping_methods" },
-      headers
+      cartId, payload, { fields: "*shipping_address,*items,*shipping_methods" }, headers
     );
     return cart;
-  } catch (error) {
-    throw error;
-  }
+  } catch (error) { throw error; }
 }
 
 // 3. Fungsi Ambil Kurir 
 export const getShippingOptionsAction = async (cartId: string) => {
   try {
     const headers = await getAuthHeaders();
-    const { shipping_options } = await (sdk.store.fulfillment as any).listCartOptions(
-      { cart_id: cartId },
-      headers
-    );
+    const { shipping_options } = await (sdk.store.fulfillment as any).listCartOptions({ cart_id: cartId }, headers);
     return shipping_options;
-  } catch (error) {
-    return [];
-  }
+  } catch (error) { return []; }
 }
 
 // 4. Fungsi Pilih Kurir
 export const setShippingMethodAction = async (cartId: string, optionId: string) => {
   try {
     const headers = await getAuthHeaders();
-    const { cart } = await (sdk.store.cart as any).addShippingMethod(
-      cartId, 
-      { option_id: optionId },
-      undefined,
-      headers
-    );
+    const { cart } = await (sdk.store.cart as any).addShippingMethod(cartId, { option_id: optionId }, undefined, headers);
     return cart;
-  } catch (error) {
-    throw error;
-  }
+  } catch (error) { throw error; }
 }
 
 // 5. Fungsi Apply Promo
 export const applyPromoCodeAction = async (cartId: string, code: string) => {
   try {
     const headers = await getAuthHeaders();
-    const { cart } = await (sdk.store.cart as any).update(
-      cartId, 
-      { promo_codes: [code] },
-      undefined,
-      headers
-    );
+    const { cart } = await (sdk.store.cart as any).update(cartId, { promo_codes: [code] }, undefined, headers);
     return cart;
-  } catch (error) {
-    throw error;
-  }
+  } catch (error) { throw error; }
 }
 
-// 🌟 6. Fungsi Inisiasi Pembayaran (Dengan GEMBOK PENGAMAN)
+// 6. Fungsi Inisiasi Pembayaran (Xendit) 
 export const initiatePaymentAction = async (cartId: string, providerId: string = "xendit") => {
   try {
     const headers = await getAuthHeaders();
-
-    // 🚨 GEMBOK PENGAMAN: Cek paksa isi keranjang di database detik ini juga!
-    const { cart: checkCart } = await (sdk.store.cart as any).retrieve(
-      cartId, 
-      { fields: "*shipping_methods,*payment_collection" }, 
-      headers
-    );
+    const { cart: checkCart } = await (sdk.store.cart as any).retrieve(cartId, { fields: "*shipping_methods,*payment_collection" }, headers);
 
     if (!checkCart.shipping_methods || checkCart.shipping_methods.length === 0) {
-      throw new Error("Sistem Medusa menghapus ongkos kirim. Silakan klik/pilih ulang metode pengiriman Anda sebelum bayar!");
+      throw new Error("Ongkos kirim belum terpasang sempurna. Silakan pilih ulang kurir Anda.");
     }
 
     let paymentCollectionId = checkCart.payment_collection?.id;
-
     if (!paymentCollectionId) {
       const collectionRes = await (sdk.client as any).fetch(`/store/payment-collections`, {
-        method: "POST",
-        body: { cart_id: cartId },
-        headers: headers 
+        method: "POST", body: { cart_id: cartId }, headers: headers 
       }); 
-      
       paymentCollectionId = collectionRes.payment_collection?.id || collectionRes.id;
     }
 
     await (sdk.client as any).fetch(`/store/payment-collections/${paymentCollectionId}/payment-sessions`, {
-      method: "POST",
-      body: { provider_id: providerId },
-      headers: headers
+      method: "POST", body: { provider_id: providerId }, headers: headers
     });
 
-    const finalCartRes = await (sdk.store.cart as any).retrieve(
-      cartId, 
-      { fields: "*payment_collection,*payment_collection.payment_sessions" }, 
-      headers
-    );
-
+    const finalCartRes = await (sdk.store.cart as any).retrieve(cartId, { fields: "*payment_collection,*payment_collection.payment_sessions" }, headers);
     return finalCartRes.cart;
-
   } catch (error: any) {
-    const errMsg = error?.response?.data || error.message;
-    console.error("🔥 Error V2 Medusa:", errMsg);
     throw new Error(error.message || "Gagal menyambung ke Xendit.");
   }
 }
 
-// 7. Robot Tukang Bersih-Bersih (Partial Checkout)
-export const cleanUpMainCartAction = async (purchasedVariantIds: string[]) => {
+// 🌟 7. ROBOT PEMBANGKIT KERANJANG SISA (Dijalankan di Halaman Success)
+export const restoreSavedCartAction = async () => {
   try {
-    const headers = await getAuthHeaders();
     const cookieStore = await cookies();
-    const rawCartId = cookieStore.get("_medusa_cart_id")?.value || cookieStore.get("cart_id")?.value;
-    
-    if (!rawCartId) return false;
-    
-    const mainCartId = rawCartId as string; 
-    const { cart } = await (sdk.store.cart as any).retrieve(
-      mainCartId, 
-      { fields: "*items" }, 
+    const savedStr = cookieStore.get("niconico_saved_cart")?.value;
+
+    if (!savedStr) return false;
+
+    const savedData = JSON.parse(savedStr);
+    if (!savedData || !savedData.items || savedData.items.length === 0) return false;
+
+    const headers = await getAuthHeaders();
+
+    // Bikin keranjang baru HANYA untuk menampung barang sisa
+    const { cart: newCart } = await (sdk.store.cart as any).create(
+      {
+        region_id: savedData.region_id,
+        sales_channel_id: savedData.sales_channel_id,
+        items: savedData.items
+      },
+      undefined,
       headers
     );
-    
-    if (!cart || !cart.items) return false;
 
-    for (const item of cart.items) {
-      if (item.variant_id && purchasedVariantIds.includes(item.variant_id)) {
-        await (sdk.client as any).fetch(`/store/carts/${mainCartId}/line-items/${item.id}`, {
-          method: "DELETE",
-          headers: headers
-        });
-      }
+    // Jadikan keranjang baru ini sebagai keranjang aktif di HP kustomer
+    if (newCart && newCart.id) {
+      cookieStore.set("_medusa_cart_id", newCart.id, { path: "/", maxAge: 60 * 60 * 24 * 7 });
+      cookieStore.set("cart_id", newCart.id, { path: "/", maxAge: 60 * 60 * 24 * 7 });
     }
+
+    // Bakar brankasnya biar nggak dieksekusi 2 kali
+    cookieStore.delete("niconico_saved_cart");
+
     return true;
   } catch (error) {
+    console.error("❌ Gagal membangkitkan sisa keranjang:", error);
     return false;
   }
 }

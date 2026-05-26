@@ -3,25 +3,20 @@
 import React, { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { ChevronLeft, ShoppingBag, CheckCircle2 } from "lucide-react"
-import { cleanUpMainCartAction } from "@lib/util/checkout-util" 
+
+// 🌟 IMPORT ROBOT PEMBANGKIT
+import { restoreSavedCartAction } from "@lib/util/checkout-util" 
 
 export default function OrderSuccessPage() {
   const router = useRouter()
 
   useEffect(() => {
-    const cleanCart = async () => {
-      const pendingStr = localStorage.getItem("niconico_purchased_variants");
-      if (pendingStr) {
-        try {
-          const purchasedVariants = JSON.parse(pendingStr);
-          await cleanUpMainCartAction(purchasedVariants);
-          localStorage.removeItem("niconico_purchased_variants");
-        } catch (error) {
-          console.error("Gagal membersihkan keranjang utama:", error);
-        }
-      }
+    const restoreCart = async () => {
+      // Robot akan mengecek apakah ada barang sisa di brankas. 
+      // Kalau ada, dia otomatis masukin ke keranjang baru kustomer!
+      await restoreSavedCartAction();
     }
-    cleanCart();
+    restoreCart();
   }, [])
 
   return (
@@ -45,7 +40,6 @@ export default function OrderSuccessPage() {
         
         <h2 className="text-2xl font-black mb-10 uppercase italic">Order Complete</h2>
         
-        {/* CUSTOM ICON STACKING (Tas Belanja + Centang) */}
         <div className="relative mb-8 animate-in zoom-in duration-500">
           <ShoppingBag className="w-24 h-24 text-gray-800 stroke-[1.5]" />
           <div className="absolute -bottom-2 -right-2 bg-white rounded-full p-1 shadow-sm">
@@ -53,7 +47,6 @@ export default function OrderSuccessPage() {
           </div>
         </div>
 
-        {/* TEXT MESSAGES */}
         <p className="text-center text-[12px] font-black uppercase tracking-widest text-gray-600 mb-2">
           Thank you for your purchase.
         </p>
@@ -61,7 +54,6 @@ export default function OrderSuccessPage() {
           You can view your order in 'My Orders'<br />section.
         </p>
 
-        {/* BUTTON */}
         <button 
           onClick={() => router.push("/store")}
           className="w-full max-w-sm mt-16 bg-[#EF7044] text-white py-5 rounded-full font-black text-[13px] tracking-[0.2em] uppercase hover:bg-[#d66139] active:scale-[0.98] transition-all shadow-xl flex items-center justify-center"
