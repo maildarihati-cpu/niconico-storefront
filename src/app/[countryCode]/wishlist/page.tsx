@@ -19,7 +19,7 @@ export default function WishlistPage() {
     setIsLoading(true)
     try {
       let activeWishlist = JSON.parse(localStorage.getItem("wishlist") || "[]")
-      const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://niconico-backend-production.up.railway.app"
+      const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://api.niconicoresort.com"
 
       // 🌟 JURUS SINKRONISASI: Cek apakah user sedang login
       try {
@@ -87,7 +87,7 @@ export default function WishlistPage() {
     setWishlistItems(prev => prev.filter(p => p.id !== productId))
 
     // 🌟 JURUS UPDATE DATABASE: Jika user login, hapus juga data di database Medusa
-    const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://niconico-backend-production.up.railway.app"
+    const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://api.niconicoresort.com"
     try {
       const customerRes = await fetch(`${backendUrl}/store/customers/me`, {
         method: "GET",

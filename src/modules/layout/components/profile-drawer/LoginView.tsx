@@ -23,7 +23,7 @@ export default function LoginView({ onClose, setView, onSuccess }: Props) {
     setError(null);
 
     try {
-      // 🌟 KITA GUNAKAN FORMDATA UNTUK SERVER ACTION NEXT.JS
+      // KITA GUNAKAN FORMDATA UNTUK SERVER ACTION NEXT.JS
       const formData = new FormData();
       formData.append("email", email);
       formData.append("password", password);
@@ -34,6 +34,48 @@ export default function LoginView({ onClose, setView, onSuccess }: Props) {
       if (resultError) {
         throw new Error("Invalid email or password.");
       }
+
+      // 🌟 [MULAI] SINKRONISASI WISHLIST (GUEST KE USER) 🌟
+      // Kita bungkus try-catch tersendiri supaya kalau gagal (misal koneksi lambat), loginnya tetap berhasil.
+      try {
+        const localWishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
+        const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://api.niconicoresort.com";
+
+        // 1. Tarik data akun kustomer dari Medusa
+        const customerRes = await fetch(`${backendUrl}/store/customers/me`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include" // Wajib agar server tahu siapa yang baru login
+        });
+
+        if (customerRes.ok) {
+          const { customer } = await customerRes.json();
+          const backendWishlist = customer?.metadata?.wishlist || [];
+
+          // 2. Gabungkan data Local Storage dengan Database, buang yang dobel
+          const mergedWishlist = Array.from(new Set([...localWishlist, ...backendWishlist]));
+
+          // 3. Update metadata akun kustomer di Database
+          await fetch(`${backendUrl}/store/customers/me`, {
+            method: "POST", // Medusa menggunakan POST untuk update customer
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({
+              metadata: {
+                ...customer.metadata, // Amankan metadata lain kalau ada
+                wishlist: mergedWishlist
+              }
+            })
+          });
+
+          // 4. Timpa ulang Local Storage dengan data gabungan yang paling lengkap
+          localStorage.setItem("wishlist", JSON.stringify(mergedWishlist));
+        }
+      } catch (syncErr) {
+        console.error("Sinkronisasi wishlist gagal, tapi login jalan terus:", syncErr);
+      }
+      // 🌟 [AKHIR] SINKRONISASI WISHLIST 🌟
+
 
       // Jika berhasil, cookie dan cache otomatis sudah diatur oleh server action!
       if (onSuccess) {
@@ -51,33 +93,32 @@ export default function LoginView({ onClose, setView, onSuccess }: Props) {
 
   // 🌟 FUNGSI GOOGLE AUTH
   const handleGoogleAuth = async (e: React.MouseEvent) => {
-  e.preventDefault();
-  
-  const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://niconico-backend-production.up.railway.app";
-  
-  // 🌟 Ini "tiket pulang"-nya. Pastikan mengarah ke halaman web kamu!
-  const storefrontUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://dev.niconicoresort.com";
-  
-  try {
-    // 🌟 PERBAIKAN: Kita selipkan ?redirect_to= di sini biar Medusa tahu harus balikin user ke mana
-    const response = await fetch(`${backendUrl}/auth/customer/google?redirect_to=${encodeURIComponent(storefrontUrl)}`, {
-      method: "GET"
-    });
+    e.preventDefault();
     
-    const data = await response.json();
+    const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://api.niconicoresort.com";
+    
+    // 🌟 Ini "tiket pulang"-nya. Pastikan mengarah ke halaman web kamu!
+    const storefrontUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://dev.niconicoresort.com";
+    
+    try {
+      const response = await fetch(`${backendUrl}/auth/customer/google?redirect_to=${encodeURIComponent(storefrontUrl)}`, {
+        method: "GET"
+      });
+      
+      const data = await response.json();
 
-    if (data.location) {
-      // Pergi ke halaman Google
-      window.location.href = data.location;
-    } else {
-      console.error("Gagal mendapatkan link Google:", data);
-      alert("Terjadi kesalahan saat menghubungi server.");
+      if (data.location) {
+        // Pergi ke halaman Google
+        window.location.href = data.location;
+      } else {
+        console.error("Gagal mendapatkan link Google:", data);
+        alert("Terjadi kesalahan saat menghubungi server.");
+      }
+    } catch (error) {
+      console.error("Error Auth:", error);
+      alert("Tidak dapat terhubung ke server.");
     }
-  } catch (error) {
-    console.error("Error Auth:", error);
-    alert("Tidak dapat terhubung ke server.");
-  }
-};
+  };
 
   return (
     <div className="flex flex-col h-full bg-white px-8 pt-8 pb-6 overflow-y-auto [&::-webkit-scrollbar]:hidden">

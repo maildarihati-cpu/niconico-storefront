@@ -25,7 +25,7 @@ export default function SignupView({ onClose, setView }: Props) {
   const handleGoogleAuth = async (e: React.MouseEvent) => {
   e.preventDefault();
   
-  const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://niconico-backend-production.up.railway.app";
+  const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://api.niconicoresort.com";
   
   // 🌟 Ini "tiket pulang"-nya. Pastikan mengarah ke halaman web kamu!
   const storefrontUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://dev.niconicoresort.com";

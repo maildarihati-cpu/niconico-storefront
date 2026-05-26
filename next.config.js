@@ -42,7 +42,7 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "niconico-backend-production.up.railway.app",
+        hostname: "api.niconicoresort.com",
       },
       {
         protocol: "https",

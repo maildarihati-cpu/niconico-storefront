@@ -225,7 +225,7 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
     setIsWishlisted(!isWishlisted)
 
     // 2. Jurus Update Database Medusa Jika Login
-    const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://niconico-backend-production.up.railway.app"
+    const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://api.niconicoresort.com"
     try {
       const customerRes = await fetch(`${backendUrl}/store/customers/me`, {
         method: "GET",

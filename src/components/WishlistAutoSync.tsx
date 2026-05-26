@@ -6,7 +6,7 @@ export default function WishlistAutoSync() {
   useEffect(() => {
     const syncWishlistGlobal = async () => {
       try {
-        const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://niconico-backend-production.up.railway.app";
+        const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://api.niconicoresort.com";
         
         // 1. Cek apakah kustomer sedang login (termasuk yang baru balik dari Google)
         const customerRes = await fetch(`${backendUrl}/store/customers/me`, {

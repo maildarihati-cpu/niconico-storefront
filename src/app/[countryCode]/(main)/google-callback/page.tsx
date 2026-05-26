@@ -10,7 +10,7 @@ function AuthCallbackHandler() {
 
   useEffect(() => {
     const fetchTokenFromMedusa = async () => {
-      const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://niconico-backend-production.up.railway.app"
+      const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://api.niconicoresort.com"
       
       const queryParams = searchParams.toString()
       if (!queryParams) return
