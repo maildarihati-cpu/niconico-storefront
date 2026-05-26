@@ -3,16 +3,14 @@
 import React, { useState } from "react"
 import { X, Package, CheckCircle2, Loader2, ChevronLeft } from "lucide-react"
 
-// Import jembatan API yang sudah dibuat (Sesuaikan path-nya jika ada)
-// import { markOrderDeliveredAction } from "@lib/util/order-util"
-
-// 🌟 INI DIA KUNCINYA: Tambahkan setView di Interface agar TypeScript minggir!
+// 🌟 1. Tambahkan onClose di sini biar Typescript aman
 interface OrderHistoryProps {
   orders: any[];
   setView?: (view: string) => void; 
+  onClose?: () => void; 
 }
 
-export default function OrderHistory({ orders = [], setView }: OrderHistoryProps) {
+export default function OrderHistory({ orders = [], setView, onClose }: OrderHistoryProps) {
   const [activeTab, setActiveTab] = useState("Pending")
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null)
   
@@ -50,7 +48,6 @@ export default function OrderHistory({ orders = [], setView }: OrderHistoryProps
   const handleMarkAsDelivered = async (orderId: string) => {
     setIsUpdating(true)
     try {
-      // await markOrderDeliveredAction(orderId);
       setOptimisticCompletedIds(prev => [...prev, orderId])
       setSelectedOrder(null)
       setActiveTab("Delivered")
@@ -64,23 +61,28 @@ export default function OrderHistory({ orders = [], setView }: OrderHistoryProps
   const filteredOrders = orders.filter(order => getOrderCategory(order) === activeTab)
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 font-sans">
+    <div className="flex flex-col h-full bg-white font-sans">
       
-      {/* 🌟 HEADER DENGAN TOMBOL BACK */}
-      <div className="bg-white px-6 pt-10 pb-4 border-b border-gray-100 flex items-center gap-3 shrink-0">
-        {setView && (
-          <button 
-            onClick={() => setView("profile")} 
-            className="p-1.5 bg-gray-50 hover:bg-gray-100 rounded-full transition-all"
-          >
-            <ChevronLeft className="w-5 h-5 text-gray-600" />
+      {/* 🌟 2. HEADER DRAWER (PERSIS SEPERTI MENU LAINNYA) */}
+      <div className="flex justify-between items-center px-6 pt-8 pb-4 shrink-0">
+        {setView ? (
+          <button onClick={() => setView("profile")} className="p-1.5 bg-gray-50 hover:bg-white hover:border-[#ef7044] border border-gray-100 rounded-full transition-all group">
+            <ChevronLeft className="w-4 h-4 text-gray-500 group-hover:text-[#ef7044]" />
           </button>
-        )}
-        <h2 className="text-gray-900 text-lg font-black uppercase italic tracking-wide">My Orders</h2>
+        ) : <div className="w-8" />}
+
+        <h2 className="text-[#ef7044] text-base font-medium">My Orders</h2>
+
+        {/* Tombol X untuk nutup laci seutuhnya */}
+        {onClose ? (
+          <button onClick={onClose} className="p-1.5 bg-gray-50 hover:bg-white hover:border-[#ef7044] border border-gray-100 rounded-full transition-all group">
+            <X className="w-4 h-4 text-gray-500 group-hover:text-[#ef7044]" />
+          </button>
+        ) : <div className="w-8" />}
       </div>
 
       {/* TABS NAVIGATION */}
-      <div className="bg-white px-4 pt-2 shadow-sm z-10 sticky top-0 shrink-0">
+      <div className="bg-white px-4 pt-2 z-10 sticky top-0 shrink-0">
         <div className="flex justify-between border-b border-gray-100 overflow-x-auto hide-scrollbar">
           {tabs.map((tab) => (
             <button
@@ -99,7 +101,7 @@ export default function OrderHistory({ orders = [], setView }: OrderHistoryProps
       </div>
 
       {/* ORDER LIST CARDS */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/50">
         {filteredOrders.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-48 text-gray-400">
             <Package className="w-12 h-12 mb-3 opacity-20" />
