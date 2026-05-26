@@ -133,12 +133,11 @@ const Navbar = () => {
       </nav>
 
       {/* FLOATING BUTTONS (WhatsApp & Shop Now) */}
-      {/* 🌟 LOGIKA PINTAR: Tombol otomatis lenyap kalau drawer kebuka! */}
+      {/* Tombol hanya muncul jika TIDAK ada drawer yang terbuka */}
       {!isDrawerOpen && (
         <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-3 items-end">
           
           {/* SHOP NOW BUTTON */}
-          {/* 🌟 LOGIKA HERO: Kalau belum di-scroll, sembunyi di HP, tapi tetap tampil di Desktop */}
           <div className={`transition-all duration-500 ${!isPastHero ? "translate-y-10 opacity-0 pointer-events-none md:translate-y-0 md:opacity-100 md:pointer-events-auto" : "translate-y-0 opacity-100 pointer-events-auto"}`}>
             <LocalizedClientLink 
               href="/store"
@@ -149,9 +148,9 @@ const Navbar = () => {
             </LocalizedClientLink>
           </div>
 
-          {/* WHATSAPP BUTTON (Selalu standby selama drawer tutup) */}
+          {/* WHATSAPP BUTTON */}
           <a 
-            href="https://wa.me/6281234567890" // 👈 Jangan lupa ganti nomor asli Niconico, Bos!
+            href="https://wa.me/6281234567890"
             target="_blank"
             rel="noopener noreferrer"
             className="bg-[#25D366] text-white p-3.5 rounded-full shadow-[0_10px_30px_rgba(37,211,102,0.3)] hover:scale-110 transition-transform flex items-center justify-center"
