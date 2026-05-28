@@ -22,17 +22,18 @@ export default function ProfileContent({ onClose, view, setView }: ProfileConten
   const [isLoading, setIsLoading] = useState(true);
   const [customerData, setCustomerData] = useState<any>(null); 
 
+  // 🌟 SENJATA RAHASIA: Paksa Medusa ngeluarin data Alamat & Items
+  const queryParams = {
+    fields: "*items,*items.variant,*shipping_address,*fulfillments",
+    expand: "items,items.variant,shipping_address,fulfillments"
+  };
+
   const fetchCustomerData = async () => {
     const customer = await retrieveCustomer().catch(() => null);
     if (customer) {
-      // 🌟 PERBAIKAN TYPESCRIPT: Kasih label 'any' biar TS nggak rewel
-      const ordersResponse: any = await listOrders().catch(() => []);
-      
-      // Logika aman: Kalau dia Array, langsung pakai. Kalau ada properti .orders, ambil dalamnya.
-      const ordersData = Array.isArray(ordersResponse) 
-        ? ordersResponse 
-        : (ordersResponse?.orders || []);
-      
+      // Masukkan senjata rahasia ke dalam listOrders
+      const ordersResponse: any = await listOrders(queryParams as any).catch(() => []);
+      const ordersData = Array.isArray(ordersResponse) ? ordersResponse : (ordersResponse?.orders || []);
       setCustomerData({ ...customer, orders: ordersData });
     }
   };
@@ -43,11 +44,9 @@ export default function ProfileContent({ onClose, view, setView }: ProfileConten
       const customer = await retrieveCustomer().catch(() => null);
       if (customer) {
         
-        // 🌟 SAMA DENGAN DI ATAS: Aman dari error TypeScript
-        const ordersResponse: any = await listOrders().catch(() => []);
-        const ordersData = Array.isArray(ordersResponse) 
-          ? ordersResponse 
-          : (ordersResponse?.orders || []);
+        // Masukkan senjata rahasia di sini juga
+        const ordersResponse: any = await listOrders(queryParams as any).catch(() => []);
+        const ordersData = Array.isArray(ordersResponse) ? ordersResponse : (ordersResponse?.orders || []);
         
         setCustomerData({ ...customer, orders: ordersData });
         
@@ -75,32 +74,13 @@ export default function ProfileContent({ onClose, view, setView }: ProfileConten
     );
   }
 
-  // OPER DATA & VIEW KE KOMPONEN ANAK
   if (view === "menu") return <MenuView onClose={onClose} setView={setView} customer={customerData} />;
-  
   if (view === "login") return <LoginView onClose={onClose} setView={setView} onSuccess={fetchCustomerData} />;
-  
   if (view === "signup") return <SignupView onClose={onClose} setView={setView} />;
-  
   if (view === "address") return <AddressView onClose={onClose} setView={setView} customer={customerData} onSuccess={fetchCustomerData} />;
+  if (view === "profile") return <ProfileView onClose={onClose} setView={setView} customer={customerData} onSuccess={fetchCustomerData} />;
+  if (view === "reset-password") return <ResetPasswordView onClose={onClose} setView={setView} customer={customerData} />;
   
-  if (view === "profile") return (
-    <ProfileView 
-      onClose={onClose} 
-      setView={setView} 
-      customer={customerData} 
-      onSuccess={fetchCustomerData} 
-    />
-  );
-  
-  if (view === "reset-password") return (
-    <ResetPasswordView 
-      onClose={onClose} 
-      setView={setView} 
-      customer={customerData} 
-    />
-  );
-
   if (view === "orders") return (
     <OrderHistory 
       orders={customerData?.orders || []} 

@@ -19,7 +19,6 @@ export default function OrderHistory({ orders = [], setView, onClose }: OrderHis
 
   const tabs = ["Pending", "Prepared", "On The Way", "Delivered"]
 
-  // Logic Status
   const getOrderCategory = (order: any) => {
     if (optimisticCompletedIds.includes(order.id)) return "Delivered"
     const fStatus = order.fulfillment_status
@@ -51,7 +50,6 @@ export default function OrderHistory({ orders = [], setView, onClose }: OrderHis
 
   const filteredOrders = orders.filter(order => getOrderCategory(order) === activeTab)
 
-  // Banner UI Data untuk Popup
   const getBannerData = (status: string) => {
     switch (status) {
       case "Delivered":
@@ -60,7 +58,7 @@ export default function OrderHistory({ orders = [], setView, onClose }: OrderHis
         return { bg: "bg-[#1A3382]", title: "Your order is on the way", icon: <Truck className="w-8 h-8 text-white" /> }
       case "Prepared":
         return { bg: "bg-[#EF7044]", title: "Your order is prepared", icon: <Package className="w-8 h-8 text-white" /> }
-      default: // Pending
+      default: 
         return { bg: "bg-[#F6BA61]", title: "Your order is pending", icon: <Package className="w-8 h-8 text-white" /> }
     }
   }
@@ -68,7 +66,7 @@ export default function OrderHistory({ orders = [], setView, onClose }: OrderHis
   return (
     <div className="flex flex-col h-full bg-white font-sans text-gray-900">
       
-      {/* 1. HEADER (Sesuai Gambar 1) */}
+      {/* Header Utama Order History */}
       <div className="px-6 pt-10 pb-2 shrink-0">
         <div className="flex justify-between items-center mb-4">
           <button onClick={() => setView?.("profile")} className="p-1 hover:bg-gray-50 rounded-full transition-colors">
@@ -84,7 +82,6 @@ export default function OrderHistory({ orders = [], setView, onClose }: OrderHis
         <p className="text-[#EF7044] text-[13px] border-b border-[#EF7044] inline-block pb-0.5 mb-2">My Order</p>
       </div>
 
-      {/* 2. TABS BENTUK KAPSUL (Sesuai Gambar 1) */}
       <div className="px-4 pb-4 border-b border-gray-100 shrink-0">
         <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
           {tabs.map((tab) => (
@@ -103,7 +100,6 @@ export default function OrderHistory({ orders = [], setView, onClose }: OrderHis
         </div>
       </div>
 
-      {/* 3. ORDER LIST CARD (Sesuai Gambar 1) */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 bg-gray-50/30">
         {filteredOrders.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-48 text-gray-400">
@@ -112,8 +108,6 @@ export default function OrderHistory({ orders = [], setView, onClose }: OrderHis
         ) : (
           filteredOrders.map((order) => (
             <div key={order.id} className="bg-white p-5 rounded-[16px] border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)]">
-              
-              {/* Card Header */}
               <div className="flex justify-between items-start mb-4">
                 <h3 className="font-extrabold text-[15px] text-gray-900">Order #{order.display_id}</h3>
                 <span className="text-[11px] text-gray-400 font-medium">
@@ -121,7 +115,6 @@ export default function OrderHistory({ orders = [], setView, onClose }: OrderHis
                 </span>
               </div>
               
-              {/* Detail Grid */}
               <div className="space-y-2 text-[12px] text-gray-500 mb-5">
                 <div className="flex gap-2">
                   <span className="w-28">Tracking number:</span>
@@ -139,7 +132,6 @@ export default function OrderHistory({ orders = [], setView, onClose }: OrderHis
                 </div>
               </div>
 
-              {/* Card Footer */}
               <div className="flex justify-between items-center pt-2">
                 <span className={`text-[11px] font-extrabold uppercase ${
                   activeTab === "Pending" ? "text-[#F6BA61]" : 
@@ -160,33 +152,31 @@ export default function OrderHistory({ orders = [], setView, onClose }: OrderHis
         )}
       </div>
 
-      {/* 4. POPUP MODAL (Sesuai Gambar 2, 3, 4) */}
+      {/* 🌟 TRUE POPUP MODAL (FLOATING) 🌟 */}
       {selectedOrder && (
-        <div className="fixed inset-0 z-[100] bg-white md:bg-black/50 md:backdrop-blur-sm flex items-center justify-center">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
           
-          <div className="bg-white w-full h-full md:h-auto md:max-h-[90vh] md:max-w-md md:rounded-[32px] flex flex-col relative overflow-hidden animate-in fade-in duration-200">
+          {/* Latar belakang transparan untuk klik-tutup */}
+          <div className="absolute inset-0 cursor-pointer" onClick={() => setSelectedOrder(null)}></div>
+          
+          {/* KOTAK POPUP MELAYANG (Max Width 400px, Max Height 85vh) */}
+          <div className="bg-white w-full max-w-[400px] max-h-[85vh] rounded-[32px] flex flex-col relative z-10 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
             
-            {/* Popup Nav */}
-            <div className="flex justify-between items-center p-6 shrink-0">
+            {/* Header Popup */}
+            <div className="flex justify-between items-center p-6 shrink-0 border-b border-gray-100">
               <button onClick={() => setSelectedOrder(null)} className="p-2 border border-gray-200 rounded-full hover:bg-gray-50">
                 <ChevronLeft className="w-5 h-5 text-gray-600" />
               </button>
-              <div className="relative w-28 h-8">
-                <Image src="/logo-niconico-black.png" alt="Logo" fill className="object-contain" />
-              </div>
+              <h2 className="text-[#EF7044] text-[15px] font-black italic">ORDER #{selectedOrder.display_id}</h2>
               <button onClick={() => setSelectedOrder(null)} className="p-2 border border-gray-200 rounded-full hover:bg-gray-50">
                 <X className="w-5 h-5 text-gray-600" />
               </button>
             </div>
 
-            <div className="text-center mb-4 shrink-0">
-              <h2 className="text-[#EF7044] text-lg font-bold">Order #{selectedOrder.display_id}</h2>
-            </div>
-
-            {/* Content Scrollable */}
-            <div className="flex-1 overflow-y-auto px-6 pb-6 space-y-6">
+            {/* Isi Popup yang Bisa di-Scroll */}
+            <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
               
-              {/* COLORFUL BANNER */}
+              {/* Banner Status */}
               <div className={`rounded-[16px] p-5 flex justify-between items-center ${getBannerData(getOrderCategory(selectedOrder)).bg}`}>
                 <div>
                   <h3 className="text-white font-bold text-[15px] mb-1">{getBannerData(getOrderCategory(selectedOrder)).title}</h3>
@@ -195,7 +185,7 @@ export default function OrderHistory({ orders = [], setView, onClose }: OrderHis
                 {getBannerData(getOrderCategory(selectedOrder)).icon}
               </div>
 
-              {/* Order Info */}
+              {/* Order Info & Address */}
               <div className="space-y-3 text-[12px] border-b border-gray-100 pb-6">
                 <div className="flex justify-between">
                   <span className="text-gray-500">Order number</span>
@@ -205,26 +195,47 @@ export default function OrderHistory({ orders = [], setView, onClose }: OrderHis
                   <span className="text-gray-500">Tracking Number</span>
                   <span className="text-gray-900 font-medium">{selectedOrder.fulfillments?.[0]?.tracking_number || "-"}</span>
                 </div>
+                
+                {/* 🌟 NAMA ALAMAT MUNCUL DI SINI 🌟 */}
                 <div className="flex justify-between">
                   <span className="text-gray-500">Delivery address</span>
-                  <span className="text-gray-900 font-medium text-right max-w-[60%]">
-                    {selectedOrder.shipping_address?.address_1 || "-"}, {selectedOrder.shipping_address?.city || "-"}
+                  <span className="text-gray-900 font-bold text-right max-w-[60%] leading-tight">
+                    {selectedOrder.shipping_address ? (
+                      `${selectedOrder.shipping_address.address_1 || ""}, ${selectedOrder.shipping_address.city || ""}`
+                    ) : (
+                      <span className="text-red-400 italic text-[11px] font-normal">Data alamat tidak tersedia</span>
+                    )}
                   </span>
                 </div>
               </div>
 
-              {/* Items */}
+              {/* 🌟 LIST BARANG YANG DIBELI 🌟 */}
               <div className="space-y-4 border-b border-gray-100 pb-6">
-                {selectedOrder.items?.map((item: any) => (
-                  <div key={item.id} className="flex justify-between text-[13px]">
-                    <span className="text-gray-600">{item.title} <span className="ml-2 text-gray-400">x{item.quantity}</span></span>
-                    <span className="text-gray-900 font-medium">Rp {item.unit_price.toLocaleString("id-ID")}</span>
-                  </div>
-                ))}
+                {selectedOrder.items && selectedOrder.items.length > 0 ? (
+                  selectedOrder.items.map((item: any) => (
+                    <div key={item.id} className="flex justify-between items-start text-[13px]">
+                      <div className="flex flex-col max-w-[70%]">
+                        <span className="text-gray-900 font-bold leading-tight">
+                          {item.product_title || item.title || "Unknown Product"} 
+                          <span className="ml-2 text-gray-500 font-black">x{item.quantity}</span>
+                        </span>
+                        {/* Menampilkan varian (misal: Warna Pink, Size M) */}
+                        {(item.variant_title || item.variant?.title) && (
+                          <span className="text-gray-400 text-[10px] uppercase font-bold mt-0.5">
+                            Variant: {item.variant_title || item.variant?.title}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-gray-900 font-medium">Rp {(item.unit_price || 0).toLocaleString("id-ID")}</span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-red-400 italic text-center text-[11px]">Data barang tidak ditarik oleh server.</p>
+                )}
               </div>
 
               {/* Totals */}
-              <div className="space-y-3 text-[13px] pb-4">
+              <div className="space-y-3 text-[13px]">
                 <div className="flex justify-between">
                   <span className="text-gray-500">Sub Total</span>
                   <span className="text-gray-900 font-bold">Rp {(selectedOrder.subtotal || 0).toLocaleString("id-ID")}</span>
@@ -239,15 +250,17 @@ export default function OrderHistory({ orders = [], setView, onClose }: OrderHis
                 </div>
               </div>
 
-              {/* ACTION BUTTON ON THE WAY */}
+              {/* Action Button (Khusus On The Way) */}
               {getOrderCategory(selectedOrder) === "On The Way" && (
-                <button 
-                  onClick={() => handleMarkAsDelivered(selectedOrder.id)}
-                  disabled={isUpdating}
-                  className="w-full bg-[#EF7044] text-white py-4 rounded-[16px] font-bold text-[13px] shadow-lg hover:bg-gray-900 active:scale-95 transition-all flex items-center justify-center gap-2"
-                >
-                  {isUpdating ? <Loader2 className="w-5 h-5 animate-spin" /> : "ORDER DELIVERED"}
-                </button>
+                <div className="pt-4">
+                  <button 
+                    onClick={() => handleMarkAsDelivered(selectedOrder.id)}
+                    disabled={isUpdating}
+                    className="w-full bg-[#EF7044] text-white py-4 rounded-[16px] font-bold text-[13px] shadow-lg hover:bg-gray-900 active:scale-95 transition-all flex items-center justify-center gap-2"
+                  >
+                    {isUpdating ? <Loader2 className="w-5 h-5 animate-spin" /> : "ORDER DELIVERED"}
+                  </button>
+                </div>
               )}
 
             </div>
