@@ -19,12 +19,13 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
   const { countryCode } = useParams();
   
   // 🌟 LOGIC SINKRONISASI CART (Context Priority)
-  // useCartContext selalu mengambil data cart terbaru yang ditarik oleh sistem auth Medusa
   const { cart: contextCart, addToCart: refreshCart } = useCart();
   
-  // Jika contextCart punya barang, pakai itu (artinya hasil sinkronisasi database akun sukses).
-  // Kalau tidak, mundur pakai initialCart (hasil SSR dari cookie HP).
-  const cart = contextCart && contextCart.items?.length > 0 ? contextCart : initialCart;
+  // 🌟 PERBAIKAN LOGIC SINKRONISASI: 
+  // Percayakan 100% pada contextCart (Database Real-time) jika sudah termuat.
+  // Jangan pakai syarat length > 0, agar saat kustomer menghapus semua barang, 
+  // barang lama dari SSR (initialCart) tidak muncul kembali.
+  const cart = contextCart || initialCart;
 
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [isLoadingItem, setIsLoadingItem] = useState<string | null>(null);
