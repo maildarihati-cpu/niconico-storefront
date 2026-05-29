@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Image from "next/image";
-import { ArrowRight, MapPin } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
+// Struktur tipe data dari backend Medusa
 interface Store {
   id: string;
   name: string;
@@ -15,141 +15,135 @@ interface Store {
   wa_link: string;
 }
 
-interface StoreSectionProps {
-  layout?: "slider" | "grid";
-}
-
-export default function StoreSection({ layout = "slider" }: StoreSectionProps) {
+export default function StoreSection() {
   const [stores, setStores] = useState<Store[]>([]);
+  const [totalStores, setTotalStores] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  // Fungsi Fetching Data API (Endpoint Anti-CORS)
   useEffect(() => {
     const fetchStores = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store-location`);
-        if (!response.ok) throw new Error("API Connection Failed");
+        setLoading(true);
+        // Nembak ke API publik Medusa anti-CORS
+        const response = await fetch(`${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store-location`); 
+        
+        if (!response.ok) throw new Error("Gagal ambil data API");
+        
         const data = await response.json();
+        
+        // Pakai kunci data yang benar dari backend
         if (data.store_locations) setStores(data.store_locations);
+        if (data.count) setTotalStores(data.count); 
+
       } catch (error) {
-        console.error("Error:", error);
+        console.error("Error fetching stores:", error);
       } finally {
         setLoading(false);
       }
     };
+
     fetchStores();
   }, []);
 
-  if (loading) return <div className="h-[500px] w-full animate-pulse bg-gray-50" />;
-  if (stores.length === 0) return null;
-
-  // ==========================================
-  // 1. GRID LAYOUT (Untuk halaman /our-store)
-  // ==========================================
-  if (layout === "grid") {
+  // Tampilan Skeleton saat loading
+  if (loading) {
     return (
-      <div className="flex flex-col gap-24 w-full">
-        {stores.map((store, index) => (
-          <article key={store.id} className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-start group">
-            {/* 60% Kiri: Main Image */}
-            <div className="lg:col-span-7 relative aspect-[4/5] md:aspect-[16/10] lg:aspect-[4/5] overflow-hidden bg-gray-50">
-              {store.image_main && (
-                <Image
-                  src={store.image_main}
-                  alt={store.name}
-                  fill
-                  className="object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-105"
-                  priority={index === 0}
-                />
-              )}
-            </div>
-
-            {/* 40% Kanan: Text & Sub-images */}
-            <div className="lg:col-span-5 flex flex-col h-full justify-between pt-4">
-              <div>
-                <h2 className="text-3xl lg:text-4xl font-light text-black mb-6 uppercase tracking-[0.15em]">
-                  {store.name}
-                </h2>
-                <div className="flex items-start gap-3 text-sm text-gray-500 font-light leading-relaxed mb-8">
-                  <MapPin className="w-5 h-5 text-[#ED5725] shrink-0 mt-0.5" />
-                  <p className="max-w-sm">{store.address}</p>
-                </div>
-                {store.maps_link && (
-                  <a href={store.maps_link} target="_blank" rel="noopener noreferrer" className="inline-block text-xs uppercase tracking-widest text-black border-b border-black pb-1 hover:text-[#ED5725] hover:border-[#ED5725] transition-colors duration-300">
-                    Get Directions
-                  </a>
-                )}
-              </div>
-
-              {/* Sub-images Grid (Mengikuti image_sub1 & image_sub2) */}
-              <div className="grid grid-cols-2 gap-4 mt-12 lg:mt-24">
-                {store.image_sub1 && (
-                  <div className="relative aspect-square overflow-hidden bg-gray-50">
-                    <Image src={store.image_sub1} alt={`${store.name} detail`} fill className="object-cover transition-opacity duration-500 hover:opacity-80" />
-                  </div>
-                )}
-                {store.image_sub2 && (
-                  <div className="relative aspect-square overflow-hidden bg-gray-50">
-                    <Image src={store.image_sub2} alt={`${store.name} detail`} fill className="object-cover transition-opacity duration-500 hover:opacity-80" />
-                  </div>
-                )}
-              </div>
-            </div>
-          </article>
-        ))}
+      <div className="py-20 flex justify-center items-center bg-white w-full">
+        <div className="animate-pulse flex gap-6 overflow-hidden w-full max-w-[1200px] px-4 md:px-0">
+           {[1, 2, 3].map((i) => (
+             <div key={i} className="shrink-0 w-[340px] md:w-[380px] h-[400px] bg-gray-100 rounded-[24px]"></div>
+           ))}
+        </div>
       </div>
     );
   }
 
-  // ==========================================
-  // 2. SLIDER LAYOUT (Untuk Homepage - Default)
-  // ==========================================
+  // Jika tidak ada data dari backend, return null biar section tidak kosong melompong
+  if (stores.length === 0) return null;
+  
   return (
-    <section className="py-24 bg-white w-full">
-      <div className="max-w-[1440px] mx-auto px-8 lg:px-16">
+    // Spasi Section Pas: pt-16 (padding-top) & pb-12 (padding-bottom)
+    <section className="pt-16 pb-12 bg-white w-full">
+      <div className="max-w-[1200px] mx-auto md:max-w-6xl w-full">
         
-        {/* Header */}
-        <div className="mb-16">
-          <h2 className="text-4xl font-light text-black uppercase tracking-[0.2em]">
-            Our Locations
-          </h2>
-          <div className="w-12 h-[1px] bg-[#ED5725] mt-6" />
-        </div>
+        {/* JUDUL */}
+        <h2 className="text-3xl font-bold text-[#ED5725] mb-8 px-4 md:px-0 uppercase">
+          Visit Our Store
+        </h2>
 
-        {/* Carousel Container */}
-        <div className="flex overflow-x-auto gap-8 pb-12 snap-x snap-mandatory scrollbar-hide">
+        {/* CAROUSEL CONTAINER */}
+        <div className="flex overflow-x-auto gap-6 px-4 md:px-0 pb-8 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           
+          {/* LOOPING KARTU STORE DARI BACKEND */}
           {stores.map((store) => (
-            <div key={store.id} className="snap-start shrink-0 w-[320px] md:w-[400px] group cursor-pointer">
-              
-              {/* Image Grid */}
-              <div className="grid grid-cols-2 gap-2 aspect-[4/5] mb-6">
-                <div className="relative overflow-hidden bg-gray-100">
-                  {store.image_main && <Image src={store.image_main} alt={store.name} fill className="object-cover transition-transform duration-700 group-hover:scale-105" />}
+            <div 
+              key={store.id} 
+              className="snap-start shrink-0 w-[340px] md:w-[380px] bg-[#f8f8f8] rounded-[24px] p-5 shadow-[0_4px_20px_rgb(0,0,0,0.05)] border border-gray-100 flex flex-col transition-all duration-300"
+            >
+              {/* Nama & Alamat */}
+              <div className="flex justify-between items-start gap-3 mb-4 h-10">
+                <h3 className="text-xl md:text-2xl font-black text-[#ED5725] tracking-wide uppercase shrink-0">
+                  {store.name}
+                </h3>
+                <p className="text-[11px] md:text-xs text-gray-700 text-right leading-snug line-clamp-2 font-medium">
+                  {store.address}
+                </p>
+              </div>
+
+              {/* Grid 3 Foto */}
+              <div className="grid grid-cols-2 gap-2 mb-2"> 
+                {/* Gambar Utama (Kiri) - Persegi */}
+                <div className="aspect-square w-full overflow-hidden rounded-xl bg-gray-200">
+                  {store.image_main && <img src={store.image_main} alt={store.name} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />}
                 </div>
-                <div className="grid grid-rows-2 gap-2">
-                  <div className="relative overflow-hidden bg-gray-100">
-                    {store.image_sub1 && <Image src={store.image_sub1} alt={store.name} fill className="object-cover" />}
+                {/* Gambar Sub (Kanan) */}
+                <div className="grid grid-rows-2 gap-2 aspect-square"> 
+                  <div className="w-full h-full overflow-hidden rounded-xl bg-gray-200">
+                    {store.image_sub1 && <img src={store.image_sub1} alt={`${store.name} view 2`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />}
                   </div>
-                  <div className="relative overflow-hidden bg-gray-100">
-                    {store.image_sub2 && <Image src={store.image_sub2} alt={store.name} fill className="object-cover" />}
+                  <div className="w-full h-full overflow-hidden rounded-xl bg-gray-200">
+                    {store.image_sub2 && <img src={store.image_sub2} alt={`${store.name} view 3`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />}
                   </div>
                 </div>
               </div>
 
-              {/* Text Info */}
-              <h3 className="text-xl font-light text-black mb-2 uppercase tracking-wide">{store.name}</h3>
-              <p className="text-sm text-gray-500 font-light mb-6 leading-relaxed line-clamp-2">{store.address}</p>
-              
-              <a href={store.maps_link} target="_blank" rel="noopener noreferrer" className="inline-block text-xs uppercase tracking-widest text-[#ED5725] border-b border-[#ED5725] pb-1 hover:opacity-70 transition-opacity">
-                Get Directions
-              </a>
+              {/* Tombol Action - Bernapas: Ganti mt-auto dengan mt-6 */}
+              <div className="grid grid-cols-2 gap-3 mt-6"> 
+                <a 
+                  href={store.maps_link} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-full border-2 border-[#ED5725] text-[#ED5725] py-2.5 rounded-full text-center font-bold text-sm hover:bg-[#ED5725] hover:text-white transition-colors duration-300"
+                >
+                  Direction
+                </a>
+                <a 
+                  href={store.wa_link?.startsWith('http') ? store.wa_link : `https://wa.me/${store.wa_link}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-full bg-[#ED5725] border-2 border-[#ED5725] text-white py-2.5 rounded-full text-center font-bold text-sm hover:bg-[#d64a1d] hover:border-[#d64a1d] transition-colors duration-300 shadow-md shadow-orange-500/20"
+                >
+                  Call
+                </a>
+              </div>
             </div>
           ))}
 
-          {/* View All */}
-          <a href="/id/our-store" className="snap-start shrink-0 w-[200px] flex flex-col items-center justify-center border border-gray-200 hover:border-black transition-colors duration-500 group">
-            <ArrowRight className="w-6 h-6 mb-4 text-gray-400 group-hover:text-black transition-colors duration-500" />
-            <span className="text-sm text-gray-500 group-hover:text-black uppercase tracking-widest transition-colors duration-500">View All</span>
+          {/* KARTU VIEW ALL (Card Ke-4) */}
+          <a 
+            href="/stores" 
+            className="snap-start shrink-0 w-[340px] md:w-[380px] bg-white rounded-[24px] p-5 shadow-[0_4px_20px_rgb(0,0,0,0.03)] border-2 border-dashed border-gray-200 hover:border-[#ED5725] hover:bg-orange-50/50 flex flex-col items-center justify-center group transition-all duration-300 cursor-pointer"
+          >
+            <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4 group-hover:bg-[#ED5725] group-hover:scale-110 transition-all duration-300 shadow-sm">
+              <ArrowRight className="w-8 h-8 text-gray-400 group-hover:text-white transition-colors duration-300" />
+            </div>
+            <span className="text-xl font-bold text-gray-800 group-hover:text-[#ED5725] transition-colors duration-300">
+              View All Stores
+            </span>
+            <span className="text-sm text-gray-500 font-medium mt-2">
+              Explore all locations
+            </span>
           </a>
 
         </div>
