@@ -589,7 +589,7 @@ export default function StoreTemplate() {
   // 🌟 STATE FILTER
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all"); 
-  const [minPrice, setMinPrice] = useState(200000);
+  const [minPrice, setMinPrice] = useState(0);
   const [maxPrice, setMaxPrice] = useState(5000000); 
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
@@ -748,7 +748,7 @@ export default function StoreTemplate() {
   };
 
   const handleResetFilter = () => {
-    setMinPrice(200000);
+    setMinPrice(0);
     setMaxPrice(5000000);
     setSelectedSize("");
     setSelectedColor("");
@@ -953,7 +953,7 @@ export default function StoreTemplate() {
               <div className="px-2">
                 <input type="range" min="200000" max="5000000" step="50000" value={maxPrice} onChange={(e) => setMaxPrice(Number(e.target.value))} className="w-full accent-[#EF7044]" />
                 <div className="flex justify-between mt-1 text-xs text-gray-600">
-                  <span>Rp 200K</span>
+                  <span>Rp 0</span>
                   <span>{formatPrice(maxPrice)}</span>
                 </div>
               </div>
