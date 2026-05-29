@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import { ArrowRight } from "lucide-react";
 
-// Struktur tipe data dari backend Medusa
 interface Store {
   id: string;
   name: string;
@@ -15,24 +14,24 @@ interface Store {
   wa_link: string;
 }
 
-export default function StoreSection() {
+// Tambahkan prop agar komponen tahu dia sedang di Homepage atau Our Store
+interface StoreSectionProps {
+  layout?: "slider" | "grid";
+}
+
+export default function StoreSection({ layout = "slider" }: StoreSectionProps) {
   const [stores, setStores] = useState<Store[]>([]);
   const [totalStores, setTotalStores] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  // Fungsi Fetching Data API (Endpoint Anti-CORS)
   useEffect(() => {
     const fetchStores = async () => {
       try {
         setLoading(true);
-        // Nembak ke API publik Medusa anti-CORS
         const response = await fetch(`${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store-location`); 
-        
         if (!response.ok) throw new Error("Gagal ambil data API");
         
         const data = await response.json();
-        
-        // Pakai kunci data yang benar dari backend
         if (data.store_locations) setStores(data.store_locations);
         if (data.count) setTotalStores(data.count); 
 
@@ -46,7 +45,6 @@ export default function StoreSection() {
     fetchStores();
   }, []);
 
-  // Tampilan Skeleton saat loading
   if (loading) {
     return (
       <div className="py-20 flex justify-center items-center bg-white w-full">
@@ -59,29 +57,37 @@ export default function StoreSection() {
     );
   }
 
-  // Jika tidak ada data dari backend, return null biar section tidak kosong melompong
   if (stores.length === 0) return null;
   
   return (
-    // Spasi Section Pas: pt-16 (padding-top) & pb-12 (padding-bottom)
     <section className="pt-16 pb-12 bg-white w-full">
       <div className="max-w-[1200px] mx-auto md:max-w-6xl w-full">
         
-        {/* JUDUL */}
-        <h2 className="text-3xl font-bold text-[#ED5725] mb-8 px-4 md:px-0 uppercase">
-          Visit Our Store
-        </h2>
+        {/* Sembunyikan judul "Visit Our Store" jika ini di halaman /our-store karena sudah ada Header halamannya */}
+        {layout === "slider" && (
+          <h2 className="text-3xl font-bold text-[#ED5725] mb-8 px-4 md:px-0 uppercase">
+            Visit Our Store
+          </h2>
+        )}
 
-        {/* CAROUSEL CONTAINER */}
-        <div className="flex overflow-x-auto gap-6 px-4 md:px-0 pb-8 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        {/* CONTAINER DINAMIS: 
+          Jika slider -> flex horizontal dengan snap
+          Jika grid -> CSS Grid 3 kolom ke bawah
+        */}
+        <div className={
+          layout === "slider" 
+            ? "flex overflow-x-auto gap-6 px-4 md:px-0 pb-8 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+            : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-4 md:px-0"
+        }>
           
-          {/* LOOPING KARTU STORE DARI BACKEND */}
           {stores.map((store) => (
             <div 
               key={store.id} 
-              className="snap-start shrink-0 w-[340px] md:w-[380px] bg-[#f8f8f8] rounded-[24px] p-5 shadow-[0_4px_20px_rgb(0,0,0,0.05)] border border-gray-100 flex flex-col transition-all duration-300"
+              // Lebar dinamis: shrink-0 width tetap untuk slider, w-full untuk grid
+              className={`bg-[#f8f8f8] rounded-[24px] p-5 shadow-[0_4px_20px_rgb(0,0,0,0.05)] border border-gray-100 flex flex-col transition-all duration-300 hover:shadow-lg ${
+                layout === "slider" ? "snap-start shrink-0 w-[340px] md:w-[380px]" : "w-full"
+              }`}
             >
-              {/* Nama & Alamat */}
               <div className="flex justify-between items-start gap-3 mb-4 h-10">
                 <h3 className="text-xl md:text-2xl font-black text-[#ED5725] tracking-wide uppercase shrink-0">
                   {store.name}
@@ -91,13 +97,10 @@ export default function StoreSection() {
                 </p>
               </div>
 
-              {/* Grid 3 Foto */}
               <div className="grid grid-cols-2 gap-2 mb-2"> 
-                {/* Gambar Utama (Kiri) - Persegi */}
                 <div className="aspect-square w-full overflow-hidden rounded-xl bg-gray-200">
                   {store.image_main && <img src={store.image_main} alt={store.name} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />}
                 </div>
-                {/* Gambar Sub (Kanan) */}
                 <div className="grid grid-rows-2 gap-2 aspect-square"> 
                   <div className="w-full h-full overflow-hidden rounded-xl bg-gray-200">
                     {store.image_sub1 && <img src={store.image_sub1} alt={`${store.name} view 2`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />}
@@ -108,7 +111,6 @@ export default function StoreSection() {
                 </div>
               </div>
 
-              {/* Tombol Action - Bernapas: Ganti mt-auto dengan mt-6 */}
               <div className="grid grid-cols-2 gap-3 mt-6"> 
                 <a 
                   href={store.maps_link} 
@@ -130,21 +132,23 @@ export default function StoreSection() {
             </div>
           ))}
 
-          {/* KARTU VIEW ALL (Card Ke-4) */}
-          <a 
-            href="/stores" 
-            className="snap-start shrink-0 w-[340px] md:w-[380px] bg-white rounded-[24px] p-5 shadow-[0_4px_20px_rgb(0,0,0,0.03)] border-2 border-dashed border-gray-200 hover:border-[#ED5725] hover:bg-orange-50/50 flex flex-col items-center justify-center group transition-all duration-300 cursor-pointer"
-          >
-            <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4 group-hover:bg-[#ED5725] group-hover:scale-110 transition-all duration-300 shadow-sm">
-              <ArrowRight className="w-8 h-8 text-gray-400 group-hover:text-white transition-colors duration-300" />
-            </div>
-            <span className="text-xl font-bold text-gray-800 group-hover:text-[#ED5725] transition-colors duration-300">
-              View All Stores
-            </span>
-            <span className="text-sm text-gray-500 font-medium mt-2">
-              Explore all locations
-            </span>
-          </a>
+          {/* Sembunyikan card "View All" jika kita sudah berada di halaman /our-store (layout grid) */}
+          {layout === "slider" && (
+            <a 
+              href="/our-store" 
+              className="snap-start shrink-0 w-[340px] md:w-[380px] bg-white rounded-[24px] p-5 shadow-[0_4px_20px_rgb(0,0,0,0.03)] border-2 border-dashed border-gray-200 hover:border-[#ED5725] hover:bg-orange-50/50 flex flex-col items-center justify-center group transition-all duration-300 cursor-pointer"
+            >
+              <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4 group-hover:bg-[#ED5725] group-hover:scale-110 transition-all duration-300 shadow-sm">
+                <ArrowRight className="w-8 h-8 text-gray-400 group-hover:text-white transition-colors duration-300" />
+              </div>
+              <span className="text-xl font-bold text-gray-800 group-hover:text-[#ED5725] transition-colors duration-300">
+                View All Stores
+              </span>
+              <span className="text-sm text-gray-500 font-medium mt-2">
+                Explore all locations
+              </span>
+            </a>
+          )}
 
         </div>
       </div>
