@@ -170,7 +170,7 @@ export default function NavDrawer({ isOpen, onClose, view, setView }: Props) {
                     { label: "Swimsuit", handle: "swimsuit" },
                     { label: "Resort Wear", handle: "resort-wear" },
                     { label: "Men's Wear", handle: "mens-wear" },
-                    { label: "Accesories", handle: "accesories" }
+                    { label: "Accessories", handle: "accessories" }
                   ].map(item => (
                     <LocalizedClientLink key={item.handle} href={`/store?category=${item.handle}`} onClick={onClose} className="text-[13px] text-gray-900 font-medium hover:text-[#ef7044] transition-colors">{item.label}</LocalizedClientLink>
                   ))}
