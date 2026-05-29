@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react"
+import React, { useState, useEffect } from "react"
 import { usePathname } from "next/navigation"
 import Image from "next/image"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
@@ -8,22 +8,58 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 export default function FloatingButtons() {
   const pathname = usePathname()
   
-  // Deteksi URL: Apakah kita sedang di halaman store atau produk tunggal?
+  // 1. Deteksi Posisi Halaman
+  const isHomePage = pathname === '/'
   const isStorePage = pathname.includes('/store')
   const isProductPage = pathname.includes('/products/')
-  const hideShopNow = isStorePage || isProductPage
+  
+  // Dasar penyembunyian Shop Now (Selalu sembunyi di halaman Store & Product)
+  const hideShopNowBase = isStorePage || isProductPage
+
+  // 2. State untuk mendeteksi apakah layar sudah melewati section Hero
+  const [isPastHero, setIsPastHero] = useState(false)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      // 500px adalah estimasi tinggi section Hero. Bisa Bos sesuaikan.
+      if (window.scrollY > 500) {
+        setIsPastHero(true)
+      } else {
+        setIsPastHero(false)
+      }
+    }
+
+    // Hanya aktifkan sensor scroll jika sedang di Homepage
+    if (isHomePage) {
+      window.addEventListener("scroll", handleScroll)
+      handleScroll() // Trigger sekali saat pertama render
+      return () => window.removeEventListener("scroll", handleScroll)
+    } else {
+      // Jika bukan di Homepage, anggap saja selalu "isPastHero" agar tombolnya bisa langsung muncul (kecuali di-hide oleh hideShopNowBase)
+      setIsPastHero(true)
+    }
+  }, [isHomePage])
+
+  // 3. Logika Final: Tombol Shop Now muncul JIKA BUKAN di Store/Product, DAN (sudah lewat Hero kalau di Homepage)
+  const shouldShowShopNow = !hideShopNowBase && isPastHero
 
   return (
-    <div className="fixed bottom-8 right-8 z-[999] flex flex-col gap-4 items-center">
+    // 🌟 KUNCI RAHASIA: z-40. Ini memastikan tombol ini akan tertutup (berada di belakang) Drawer yang z-index-nya 50 ke atas.
+    <div className="fixed bottom-8 right-8 z-40 flex flex-col gap-4 items-center">
       
-      {/* 🌟 SHOP NOW BUTTON (Disembunyikan di halaman Store & Product) */}
-      {!hideShopNow && (
+      {/* 🌟 SHOP NOW BUTTON */}
+      {/* Memanfaatkan efek transisi smooth dari opacity dan scale */}
+      <div 
+        className={`transition-all duration-500 ease-out origin-bottom ${
+          shouldShowShopNow 
+            ? "opacity-100 scale-100 translate-y-0 pointer-events-auto" 
+            : "opacity-0 scale-90 translate-y-10 pointer-events-none absolute bottom-0" // Posisi absolute saat sembunyi agar tidak menggeser tombol WA
+        }`}
+      >
         <LocalizedClientLink 
           href="/store"
-          // 👈 Tambahkan w-14 h-14 di sini agar sama dengan tombol WA, dan perbaiki efek hover-nya
           className="flex items-center justify-center w-14 h-14 bg-transparent outline-none focus:outline-none ring-0 hover:scale-110 transition-transform duration-300 drop-shadow-lg"
         >
-          {/* 👈 Ubah w-6 h-6 menjadi w-full h-full agar gambar memenuhi container w-14 h-14 */}
           <div className="relative w-full h-full">
             <Image 
               src="/shop-now.png" 
@@ -33,7 +69,7 @@ export default function FloatingButtons() {
             />
           </div>
         </LocalizedClientLink>
-      )}
+      </div>
 
       {/* 🌟 WHATSAPP BUTTON (Selalu Muncul) */}
       <a
