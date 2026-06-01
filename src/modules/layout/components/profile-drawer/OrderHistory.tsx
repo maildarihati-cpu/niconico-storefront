@@ -21,17 +21,35 @@ export default function OrderHistory({ orders = [], setView, onClose }: OrderHis
 
   const getOrderCategory = (order: any) => {
     if (optimisticCompletedIds.includes(order.id)) return "Delivered"
+    
+    const pStatus = order.payment_status
     const fStatus = order.fulfillment_status
-    if (fStatus === "delivered" || order.status === "completed") return "Delivered"
-    if (fStatus === "shipped") {
-      const shipment = order.fulfillments?.find((f: any) => f.shipped_at)
-      const shippedDate = shipment?.shipped_at ? new Date(shipment.shipped_at) : new Date(order.updated_at)
-      const sevenDaysAgo = new Date()
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-      if (shippedDate < sevenDaysAgo) return "Delivered" 
+    
+    // 4. DELIVERED: Uang ditarik dan barang sudah sampai / complete
+    if (
+      fStatus === "delivered" || 
+      order.status === "completed"
+    ) {
+      return "Delivered"
+    }
+
+    // 3. ON THE WAY: Uang ditarik dan barang sudah dipacking/diserahkan kurir
+    if (
+      pStatus === "captured" && 
+      (fStatus === "fulfilled" || fStatus === "shipped" || fStatus === "partially_shipped")
+    ) {
       return "On The Way"
     }
-    if (fStatus === "fulfilled" || fStatus === "partially_shipped") return "Prepared"
+    
+    // 2. PREPARED: Uang sudah ditarik, tapi barang masih disiapkan
+    if (
+      pStatus === "captured" && 
+      (fStatus === "not_fulfilled" || !fStatus)
+    ) {
+      return "Prepared"
+    }
+
+    // 1. PENDING: Uang baru ditahan (Authorized/Awaiting) atau belum bayar
     return "Pending"
   }
 
@@ -154,7 +172,7 @@ export default function OrderHistory({ orders = [], setView, onClose }: OrderHis
 
       {/* 🌟 TRUE POPUP MODAL (FLOATING) 🌟 */}
       {selectedOrder && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/0 backdrop-blur-sm animate-in fade-in duration-200">
           
           {/* Latar belakang transparan untuk klik-tutup */}
           <div className="absolute inset-0 cursor-pointer" onClick={() => setSelectedOrder(null)}></div>
