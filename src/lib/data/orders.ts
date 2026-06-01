@@ -18,8 +18,9 @@ export const retrieveOrder = async (id: string) => {
     .fetch<HttpTypes.StoreOrderResponse>(`/store/orders/${id}`, {
       method: "GET",
       query: {
+        // 🌟 PERBAIKAN: Tambah *shipping_address dan *fulfillments agar halaman detail order lengkap
         fields:
-          "*payment_collections.payments,*items,*items.metadata,*items.variant,*items.product",
+          "*payment_collections.payments,*items,*items.metadata,*items.variant,*items.product,*shipping_address,*fulfillments",
       },
       headers,
       next,
@@ -49,7 +50,8 @@ export const listOrders = async (
         limit,
         offset,
         order: "-created_at",
-        fields: "*items,+items.metadata,*items.variant,*items.product",
+        // 🌟 PERBAIKAN: Tambah *shipping_address dan *fulfillments untuk Drawer Order History
+        fields: "*items,+items.metadata,*items.variant,*items.product,*shipping_address,*fulfillments",
         ...filters,
       },
       headers,

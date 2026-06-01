@@ -10,7 +10,7 @@ import {
   getCacheOptions,
   getCacheTag,
   getCartId,
-  setCartId, // 🌟 TAMBAHAN: Untuk nulis cookie
+  setCartId,
   removeAuthToken,
   removeCartId,
   setAuthToken,
@@ -48,9 +48,7 @@ export const retrieveCustomer =
       .fetch<{ customer: HttpTypes.StoreCustomer }>(`/store/customers/me`, {
         method: "GET",
         query: {
-          // 🌟 INI DIA OBATNYA BOS! 
-          // Kita paksa server mengirimkan Item, Varian, Alamat, dan Resi Pengiriman!
-          fields: "*orders,*orders.items,*orders.items.variant,*orders.shipping_address,*orders.fulfillments",
+          fields: "*orders", // 🌟 KEMBALI NORMAL: Supaya tidak Bad Request!
         },
         headers,
         next,
@@ -113,8 +111,8 @@ export async function signup(_currentState: unknown, formData: FormData) {
     const customerCacheTag = await getCacheTag("customers")
     revalidateTag(customerCacheTag)
 
-    await transferCart() // Transfer jika ada cart guest
-    await syncCustomerCartToCookie() // 🌟 PENTING: Paksa sinkronisasi Cookie
+    await transferCart()
+    await syncCustomerCartToCookie()
 
     return createdCustomer
   } catch (error: any) {
@@ -139,8 +137,8 @@ export async function login(_currentState: unknown, formData: FormData) {
   }
 
   try {
-    await transferCart() // Transfer jika ada cart guest
-    await syncCustomerCartToCookie() // 🌟 PENTING: Paksa sinkronisasi Cookie
+    await transferCart()
+    await syncCustomerCartToCookie() // AMAN: Dijalankan hanya saat Server Action Login
   } catch (error: any) {
     return error.toString()
   }
@@ -177,7 +175,6 @@ export async function transferCart() {
   revalidateTag(cartCacheTag)
 }
 
-// 🌟 FUNGSI BARU: MENARIK CART DARI DATABASE KE COOKIE BROWSER BARU
 export async function syncCustomerCartToCookie() {
   const customer = await retrieveCustomer().catch(() => null)
   
@@ -185,7 +182,6 @@ export async function syncCustomerCartToCookie() {
     const currentCartId = await getCartId()
     const dbCartId = customer.metadata.cart_id as string
     
-    // Jika browser kosong, atau beda, paksa ikuti database
     if (currentCartId !== dbCartId) {
       await setCartId(dbCartId)
       const cartCacheTag = await getCacheTag("carts")

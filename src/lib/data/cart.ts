@@ -15,26 +15,11 @@ import {
 } from "./cookies"
 import { getRegion } from "./regions"
 import { getLocale } from "@lib/data/locale-actions"
-// 🌟 IMPORT FUNGSI CUSTOMER UNTUK UPDATE METADATA
 import { retrieveCustomer, updateCustomer } from "./customer"
 
-/**
- * Retrieves a cart by its ID. If no ID is provided, it will use the cart ID from the cookies.
- * @param cartId - optional - The ID of the cart to retrieve.
- * @returns The cart object if found, or null if not found.
- */
 export async function retrieveCart(cartId?: string, fields?: string) {
-  let id = cartId || (await getCartId())
-  
-  // 🌟 JIKA CART ID BROWSER KOSONG, COBA CEK CUSTOMER DB
-  if (!id) {
-     const customer = await retrieveCustomer().catch(() => null)
-     if (customer && customer.metadata?.cart_id) {
-       id = customer.metadata.cart_id as string
-       await setCartId(id) // Pasang ke browser
-     }
-  }
-
+  // 🌟 KEMBALI BERSIH: Tidak ada lagi setCartId paksa di sini!
+  const id = cartId || (await getCartId())
   fields ??=
     "*items, *region, *items.product, *items.variant, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name"
 
@@ -53,9 +38,7 @@ export async function retrieveCart(cartId?: string, fields?: string) {
   return await sdk.client
     .fetch<HttpTypes.StoreCartResponse>(`/store/carts/${id}`, {
       method: "GET",
-      query: {
-        fields,
-      },
+      query: { fields },
       headers,
       next,
       cache: "force-cache",
@@ -88,7 +71,7 @@ export async function getOrSetCart(countryCode: string) {
 
     await setCartId(cart.id)
     
-    // 🌟 SIMPAN ID KERANJANG BARU KE DATABASE CUSTOMER JIKA LOGIN
+    // 🌟 AMAN: Menyimpan ke metadata kustomer saat Add To Cart
     const customer = await retrieveCustomer().catch(() => null)
     if (customer) {
        await updateCustomer({ metadata: { ...customer.metadata, cart_id: cart.id } })
@@ -393,15 +376,14 @@ export async function placeOrder(cartId?: string) {
 
     const orderCacheTag = await getCacheTag("orders")
     revalidateTag(orderCacheTag)
-
-    // 🌟 TAMBAHKAN 2 BARIS INI BOS!
-    // Ini buat ngasih tau Next.js: "Eh ada order baru nih, reset cache laci Order History ya!"
+    
+    // Reset cache customer agar laci Order History langsung update
     const customerCacheTag = await getCacheTag("customers")
     revalidateTag(customerCacheTag)
-    // 🌟 =========================
 
     removeCartId()
     
+    // Bersihkan metadata cart_id setelah checkout sukses
     const customer = await retrieveCustomer().catch(() => null)
     if (customer) {
        await updateCustomer({ metadata: { ...customer.metadata, cart_id: null } }).catch(() => null)
