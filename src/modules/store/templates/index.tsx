@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useParams, useRouter, useSearchParams } from "next/navigation"; 
 import { Heart, Search, X, ChevronDown, ArrowUp, ShoppingCart, Ruler } from "lucide-react";
@@ -579,6 +579,9 @@ export default function StoreTemplate() {
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   
+  // 🌟 SENSOR UNTUK INFINITE SCROLL
+  const observerTarget = useRef<HTMLDivElement | null>(null);
+
   // STATE UI
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [wishlist, setWishlist] = useState<string[]>([]);
@@ -586,7 +589,7 @@ export default function StoreTemplate() {
   // STATE POPUP VARIAN
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   
-  // 🌟 STATE FILTER
+  // 🌟 STATE FILTER (minPrice sekarang dijamin 0)
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all"); 
   const [minPrice, setMinPrice] = useState(0);
@@ -654,7 +657,7 @@ export default function StoreTemplate() {
   const fetchStoreProducts = useCallback(async (pageNumber: number, reset = false) => {
     setIsLoading(true);
     try {
-      const limit = 100; 
+      const limit = 10; // 🌟 10 PRODUK SAJA BIAR RINGAN!
       const offset = (pageNumber - 1) * limit;
       
       const data = await listProducts({
@@ -741,6 +744,30 @@ export default function StoreTemplate() {
     return () => clearTimeout(timer);
   }, [searchQuery, activeCategory, selectedCollection]);
 
+  // 🌟 EFEK SENSOR INFINITE SCROLL
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isLoading) {
+          setPage((prevPage) => {
+            const next = prevPage + 1;
+            fetchStoreProducts(next, false);
+            return next;
+          });
+        }
+      },
+      { threshold: 0.1, rootMargin: "200px" } 
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => {
+      if (observerTarget.current) observer.unobserve(observerTarget.current);
+    };
+  }, [hasMore, isLoading, fetchStoreProducts]);
+
   const handleApplyFilter = () => {
     setIsFilterOpen(false);
     setPage(1);
@@ -748,7 +775,7 @@ export default function StoreTemplate() {
   };
 
   const handleResetFilter = () => {
-    setMinPrice(0);
+    setMinPrice(0); // 🌟 Reset minPrice ke 0
     setMaxPrice(5000000);
     setSelectedSize("");
     setSelectedColor("");
@@ -757,12 +784,6 @@ export default function StoreTemplate() {
     setSearchQuery("");
     
     router.push(`/${countryCode}/store`);
-  };
-
-  const handleLoadMore = () => {
-    const nextPage = page + 1;
-    setPage(nextPage);
-    fetchStoreProducts(nextPage, false);
   };
 
   const scrollToTop = () => {
@@ -849,10 +870,10 @@ export default function StoreTemplate() {
           </button>
         </div>
 
-        {/* 🌟 KATEGORI LUAR */}
+        {/* 🌟 KATEGORI LUAR (LOGIKA AND: TIDAK MERESET COLLECTION) */}
         <div className="flex overflow-x-auto gap-5 scrollbar-hide pb-2">
           {topCategories.map((cat) => (
-            <button key={cat.handle} onClick={() => { setActiveCategory(cat.handle); setSelectedCollection(""); }} className="flex flex-col items-center min-w-[70px] gap-2 group">
+            <button key={cat.handle} onClick={() => setActiveCategory(cat.handle)} className="flex flex-col items-center min-w-[70px] gap-2 group">
               <div className={`w-[72px] h-[72px] rounded-full overflow-hidden border-2 transition-all p-0.5 ${activeCategory === cat.handle ? "border-[#EF7044]" : "border-transparent"}`}>
                 <div className="w-full h-full rounded-full overflow-hidden bg-gray-100">
                    <img src={cat.img} alt={cat.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
@@ -903,12 +924,27 @@ export default function StoreTemplate() {
         )}
       </div>
 
-      {/* VIEW MORE & BACK TO TOP */}
-      <div className="px-4">
-        {hasMore && products.length > 0 && (
-          <button onClick={handleLoadMore} disabled={isLoading} className="w-full py-4 rounded-full bg-gray-50 border border-gray-200 text-gray-600 font-bold text-sm uppercase tracking-widest hover:bg-gray-100 transition-colors mb-8 shadow-sm">
-            {isLoading ? "Loading..." : "View More"}
-          </button>
+      {/* =========================================
+          🌟 TRIGGER INFINITE SCROLL & LOADING
+          ========================================= */}
+      <div className="px-4 pb-12 flex flex-col items-center justify-center">
+        {/* Sensor Gaib untuk memuat data */}
+        <div ref={observerTarget} className="h-4 w-full" />
+        
+        {/* Animasi Loading */}
+        {isLoading && hasMore && (
+          <div className="flex gap-2 items-center justify-center py-6 animate-pulse">
+             <div className="w-2 h-2 bg-[#EF7044] rounded-full"></div>
+             <div className="w-2 h-2 bg-[#EF7044] rounded-full animation-delay-200"></div>
+             <div className="w-2 h-2 bg-[#EF7044] rounded-full animation-delay-400"></div>
+          </div>
+        )}
+        
+        {/* Pesan Mentok */}
+        {!hasMore && products.length > 0 && (
+          <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px] mt-6">
+            You have reached the end
+          </p>
         )}
       </div>
 
@@ -951,7 +987,8 @@ export default function StoreTemplate() {
             <div>
               <p className="text-[15px] font-medium text-gray-900 mb-4">Price</p>
               <div className="px-2">
-                <input type="range" min="200000" max="5000000" step="50000" value={maxPrice} onChange={(e) => setMaxPrice(Number(e.target.value))} className="w-full accent-[#EF7044]" />
+                {/* 🌟 min="0" DIPASANG DI SINI */}
+                <input type="range" min="0" max="5000000" step="50000" value={maxPrice} onChange={(e) => setMaxPrice(Number(e.target.value))} className="w-full accent-[#EF7044]" />
                 <div className="flex justify-between mt-1 text-xs text-gray-600">
                   <span>Rp 0</span>
                   <span>{formatPrice(maxPrice)}</span>
@@ -990,14 +1027,14 @@ export default function StoreTemplate() {
               </div>
             </div>
 
-            {/* 🌟 KATEGORI DALAM DRAWER SINKRON DENGAN LUAR */}
+            {/* 🌟 KATEGORI DALAM DRAWER SINKRON DENGAN LUAR (LOGIKA AND) */}
             <div>
               <p className="text-[15px] font-medium text-gray-900 mb-3">Category</p>
               <div className="flex flex-wrap gap-2.5">
                 {topCategories.map(cat => (
                   <button 
                     key={cat.handle} 
-                    onClick={() => { setActiveCategory(activeCategory === cat.handle ? "all" : cat.handle); setSelectedCollection(""); }} 
+                    onClick={() => setActiveCategory(activeCategory === cat.handle ? "all" : cat.handle)} 
                     className={`px-5 py-1.5 rounded-full border transition-colors text-sm ${activeCategory === cat.handle ? "border-[#EF7044] text-[#EF7044]" : "border-gray-300 text-gray-700 bg-white"}`}
                   >
                     {cat.name}
@@ -1006,14 +1043,14 @@ export default function StoreTemplate() {
               </div>
             </div>
 
-            {/* 🌟 COLLECTIONS FILTER JUGA MENGAMBIL DARI CATEGORIES */}
+            {/* 🌟 COLLECTIONS: "Best Seller" UDAH JADI "Carvico" (LOGIKA AND) */}
             <div>
               <p className="text-[15px] font-medium text-gray-900 mb-3">Collections</p>
               <div className="flex flex-wrap gap-2.5">
-                {["New Arrivals", "Best Seller", "Signature", "Island Escape", "Discount"].map(col => (
+                {["Carvico", "New Arrivals", "Signature", "Island Escape", "Discount"].map(col => (
                   <button 
                     key={col} 
-                    onClick={() => { setSelectedCollection(selectedCollection === col ? "" : col); setActiveCategory("all"); }}
+                    onClick={() => setSelectedCollection(selectedCollection === col ? "" : col)}
                     className={`px-5 py-1.5 rounded-full border transition-colors text-sm ${selectedCollection === col ? "border-[#EF7044] text-[#EF7044]" : "border-gray-300 text-gray-700 bg-white hover:border-[#EF7044] hover:text-[#EF7044]"}`}
                   >
                     {col}

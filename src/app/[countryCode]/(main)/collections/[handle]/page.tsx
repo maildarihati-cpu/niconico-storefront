@@ -19,10 +19,10 @@ const COLLECTION_MAP: Record<string, any> = {
     heroImage: "/banners/hero-collection-new-arrivals.png",
     lookbookUrl: "https://online.fliphtml5.com/yftbr/shqn/"
   },
-  "best-seller": {
-    title: "BEST SELLER",
+  "carvico": {
+    title: "CARVICO",
     subtitle: "Niconico Resorts The Top Picks\nOur Loyal Customer",
-    heroImage: "/banners/best-seller.jpg",
+    heroImage: "/banners/carvico.jpg",
     lookbookUrl: "https://online.fliphtml5.com/yftbr/shqn/"
   },
   "signature": {

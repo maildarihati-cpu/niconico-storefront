@@ -15,10 +15,10 @@ const STATIC_CONTENT: Record<string, any> = {
     subtitle: "NICONICO RESORT New Arrivals\nPrepare You For Your Summer 2026",
     image: "/banners/hero-collection-new-arrivals.png"
   },
-  "best-seller": {
+  "carvico": {
     title: "BEST SELLER",
     subtitle: "NICONICO RESORT The Top Picks\nOur Loyal Customer",
-    image: "/banners/best-seller.jpg"
+    image: "/banners/carvico.jpg"
   },
   "signature": {
     title: "SIGNATURE",
@@ -33,7 +33,7 @@ const STATIC_CONTENT: Record<string, any> = {
 }
 
 // Urutan yang diinginkan
-const ORDER = ["new-arrivals", "best-seller", "signature", "island-escape"]
+const ORDER = ["new-arrivals", "carvico", "signature", "island-escape"]
 
 export default function CollectionsPage() {
   const { countryCode } = useParams()

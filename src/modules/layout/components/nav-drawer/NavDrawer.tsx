@@ -26,8 +26,8 @@ export default function NavDrawer({ isOpen, onClose, view, setView }: Props) {
   // State untuk Pencarian
   const [searchKeyword, setSearchKeyword] = useState("");
 
-  // State untuk Data Database
-  const [bestSellers, setBestSellers] = useState<any[]>([]);
+  // State untuk Data Database (Disesuaikan jadi Carvico)
+  const [carvicoProducts, setCarvicoProducts] = useState<any[]>([]);
   const [newArrivals, setNewArrivals] = useState<any[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(false);
 
@@ -49,7 +49,7 @@ export default function NavDrawer({ isOpen, onClose, view, setView }: Props) {
   // FUNGSI TARIK DATA DARI MEDUSA (REKOMENDASI SEARCH)
   useEffect(() => {
     async function fetchRecommendations() {
-      if (!isOpen || view !== "search" || (bestSellers.length > 0 && newArrivals.length > 0)) return; 
+      if (!isOpen || view !== "search" || (carvicoProducts.length > 0 && newArrivals.length > 0)) return; 
 
       setIsLoadingData(true);
       try {
@@ -67,7 +67,7 @@ export default function NavDrawer({ isOpen, onClose, view, setView }: Props) {
           return data.product_categories?.[0];
         };
 
-        const bsCategory = await fetchCategory("best-seller");
+        const bsCategory = await fetchCategory("carvico");
         const naCategory = await fetchCategory("new-arrivals");
 
         // Jika ketemu, tarik produk berdasarkan CATEGORY_ID
@@ -76,7 +76,7 @@ export default function NavDrawer({ isOpen, onClose, view, setView }: Props) {
             queryParams: { category_id: [bsCategory.id], limit: 2, fields: "*variants,*variants.prices" },
             countryCode: countryCode as string,
           }).catch(() => null);
-          if (bsData && bsData.response) setBestSellers(bsData.response.products);
+          if (bsData && bsData.response) setCarvicoProducts(bsData.response.products);
         }
 
         if (naCategory) {
@@ -185,7 +185,7 @@ export default function NavDrawer({ isOpen, onClose, view, setView }: Props) {
                 </button>
                 <div className={`flex flex-col gap-3.5 pl-4 overflow-hidden transition-all duration-300 origin-top ${isCollectionsOpen ? "max-h-[500px] opacity-100 mb-2" : "max-h-0 opacity-0 mb-0"}`}>
                   {[
-                    { label: "Best Seller", handle: "best-seller" },
+                    { label: "Carvico", handle: "carvico" },
                     { label: "New Arrivals", handle: "new-arrivals" },
                     { label: "Signature", handle: "signature" },
                     { label: "Island Escape", handle: "island-escape" }
@@ -234,15 +234,15 @@ export default function NavDrawer({ isOpen, onClose, view, setView }: Props) {
               ) : (
                 <div className="space-y-8 animate-in fade-in duration-500">
                   
-                  {/* Bagian Best Seller (DARI DATABASE) */}
-                  {bestSellers.length > 0 && (
+                  {/* Bagian Carvico (DARI DATABASE) */}
+                  {carvicoProducts.length > 0 && (
                     <div>
                       <div className="flex items-center gap-2 mb-4">
                         <Star className="w-4 h-4 text-[#ef7044] fill-[#ef7044]" />
-                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Best Sellers</h4>
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Carvico</h4>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
-                        {bestSellers.map((product) => (
+                        {carvicoProducts.map((product) => (
                           <LocalizedClientLink key={product.id} href={`/products/${product.handle}`} onClick={onClose} className="group cursor-pointer block">
                             <div className="relative aspect-[3/4] bg-gray-100 rounded-2xl overflow-hidden mb-2">
                                <Image src={product.thumbnail || "/placeholder.png"} alt={product.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -275,7 +275,7 @@ export default function NavDrawer({ isOpen, onClose, view, setView }: Props) {
                     </div>
                   )}
 
-                  {bestSellers.length === 0 && newArrivals.length === 0 && (
+                  {carvicoProducts.length === 0 && newArrivals.length === 0 && (
                     <div className="text-center py-10 text-gray-400 italic text-sm">
                       Silakan periksa kategori produk Anda di Admin Medusa.
                     </div>

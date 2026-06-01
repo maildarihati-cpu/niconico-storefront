@@ -526,7 +526,7 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
 // ==========================================
 const collectionsConfig = {
   "New Arrivals": { handle: "new-arrivals", link: "/collections/new-arrivals" },
-  "Best Seller": { handle: "best-seller", link: "/collections/best-seller" },
+  "Best Seller": { handle: "carvico", link: "/collections/carvico" },
   "Signature": { handle: "signature", link: "/collections/signature" },
   "Island Escape": { handle: "island-escape", link: "/collections/island-escape" }
 };
