@@ -524,14 +524,16 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
 // ==========================================
 // 🌟 2. KOMPONEN UTAMA TOP COLLECTIONS 
 // ==========================================
+// 🌟 PERUBAHAN DI SINI: "Best Seller" UDAH JADI "Carvico"
 const collectionsConfig = {
   "New Arrivals": { handle: "new-arrivals", link: "/collections/new-arrivals" },
-  "Best Seller": { handle: "carvico", link: "/collections/carvico" },
+  "Carvico": { handle: "carvico", link: "/collections/carvico" },
   "Signature": { handle: "signature", link: "/collections/signature" },
   "Island Escape": { handle: "island-escape", link: "/collections/island-escape" }
 };
 
-const tabs = ["New Arrivals", "Best Seller", "Signature", "Island Escape"];
+// 🌟 PERUBAHAN DI SINI JUGA
+const tabs = ["New Arrivals", "Carvico", "Signature", "Island Escape"];
 
 export default function TopCollections() {
   const { countryCode } = useParams();
@@ -554,14 +556,12 @@ export default function TopCollections() {
           queryParams: { 
             limit: 100,
             order: "-created_at",
-            // 🌟 fields: KITA TAMBAH *categories AGAR DATA KATEGORI IKUT KETARIK
             fields: "*collection,*categories,*variants,*variants.prices,*variants.inventory_quantity,*variants.manage_inventory,*variants.allow_backorder" 
           }, 
           countryCode: countryCode as string,
         }).catch(() => null);
 
         if (data && data.response) {
-          // 🌟 FILTER: Kita saring produk yang punya kategori sesuai dengan handle tab yang diklik
           const filtered = data.response.products.filter((p: any) => {
             const targetHandle = activeConfig.handle.toLowerCase();
             return p.categories?.some((c: any) => c.handle?.toLowerCase() === targetHandle);
