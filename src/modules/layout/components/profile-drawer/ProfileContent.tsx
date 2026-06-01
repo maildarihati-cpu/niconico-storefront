@@ -22,17 +22,12 @@ export default function ProfileContent({ onClose, view, setView }: ProfileConten
   const [isLoading, setIsLoading] = useState(true);
   const [customerData, setCustomerData] = useState<any>(null); 
 
-  // 🌟 SENJATA RAHASIA: Paksa Medusa ngeluarin data Alamat & Items
-  const queryParams = {
-    fields: "*items,*items.variant,*shipping_address,*fulfillments",
-    expand: "items,items.variant,shipping_address,fulfillments"
-  };
-
   const fetchCustomerData = async () => {
     const customer = await retrieveCustomer().catch(() => null);
     if (customer) {
-      // Masukkan senjata rahasia ke dalam listOrders
-      const ordersResponse: any = await listOrders(queryParams as any).catch(() => []);
+      // 🌟 PERBAIKAN: Panggil dengan urutan yang benar (limit: 100, offset: 0).
+      // Data alamat & resi otomatis ikut karena sudah kita seting di orders.ts
+      const ordersResponse: any = await listOrders(100, 0).catch(() => []);
       const ordersData = Array.isArray(ordersResponse) ? ordersResponse : (ordersResponse?.orders || []);
       setCustomerData({ ...customer, orders: ordersData });
     }
@@ -44,8 +39,8 @@ export default function ProfileContent({ onClose, view, setView }: ProfileConten
       const customer = await retrieveCustomer().catch(() => null);
       if (customer) {
         
-        // Masukkan senjata rahasia di sini juga
-        const ordersResponse: any = await listOrders(queryParams as any).catch(() => []);
+        // 🌟 PERBAIKAN: Sama seperti di atas
+        const ordersResponse: any = await listOrders(100, 0).catch(() => []);
         const ordersData = Array.isArray(ordersResponse) ? ordersResponse : (ordersResponse?.orders || []);
         
         setCustomerData({ ...customer, orders: ordersData });
