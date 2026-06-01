@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 import React, { useState, useEffect, useRef } from "react"; 
 import Image from "next/image";
 import { Menu, Search, ShoppingBag, User, Eye, ArrowRight, Heart } from "lucide-react";
-import { useCart } from "../../../context/cart-context";
+import { useCart } from "../../../context/cart-context/cart-context";
 import TopCollections from "@modules/home/components/top-collections";
 import InstagramFeed from "@modules/home/components/instagram-feed";
 import MakeYourOwnBrand from "@modules/home/components/make-your-own-brand";

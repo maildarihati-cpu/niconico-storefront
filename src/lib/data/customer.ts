@@ -10,6 +10,7 @@ import {
   getCacheOptions,
   getCacheTag,
   getCartId,
+  setCartId, // 🌟 TAMBAHAN: Untuk nulis cookie
   removeAuthToken,
   removeCartId,
   setAuthToken,
@@ -25,7 +26,7 @@ export async function updateCustomerWishlist(wishlistIds: string[]) {
     {},
     headers
   ).then(() => {
-    revalidateTag("customer") // Biar datanya fresh
+    revalidateTag("customer") 
   })
 }
 
@@ -47,7 +48,9 @@ export const retrieveCustomer =
       .fetch<{ customer: HttpTypes.StoreCustomer }>(`/store/customers/me`, {
         method: "GET",
         query: {
-          fields: "*orders",
+          // 🌟 INI DIA OBATNYA BOS! 
+          // Kita paksa server mengirimkan Item, Varian, Alamat, dan Resi Pengiriman!
+          fields: "*orders,*orders.items,*orders.items.variant,*orders.shipping_address,*orders.fulfillments",
         },
         headers,
         next,
@@ -110,7 +113,8 @@ export async function signup(_currentState: unknown, formData: FormData) {
     const customerCacheTag = await getCacheTag("customers")
     revalidateTag(customerCacheTag)
 
-    await transferCart()
+    await transferCart() // Transfer jika ada cart guest
+    await syncCustomerCartToCookie() // 🌟 PENTING: Paksa sinkronisasi Cookie
 
     return createdCustomer
   } catch (error: any) {
@@ -135,7 +139,8 @@ export async function login(_currentState: unknown, formData: FormData) {
   }
 
   try {
-    await transferCart()
+    await transferCart() // Transfer jika ada cart guest
+    await syncCustomerCartToCookie() // 🌟 PENTING: Paksa sinkronisasi Cookie
   } catch (error: any) {
     return error.toString()
   }
@@ -166,10 +171,27 @@ export async function transferCart() {
 
   const headers = await getAuthHeaders()
 
-  await sdk.store.cart.transferCart(cartId, {}, headers)
+  await sdk.store.cart.transferCart(cartId, {}, headers).catch(() => null)
 
   const cartCacheTag = await getCacheTag("carts")
   revalidateTag(cartCacheTag)
+}
+
+// 🌟 FUNGSI BARU: MENARIK CART DARI DATABASE KE COOKIE BROWSER BARU
+export async function syncCustomerCartToCookie() {
+  const customer = await retrieveCustomer().catch(() => null)
+  
+  if (customer && customer.metadata?.cart_id) {
+    const currentCartId = await getCartId()
+    const dbCartId = customer.metadata.cart_id as string
+    
+    // Jika browser kosong, atau beda, paksa ikuti database
+    if (currentCartId !== dbCartId) {
+      await setCartId(dbCartId)
+      const cartCacheTag = await getCacheTag("carts")
+      revalidateTag(cartCacheTag)
+    }
+  }
 }
 
 export const addCustomerAddress = async (

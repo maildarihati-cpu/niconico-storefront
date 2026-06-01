@@ -1,6 +1,6 @@
 import { Metadata } from "next"
 
-import { CartProvider } from "../../../context/cart-context";
+import { CartProvider } from "../../../context/cart-context/cart-context";
 import { listCartOptions, retrieveCart } from "@lib/data/cart"
 import { retrieveCustomer } from "@lib/data/customer"
 import { getBaseURL } from "@lib/util/env"

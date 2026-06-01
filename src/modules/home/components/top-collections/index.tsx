@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useParams, useRouter } from "next/navigation";
-import { useCart } from "@/context/cart-context";
+import { useCart } from "@/context/cart-context/cart-context";
 import { addToCart } from "@lib/data/cart"; 
 import { listProducts } from "@lib/data/products";
 import LocalizedClientLink from "@modules/common/components/localized-client-link";

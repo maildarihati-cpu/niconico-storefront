@@ -6,7 +6,7 @@ import { useParams } from "next/navigation"
 import { listProducts } from "@lib/data/products"
 import { listCollections } from "@lib/data/collections"
 // 👈 IMPORT listCategories SUDAH DIHAPUS AGAR TIDAK ERROR SERVER-ONLY
-import { useCart } from "@/context/cart-context"
+import { useCart } from "@/context/cart-context/cart-context"
 import { addToCart as medusaAddToCart } from "@lib/data/cart"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { ShoppingCart, Heart, X, Ruler } from "lucide-react"

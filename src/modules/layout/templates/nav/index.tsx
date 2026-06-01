@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams, useRouter } from "next/navigation"; 
 import { Menu, Search, ShoppingBag, User } from "lucide-react";
 import CartPreview from "@modules/cart/templates/preview";
-import { useCart } from "@/context/cart-context";
+import { useCart } from "@/context/cart-context/cart-context";
 
 import ProfileContent from "../../components/profile-drawer/ProfileContent";
 import NavDrawer from "../../components/nav-drawer/NavDrawer"; 

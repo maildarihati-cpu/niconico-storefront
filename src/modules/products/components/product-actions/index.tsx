@@ -6,7 +6,7 @@ import { addToCart } from "@lib/data/cart"
 import { useParams, useRouter } from "next/navigation" 
 import { updateCustomerWishlist } from "@lib/data/customer"
 
-import { useCart } from "@/context/cart-context"
+import { useCart } from "@/context/cart-context/cart-context"
 
 interface SizeData {
   label: string

@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { useRouter, useParams } from "next/navigation";
 import { ChevronLeft, Check, Trash2, Loader2 } from "lucide-react";
-import { useCart } from "@/context/cart-context";
+import { useCart } from "@/context/cart-context/cart-context";
 import { updateLineItem, deleteLineItem } from "@lib/data/cart";
 import { StoreCart, StoreCustomer } from "@medusajs/types";
 import { prepareCheckoutCart } from "@lib/util/checkout-util"; 

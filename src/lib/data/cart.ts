@@ -15,6 +15,8 @@ import {
 } from "./cookies"
 import { getRegion } from "./regions"
 import { getLocale } from "@lib/data/locale-actions"
+// 🌟 IMPORT FUNGSI CUSTOMER UNTUK UPDATE METADATA
+import { retrieveCustomer, updateCustomer } from "./customer"
 
 /**
  * Retrieves a cart by its ID. If no ID is provided, it will use the cart ID from the cookies.
@@ -22,7 +24,17 @@ import { getLocale } from "@lib/data/locale-actions"
  * @returns The cart object if found, or null if not found.
  */
 export async function retrieveCart(cartId?: string, fields?: string) {
-  const id = cartId || (await getCartId())
+  let id = cartId || (await getCartId())
+  
+  // 🌟 JIKA CART ID BROWSER KOSONG, COBA CEK CUSTOMER DB
+  if (!id) {
+     const customer = await retrieveCustomer().catch(() => null)
+     if (customer && customer.metadata?.cart_id) {
+       id = customer.metadata.cart_id as string
+       await setCartId(id) // Pasang ke browser
+     }
+  }
+
   fields ??=
     "*items, *region, *items.product, *items.variant, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name"
 
@@ -75,6 +87,12 @@ export async function getOrSetCart(countryCode: string) {
     cart = cartResp.cart
 
     await setCartId(cart.id)
+    
+    // 🌟 SIMPAN ID KERANJANG BARU KE DATABASE CUSTOMER JIKA LOGIN
+    const customer = await retrieveCustomer().catch(() => null)
+    if (customer) {
+       await updateCustomer({ metadata: { ...customer.metadata, cart_id: cart.id } })
+    }
 
     const cartCacheTag = await getCacheTag("carts")
     revalidateTag(cartCacheTag)
@@ -281,48 +299,9 @@ export async function applyPromotions(codes: string[]) {
     .catch(medusaError)
 }
 
-export async function applyGiftCard(code: string) {
-  //   const cartId = getCartId()
-  //   if (!cartId) return "No cartId cookie found"
-  //   try {
-  //     await updateCart(cartId, { gift_cards: [{ code }] }).then(() => {
-  //       revalidateTag("cart")
-  //     })
-  //   } catch (error: any) {
-  //     throw error
-  //   }
-}
-
-export async function removeDiscount(code: string) {
-  // const cartId = getCartId()
-  // if (!cartId) return "No cartId cookie found"
-  // try {
-  //   await deleteDiscount(cartId, code)
-  //   revalidateTag("cart")
-  // } catch (error: any) {
-  //   throw error
-  // }
-}
-
-export async function removeGiftCard(
-  codeToRemove: string,
-  giftCards: any[]
-  // giftCards: GiftCard[]
-) {
-  //   const cartId = getCartId()
-  //   if (!cartId) return "No cartId cookie found"
-  //   try {
-  //     await updateCart(cartId, {
-  //       gift_cards: [...giftCards]
-  //         .filter((gc) => gc.code !== codeToRemove)
-  //         .map((gc) => ({ code: gc.code })),
-  //     }).then(() => {
-  //       revalidateTag("cart")
-  //     })
-  //   } catch (error: any) {
-  //     throw error
-  //   }
-}
+export async function applyGiftCard(code: string) {}
+export async function removeDiscount(code: string) {}
+export async function removeGiftCard(codeToRemove: string, giftCards: any[]) {}
 
 export async function submitPromotionForm(
   currentState: unknown,
@@ -336,7 +315,6 @@ export async function submitPromotionForm(
   }
 }
 
-// TODO: Pass a POJO instead of a form entity here
 export async function setAddresses(currentState: unknown, formData: FormData) {
   try {
     if (!formData) {
@@ -389,11 +367,6 @@ export async function setAddresses(currentState: unknown, formData: FormData) {
   )
 }
 
-/**
- * Places an order for a cart. If no cart ID is provided, it will use the cart ID from the cookies.
- * @param cartId - optional - The ID of the cart to place an order for.
- * @returns The cart object if the order was successful, or null if not.
- */
 export async function placeOrder(cartId?: string) {
   const id = cartId || (await getCartId())
 
@@ -421,18 +394,25 @@ export async function placeOrder(cartId?: string) {
     const orderCacheTag = await getCacheTag("orders")
     revalidateTag(orderCacheTag)
 
+    // 🌟 TAMBAHKAN 2 BARIS INI BOS!
+    // Ini buat ngasih tau Next.js: "Eh ada order baru nih, reset cache laci Order History ya!"
+    const customerCacheTag = await getCacheTag("customers")
+    revalidateTag(customerCacheTag)
+    // 🌟 =========================
+
     removeCartId()
+    
+    const customer = await retrieveCustomer().catch(() => null)
+    if (customer) {
+       await updateCustomer({ metadata: { ...customer.metadata, cart_id: null } }).catch(() => null)
+    }
+
     redirect(`/${countryCode}/order/${cartRes?.order.id}/confirmed`)
   }
 
   return cartRes.cart
 }
 
-/**
- * Updates the countrycode param and revalidates the regions cache
- * @param regionId
- * @param countryCode
- */
 export async function updateRegion(countryCode: string, currentPath: string) {
   const cartId = await getCartId()
   const region = await getRegion(countryCode)

@@ -6,7 +6,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Heart, Search, X, ChevronDown, ArrowUp, ShoppingCart, Ruler } from "lucide-react";
 import LocalizedClientLink from "@modules/common/components/localized-client-link";
 import { listProducts } from "@lib/data/products";
-import { useCart } from "@/context/cart-context";
+import { useCart } from "@/context/cart-context/cart-context";
 import { addToCart as medusaAddToCart } from "@lib/data/cart";
 
 // Kategori Atas (Sesuaikan handle ini dengan nama di Medusa)
