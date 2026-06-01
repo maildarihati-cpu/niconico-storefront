@@ -28,6 +28,7 @@
     "lucide-react": "^1.7.0",
     "next": "15.3.9",
     "pg": "^8.11.3",
+    "posthog-js": "^1.377.0",
     "qs": "^6.12.1",
     "react": "19.0.4",
     "react-country-flag": "^3.1.0",

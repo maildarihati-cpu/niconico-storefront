@@ -7,6 +7,7 @@ import ProductInfo from "@modules/products/templates/product-info"
 import StoreSection from "@modules/home/components/store-location"
 import { notFound } from "next/navigation"
 import { retrieveCustomer } from "@lib/data/customer"
+import ProductViewTracker from "@modules/products/components/product-view-tracker"
 
 type ProductTemplateProps = {
   product: any // Sesuaikan dengan tipe Medusa v2 kamu
@@ -27,6 +28,7 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
   return (
     // Tambahkan pb-24 agar konten tidak tertutup tombol Sticky "BUY NOW" di bawah
     <div className="relative w-full pt-[85px] md:pt-24 pb-24 bg-white">
+      <ProductViewTracker product={product} />
       
       {/* 1. GALLERY IMAGE (Swipeable) */}
       <div className="w-full px-[5pt]">

@@ -5,6 +5,7 @@ import { ShoppingCart, Heart, X, Ruler } from "lucide-react"
 import { addToCart } from "@lib/data/cart" 
 import { useParams, useRouter } from "next/navigation" 
 import { updateCustomerWishlist } from "@lib/data/customer"
+import { usePostHog } from 'posthog-js/react'
 
 import { useCart } from "@/context/cart-context/cart-context"
 
@@ -19,6 +20,7 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
   const countryCode = useParams().countryCode as string
   const router = useRouter() 
   const { cart: mainCart, addToCart: refreshCartCount } = useCart() 
+  const posthog = usePostHog()
 
   // 🌟 LOGIKA WARNA
   const colorName = product?.metadata?.color_name || "White"
@@ -273,6 +275,16 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
           metadata: { is_bundle: true, bundle_id: uniqueSetId, bundle_type: "BOTTOM", size: bottomSize, color: colorName }
         })
 
+        // 🌟 SUNTIKKAN SENSOR 'ADD TO CART' UNTUK PEMBELIAN BUNDLE DI SINI
+        if (posthog) {
+          posthog.capture('add_to_cart', {
+            product_id: product.id,
+            product_name: `${product.title} (Set Bundle)`,
+            product_type: "SET",
+            quantity: setQuantity
+          })
+        }
+
         if (refreshCartCount) refreshCartCount();
 
         if (redirectToCart) {
@@ -291,6 +303,16 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
           metadata: { color: colorName }
         })
         
+        // 🌟 SUNTIKKAN SENSOR 'ADD TO CART' UNTUK PEMBELIAN REGULER DI SINI
+        if (posthog) {
+          posthog.capture('add_to_cart', {
+            product_id: product.id,
+            product_name: product.title,
+            product_type: selectedType, // Mencatat apakah dia beli Top saja atau Bottom saja
+            quantity: 1
+          })
+        }
+
         if (refreshCartCount) refreshCartCount();
 
         if (redirectToCart) {
