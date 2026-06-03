@@ -82,11 +82,21 @@ export default function ProfileView({ onClose, setView, customer, onSuccess }: P
     }
   };
 
+  // 🌟 PERBAIKAN HANYA DI FUNGSI INI
   const handleLogout = async () => {
     setIsLoggingOut(true);
+    // Hapus manual jika memungkinkan (fallback)
     document.cookie = "_medusa_jwt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-    await fetch(`${BACKEND_URL}/store/auth`, { method: "DELETE" }).catch(() => null);
-    window.location.reload(); 
+    
+    // 🌟 KUNCI UTAMA: Wajib pakai credentials include agar server bisa menghapus HttpOnly Cookie!
+    await fetch(`${BACKEND_URL}/store/auth`, { 
+      method: "DELETE",
+      credentials: "include" 
+    }).catch(() => null);
+    
+    // Paksa router refresh lalu lempar ke home agar memori cache profil langsung musnah
+    router.refresh();
+    window.location.href = "/"; 
   };
 
   const defaultAddress = customer?.addresses?.[0];

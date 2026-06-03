@@ -32,16 +32,10 @@ export default function AddressView({ onClose, setView, customer, onSuccess }: P
   const [isMapLoading, setIsMapLoading] = useState(false);
   const [leafletLoaded, setLeafletLoaded] = useState(false);
 
-  // Address Records (🌟 DIBUAT JADI STATE AGAR BISA INSTAN REFRESH)
+  // 🌟 PERBAIKAN FATAL: STATE LOKAL MURNI 
+  // Kita jadikan localAddresses state tunggal. Tidak ada useEffect yang meniban ulang data ini!
   const [localAddresses, setLocalAddresses] = useState<any[]>(customer?.addresses || []);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(localAddresses[0]?.id || null);
-  
-  // Update state lokal jika props customer berubah (dari luar)
-  useEffect(() => {
-    if (customer?.addresses) {
-      setLocalAddresses(customer.addresses);
-    }
-  }, [customer?.addresses]);
 
   // Form State
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -58,15 +52,13 @@ export default function AddressView({ onClose, setView, customer, onSuccess }: P
     postal_code: ""
   });
 
-  // 🌟 DYNAMIC LEAFLET CDN LOADER (ANTI SSR CRASH)
+  // 🌟 DYNAMIC LEAFLET CDN LOADER
   useEffect(() => {
     if (typeof window === "undefined" || leafletLoaded) return;
-
     const link = document.createElement("link");
     link.rel = "stylesheet";
     link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
     document.head.appendChild(link);
-
     const script = document.createElement("script");
     script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
     script.async = true;
@@ -77,25 +69,15 @@ export default function AddressView({ onClose, setView, customer, onSuccess }: P
   // 🌟 INITIALIZE MAP ENGINE
   useEffect(() => {
     if (!leafletLoaded || !mapRef.current || step !== "map" || mapInstance) return;
-
     const L = (window as any).L;
-    // Default koordinat Bali/Denpasar jika tidak ada data awal
     const defaultLat = -8.6500;
     const defaultLng = 115.2167;
-
-    const map = L.map(mapRef.current, {
-      center: [defaultLat, defaultLng],
-      zoom: 15,
-      zoomControl: false
-    });
-
+    const map = L.map(mapRef.current, { center: [defaultLat, defaultLng], zoom: 15, zoomControl: false });
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
-
     setMapInstance(map);
 
-    // 🌟 LOGIKA REVERSE GEOCODING (SETIAP PETA BERHENTI DIGESER)
     map.on("moveend", async () => {
       const center = map.getCenter();
       setIsMapLoading(true);
@@ -107,10 +89,7 @@ export default function AddressView({ onClose, setView, customer, onSuccess }: P
         const data = await response.json();
         if (data && data.address) {
           const addr = data.address;
-          // Ambil potongan nama jalan utama agar rapi tidak kepanjangan
-          const mainStreet = addr.road || addr.suburb || addr.neighbourhood || data.display_name.split(",")[0];
           const fullFormatted = data.display_name;
-
           setFormData(prev => ({
             ...prev,
             address_1: fullFormatted,
@@ -125,14 +104,9 @@ export default function AddressView({ onClose, setView, customer, onSuccess }: P
         setIsMapLoading(false);
       }
     });
-
-    return () => {
-      map.remove();
-      setMapInstance(null);
-    };
+    return () => { map.remove(); setMapInstance(null); };
   }, [leafletLoaded, step]);
 
-  // 🌟 SEARCH LOCATION FUNCTION (FORWARD GEOCODING)
   const handleSearchLocation = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery || !mapInstance) return;
@@ -156,7 +130,6 @@ export default function AddressView({ onClose, setView, customer, onSuccess }: P
     }
   };
 
-  // 🌟 GPS CURRENT LOCATION FUNCTION
   const handleUseCurrentLocation = () => {
     if (!mapInstance) return;
     if (navigator.geolocation) {
@@ -165,9 +138,7 @@ export default function AddressView({ onClose, setView, customer, onSuccess }: P
           const { latitude, longitude } = position.coords;
           mapInstance.setView([latitude, longitude], 16);
         },
-        (err) => {
-          alert("Gagal mendeteksi GPS. Pastikan izin lokasi browser aktif, say.");
-        }
+        (err) => { alert("Gagal mendeteksi GPS. Pastikan izin lokasi browser aktif, say."); }
       );
     }
   };
@@ -230,27 +201,23 @@ export default function AddressView({ onClose, setView, customer, onSuccess }: P
         metadata: { notes: formData.notes }
       };
 
-      // 🌟 TEMBAK LEWAT JALUR DALAM (BEBAS 401 UNAUTHORIZED)
       await saveAddressServerAction(payload, editingId);
 
-      // 🌟 PERBAIKAN: Suntik alamat baru langsung ke layar agar tidak perlu refresh halaman!
+      // 🌟 INJEKSI OPTIMISTIS (Data disuntik ke layar detik ini juga tanpa peduli Induk!)
       const newAddressFake = {
-        id: editingId || `temp_${Date.now()}`, // Temporary ID sampai reload asli
+        id: editingId || `temp_${Date.now()}`,
         ...payload
       };
 
       if (editingId) {
-        // Mode Edit: Ganti data yang lama
         setLocalAddresses(prev => prev.map(a => a.id === editingId ? { ...a, ...payload } : a));
       } else {
-        // Mode Add: Tambah ke list paling atas
         setLocalAddresses(prev => [newAddressFake, ...prev]);
         setSelectedAddressId(newAddressFake.id);
       }
 
       if (onSuccess) {
-        // Panggil parent untuk update data aslinya di background
-        await onSuccess(); 
+        onSuccess(); // Panggil fungsi induk tanpa perlu di-await agar layar tidak freeze
       }
       
       router.refresh();
