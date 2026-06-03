@@ -14,11 +14,11 @@ import { AnalyticsProvider } from "./providers"
 // 🌟 Inisialisasi font Avenir lokal
 const avenir = localFont({
   src: [
-    { path: '../../public/fonts/avenir/Avenir-Light.ttf', weight: '300', style: 'normal' },
-    { path: '../../public/fonts/avenir/Avenir-Book.ttf', weight: '400', style: 'normal' },
-    { path: '../../public/fonts/avenir/Avenir-Regular.ttf', weight: '500', style: 'normal' },
-    { path: '../../public/fonts/avenir/Avenir-Heavy.ttf', weight: '600', style: 'normal' },
-    { path: '../../public/fonts/avenir/Avenir-Black.ttf', weight: '900', style: 'normal' },
+    { path: '../fonts/avenir/Avenir-Light.ttf', weight: '300', style: 'normal' },
+    { path: '../fonts/avenir/Avenir-Book.ttf', weight: '400', style: 'normal' },
+    { path: '../fonts/avenir/Avenir-Regular.ttf', weight: '500', style: 'normal' },
+    { path: '../fonts/avenir/Avenir-Heavy.ttf', weight: '600', style: 'normal' },
+    { path: '../fonts/avenir/Avenir-Black.ttf', weight: '900', style: 'normal' },
   ],
   variable: '--font-avenir',
 });
