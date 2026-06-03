@@ -11,10 +11,45 @@ type Props = {
 }
 
 export async function generateStaticParams() {
-  // 🌟 INI SATU-SATUNYA UBAHAN: 
-  // Kita kembalikan array kosong agar Vercel tidak timeout 60 detik saat build/deploy.
-  // Selain ini, semua logika di bawah adalah murni kodingan asli Bos!
-  return []
+  try {
+    const countryCodes = await listRegions().then((regions) =>
+      regions?.map((r) => r.countries?.map((c) => c.iso_2)).flat()
+    )
+
+    if (!countryCodes) {
+      return []
+    }
+
+    const promises = countryCodes.map(async (country) => {
+      const { response } = await listProducts({
+        countryCode: country,
+        queryParams: { limit: 100, fields: "handle" },
+      })
+
+      return {
+        country,
+        products: response.products,
+      }
+    })
+
+    const countryProducts = await Promise.all(promises)
+
+    return countryProducts
+      .flatMap((countryData) =>
+        countryData.products.map((product) => ({
+          countryCode: countryData.country,
+          handle: product.handle,
+        }))
+      )
+      .filter((param) => param.handle)
+  } catch (error) {
+    console.error(
+      `Failed to generate static paths for product pages: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }.`
+    )
+    return []
+  }
 }
 
 function getImagesForVariant(
@@ -27,10 +62,12 @@ function getImagesForVariant(
 
   const variant = product.variants.find((v) => v.id === selectedVariantId)
   
+  // 🌟 PERBAIKAN 1: Tambahkan ? sebelum .length untuk mencegah error null
   if (!variant || !variant.images?.length) {
     return product.images
   }
 
+  // 🌟 PERBAIKAN 2: Tambahkan any pada map dan ? pada filter
   const imageIdsMap = new Map(variant.images.map((i: any) => [i.id, true]))
   return product.images?.filter((i) => imageIdsMap.has(i.id))
 }
@@ -53,6 +90,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     notFound()
   }
 
+  // 🌟 BONUS: Ganti Medusa Store jadi Niconico Resort
   return {
     title: `${product.title} | Niconico Resort`,
     description: `${product.title}`,
@@ -84,6 +122,7 @@ export default async function ProductPage(props: Props) {
     notFound()
   }
 
+  // 🌟 PERBAIKAN 3: Timpa gambar varian langsung ke objek product
   const images = getImagesForVariant(pricedProduct, selectedVariantId)
   if (images) {
     pricedProduct.images = images
@@ -94,6 +133,7 @@ export default async function ProductPage(props: Props) {
       product={pricedProduct}
       region={region}
       countryCode={params.countryCode}
+      // 🚫 Hapus props images={images} karena ProductTemplate tidak memintanya
     />
   )
 }
