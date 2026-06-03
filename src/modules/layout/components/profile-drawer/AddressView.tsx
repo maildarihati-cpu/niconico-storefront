@@ -29,7 +29,7 @@ export default function AddressView({ onClose, setView, customer, onSuccess }: P
   const [isMapLoading, setIsMapLoading] = useState(false);
   const [leafletLoaded, setLeafletLoaded] = useState(false);
 
-  // Address Records
+  // Add  ess Records
   const addresses = customer?.addresses || [];
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(addresses[0]?.id || null);
   
@@ -203,12 +203,6 @@ export default function AddressView({ onClose, setView, customer, onSuccess }: P
     setIsSaving(true);
     setErrorMsg(null);
     try {
-      const getCookie = (name: string) => {
-        const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-        return match ? match[2] : null;
-      };
-      const token = getCookie('_medusa_jwt');
-
       const nameParts = formData.first_name.trim().split(" ");
       const fName = nameParts[0] || "";
       const lName = nameParts.slice(1).join(" ") || formData.last_name;
@@ -232,15 +226,20 @@ export default function AddressView({ onClose, setView, customer, onSuccess }: P
 
       const response = await fetch(endpoint, {
         method: "POST", 
+        credentials: "include", // 🌟 INI KUNCI UTAMANYA! Memaksa browser mengirim cookie login.
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
+          // 🌟 Hapus baris Authorization manual, biarkan credentials yang bekerja
           "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || ""
         },
         body: JSON.stringify(payload)
       });
 
-      if (!response.ok) throw new Error("Gagal menyimpan alamat ke database Medusa.");
+      if (!response.ok) {
+        // Ambil pesan error dari backend biar kita tahu detailnya kalau masih gagal
+        const errData = await response.json().catch(() => null);
+        throw new Error(errData?.message || "Gagal menyimpan alamat ke database Medusa.");
+      }
 
       if (onSuccess) {
         await onSuccess(); 
