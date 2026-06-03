@@ -1,9 +1,9 @@
 "use server";
 
 import { cookies } from "next/headers";
+import { revalidatePath } from "next/cache"; // 🌟 LANGKAH 1: Import penghancur cache
 
 export async function saveAddressServerAction(payload: any, editingId: string | null) {
-  // 🌟 PERBAIKAN DI SINI: Tambahkan 'await' karena di Next.js terbaru cookies() adalah Promise!
   const cookieStore = await cookies();
   const token = cookieStore.get("_medusa_jwt")?.value;
 
@@ -18,7 +18,6 @@ export async function saveAddressServerAction(payload: any, editingId: string | 
     ? `${BACKEND_URL}/store/customers/me/addresses/${editingId}`
     : `${BACKEND_URL}/store/customers/me/addresses`;
 
-  // 2. Server yang menembak ke Backend Medusa
   const response = await fetch(endpoint, {
     method: "POST",
     headers: {
@@ -33,6 +32,11 @@ export async function saveAddressServerAction(payload: any, editingId: string | 
     const err = await response.json().catch(() => null);
     throw new Error(err?.message || "Gagal menyimpan alamat di database Medusa.");
   }
+
+  // 🌟 LANGKAH 2: VAKSIN ANTI-CACHE!
+  // Perintah ini memaksa Next.js membuang seluruh cache layout & halaman detik ini juga,
+  // sehingga data alamat baru terpaksa ditarik live dari database Medusa.
+  revalidatePath("/", "layout"); 
 
   return true;
 }
