@@ -1,7 +1,7 @@
 import { getBaseURL } from "@lib/util/env"
 import { Metadata } from "next"
 import "@/styles/globals.css"
-import { Inter } from "next/font/google";
+import localFont from 'next/font/local';
 import { retrieveCustomer } from "@lib/data/customer"
 import WishlistSync from "@modules/common/components/wishlist-sync"
 // 🌟 Import komponen tombol melayang yang baru dibuat
@@ -11,8 +11,17 @@ import WishlistAutoSync from "@/components/WishlistAutoSync"
 // 🌟 IMPORT SENSOR POSTHOG KITA DI SINI
 import { AnalyticsProvider } from "./providers"
 
-// 1. Inisialisasi font Inter
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+// 🌟 Inisialisasi font Avenir lokal
+const avenir = localFont({
+  src: [
+    { path: '../../public/fonts/avenir/Avenir-Light.ttf', weight: '300', style: 'normal' },
+    { path: '../../public/fonts/avenir/Avenir-Book.ttf', weight: '400', style: 'normal' },
+    { path: '../../public/fonts/avenir/Avenir-Regular.ttf', weight: '500', style: 'normal' },
+    { path: '../../public/fonts/avenir/Avenir-Heavy.ttf', weight: '600', style: 'normal' },
+    { path: '../../public/fonts/avenir/Avenir-Black.ttf', weight: '900', style: 'normal' },
+  ],
+  variable: '--font-avenir',
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(getBaseURL()),
@@ -24,9 +33,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const customer = await retrieveCustomer()
 
   return (
-    <html lang="en" data-mode="light">
-      {/* 2. Suntikkan class font Inter di tag body ini */}
-      <body className={inter.className}>
+    <html lang="en" data-mode="light" className={avenir.variable}>
+      {/* 🌟 Suntikkan class font Avenir di tag body ini */}
+      <body className={avenir.className}>
         
         {/* 🌟 SELIMUTI SELURUH APLIKASI DENGAN SENSOR ANALYTICS */}
         <AnalyticsProvider>

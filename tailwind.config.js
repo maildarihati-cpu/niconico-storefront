@@ -59,7 +59,8 @@ module.exports = {
         "3xl": "2rem",
       },
       fontFamily: {
-        sans: ["var(--font-inter)", "sans-serif"],
+        // 🌟 PERUBAHAN: Avenir sekarang jadi font utama (sans)
+        sans: ["var(--font-avenir)", "sans-serif"],
       },
       keyframes: {
         ring: {
