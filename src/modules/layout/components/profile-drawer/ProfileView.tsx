@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { X, ChevronLeft, Loader2, LogOut, CheckCircle2, ChevronRight, AlertCircle } from "lucide-react";
 
+// 🌟 IMPORT JURUS NUKLIR LOGOUT DARI FILE SERVER ACTIONS
+import { logoutServerAction } from "@/lib/address-actions"; 
+
 const BACKEND_URL = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000";
 
 interface Props {
   onClose: () => void;
-  // 🌟 Pastikan "orders" ada di list setView
   setView: (view: "menu" | "login" | "signup" | "profile" | "address" | "reset-password" | "orders") => void;
   customer: any; 
   onSuccess?: () => Promise<void>; 
@@ -82,24 +84,25 @@ export default function ProfileView({ onClose, setView, customer, onSuccess }: P
     }
   };
 
-  // 🌟 PERBAIKAN HANYA DI FUNGSI INI
+  // 🌟 PERBAIKAN LOGOUT: Panggil fungsi dari file terpisah, jangan buat cookie() di sini!
   const handleLogout = async () => {
     setIsLoggingOut(true);
-    // Hapus manual jika memungkinkan (fallback)
-    document.cookie = "_medusa_jwt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-    
-    // 🌟 KUNCI UTAMA: Wajib pakai credentials include agar server bisa menghapus HttpOnly Cookie!
-    await fetch(`${BACKEND_URL}/store/auth`, { 
-      method: "DELETE",
-      credentials: "include" 
-    }).catch(() => null);
-    
-    // Paksa router refresh lalu lempar ke home agar memori cache profil langsung musnah
-    router.refresh();
-    window.location.href = "/"; 
+    try {
+      // Eksekusi pembersihan total di sisi server
+      await logoutServerAction();
+      
+      // Tendang paksa ke Home tanpa ampun
+      window.location.href = "/"; 
+    } catch (err) {
+      console.error("Gagal logout", err);
+      setIsLoggingOut(false);
+    }
   };
 
-  const defaultAddress = customer?.addresses?.[0];
+  const defaultAddressId = customer?.metadata?.default_address_id;
+  const defaultAddress = defaultAddressId 
+    ? customer?.addresses?.find((a: any) => a.id === defaultAddressId) || customer?.addresses?.[0]
+    : customer?.addresses?.[0];
 
   if (!customer) return null;
 
@@ -181,10 +184,8 @@ export default function ProfileView({ onClose, setView, customer, onSuccess }: P
           </div>
         </div>
 
-        {/* 🌟 MAIN NAVIGATION BUTTONS (Cart, Order, Wishlist) */}
+        {/* MAIN NAVIGATION BUTTONS */}
         <div className="flex flex-col gap-2.5 mb-10 mt-4">
-          
-          {/* Button My Cart */}
           <button 
             onClick={() => { onClose(); router.push("/cart"); }}
             className="w-full bg-[#ef7044] text-white py-3 rounded-xl font-bold tracking-wide border border-[#ef7044] hover:bg-white hover:text-[#ef7044] transition-all flex justify-between px-6 items-center"
@@ -193,7 +194,6 @@ export default function ProfileView({ onClose, setView, customer, onSuccess }: P
             <ChevronRight className="w-4 h-4 opacity-50" />
           </button>
 
-          {/* 🌟 Button My Order (Sudah Diaktifkan & Mengarah ke setView) */}
           <button 
             onClick={() => setView("orders")}
             className="w-full bg-[#ef7044] text-white py-3 rounded-xl font-bold tracking-wide border border-[#ef7044] hover:bg-white hover:text-[#ef7044] transition-all flex justify-between px-6 items-center"
@@ -202,7 +202,6 @@ export default function ProfileView({ onClose, setView, customer, onSuccess }: P
             <ChevronRight className="w-4 h-4 opacity-50" />
           </button>
 
-          {/* Button My Wishlist */}
           <button 
             onClick={() => { onClose(); router.push("/wishlist"); }}
             className="w-full bg-[#ef7044] text-white py-3 rounded-xl font-bold tracking-wide border border-[#ef7044] hover:bg-white hover:text-[#ef7044] transition-all flex justify-between px-6 items-center"
@@ -210,7 +209,6 @@ export default function ProfileView({ onClose, setView, customer, onSuccess }: P
             <span className="text-sm">My Wishlist</span>
             <ChevronRight className="w-4 h-4 opacity-50" />
           </button>
-
         </div>
 
         {/* LOGOUT */}

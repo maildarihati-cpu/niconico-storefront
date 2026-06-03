@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { ChevronLeft, MapPin, Search, Crosshair, AlertCircle, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { saveAddressServerAction } from "@/lib/address-actions"; 
+import { saveAddressServerAction, setDefaultAddressServerAction } from "@/lib/address-actions";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL?.includes("railway.app") 
   ? "https://api.niconicoresort.com" 
@@ -242,6 +242,24 @@ export default function AddressView({ onClose, setView, customer, onSuccess }: P
     return "translate-x-full";
   };
 
+const [isSettingDefault, setIsSettingDefault] = useState(false);
+
+  const handleChooseAddress = async () => {
+    if (!selectedAddressId) return;
+    setIsSettingDefault(true);
+    try {
+      await setDefaultAddressServerAction(selectedAddressId);
+      if (onSuccess) await onSuccess();
+      router.refresh();
+      setView("profile"); // Sukses simpan, baru tutup laci!
+    } catch (err) {
+      console.error(err);
+      alert("Gagal memilih alamat utama, say.");
+    } finally {
+      setIsSettingDefault(false);
+    }
+  };
+
   return (
     <div className="relative h-full w-full overflow-hidden bg-white flex flex-col font-sans antialiased z-[60]">
       
@@ -296,12 +314,12 @@ export default function AddressView({ onClose, setView, customer, onSuccess }: P
 
         <div className="bg-white p-5 border-t border-gray-100">
           <button 
-            onClick={() => setView("profile")}
-            disabled={!selectedAddressId}
-            className="w-full bg-[#ef7044] text-white py-3.5 rounded-xl font-bold border border-[#ef7044] hover:bg-white hover:text-[#ef7044] transition-all text-xs tracking-widest uppercase disabled:opacity-50"
-          >
-            Choose Address
-          </button>
+          onClick={handleChooseAddress}
+          disabled={!selectedAddressId || isSettingDefault}
+          className="w-full bg-[#ef7044] text-white py-3.5 rounded-xl font-bold border border-[#ef7044] hover:bg-white hover:text-[#ef7044] transition-all text-xs tracking-widest uppercase disabled:opacity-50 flex items-center justify-center gap-2"
+        >
+          {isSettingDefault ? <Loader2 className="w-4 h-4 animate-spin" /> : "Choose Address"}
+        </button>
         </div>
       </div>
 
