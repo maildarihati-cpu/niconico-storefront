@@ -4,7 +4,9 @@ import React, { useState, useEffect, useRef } from "react";
 import { ChevronLeft, MapPin, Search, Crosshair, AlertCircle, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL?.includes("railway.app") 
+  ? "https://api.niconicoresort.com" 
+  : (process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://api.niconicoresort.com");
 
 interface Props {
   onClose: () => void;
