@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { ChevronLeft, MapPin, Search, Crosshair, AlertCircle, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { saveAddressServerAction } from "@/lib/address-actions"; 
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL?.includes("railway.app") 
   ? "https://api.niconicoresort.com" 
@@ -222,26 +223,8 @@ export default function AddressView({ onClose, setView, customer, onSuccess }: P
         metadata: { notes: formData.notes }
       };
 
-      const endpoint = editingId 
-        ? `${BACKEND_URL}/store/customers/me/addresses/${editingId}`
-        : `${BACKEND_URL}/store/customers/me/addresses`;
-
-      const response = await fetch(endpoint, {
-        method: "POST", 
-        credentials: "include", // 🌟 INI KUNCI UTAMANYA! Memaksa browser mengirim cookie login.
-        headers: {
-          "Content-Type": "application/json",
-          // 🌟 Hapus baris Authorization manual, biarkan credentials yang bekerja
-          "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || ""
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (!response.ok) {
-        // Ambil pesan error dari backend biar kita tahu detailnya kalau masih gagal
-        const errData = await response.json().catch(() => null);
-        throw new Error(errData?.message || "Gagal menyimpan alamat ke database Medusa.");
-      }
+      // 🌟 TEMBAK LEWAT JALUR DALAM (BEBAS 401 UNAUTHORIZED)
+      await saveAddressServerAction(payload, editingId);
 
       if (onSuccess) {
         await onSuccess(); 
