@@ -38,32 +38,43 @@ function getImagesForVariant(
 }
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
-  const params = await props.params
-  const { handle } = params
-  const region = await getRegion(params.countryCode)
+  // 🌟 VAKSIN ANTI-500 UNTUK SEO: Kita lindungi proses fetch metadata!
+  try {
+    const params = await props.params
+    const { handle } = params
+    const region = await getRegion(params.countryCode)
 
-  if (!region) {
-    notFound()
-  }
+    if (!region) {
+      return { title: "Not Found | Niconico Resort" }
+    }
 
-  const product = await listProducts({
-    countryCode: params.countryCode,
-    queryParams: { handle },
-  }).then(({ response }) => response.products[0])
+    const data = await listProducts({
+      countryCode: params.countryCode,
+      queryParams: { handle },
+    })
 
-  if (!product) {
-    notFound()
-  }
+    const product = data.response?.products?.[0]
 
-  // 🌟 BONUS: Ganti Medusa Store jadi Niconico Resort
-  return {
-    title: `${product.title} | Niconico Resort`,
-    description: `${product.title}`,
-    openGraph: {
+    if (!product) {
+      return { title: "Not Found | Niconico Resort" }
+    }
+
+    return {
       title: `${product.title} | Niconico Resort`,
       description: `${product.title}`,
-      images: product.thumbnail ? [product.thumbnail] : [],
-    },
+      openGraph: {
+        title: `${product.title} | Niconico Resort`,
+        description: `${product.title}`,
+        images: product.thumbnail ? [product.thumbnail] : [],
+      },
+    }
+  } catch (error) {
+    console.error("💥 ERROR FETCH METADATA:", error)
+    // Jika backend ngadat, jangan meledak 500! Kembalikan title darurat, 
+    // lalu biarkan ProductPage di bawahnya yang mengarahkan ke halaman 404 dengan elegan.
+    return {
+      title: "Product | Niconico Resort",
+    }
   }
 }
 
