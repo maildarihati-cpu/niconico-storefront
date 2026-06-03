@@ -32,10 +32,17 @@ export default function AddressView({ onClose, setView, customer, onSuccess }: P
   const [isMapLoading, setIsMapLoading] = useState(false);
   const [leafletLoaded, setLeafletLoaded] = useState(false);
 
-  // Add  ess Records
-  const addresses = customer?.addresses || [];
-  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(addresses[0]?.id || null);
+  // Address Records (🌟 DIBUAT JADI STATE AGAR BISA INSTAN REFRESH)
+  const [localAddresses, setLocalAddresses] = useState<any[]>(customer?.addresses || []);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(localAddresses[0]?.id || null);
   
+  // Update state lokal jika props customer berubah (dari luar)
+  useEffect(() => {
+    if (customer?.addresses) {
+      setLocalAddresses(customer.addresses);
+    }
+  }, [customer?.addresses]);
+
   // Form State
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -169,7 +176,7 @@ export default function AddressView({ onClose, setView, customer, onSuccess }: P
   
   const goToMap = (addressId?: string) => {
     if (addressId) {
-      const addr = addresses.find((a: any) => a.id === addressId);
+      const addr = localAddresses.find((a: any) => a.id === addressId);
       if (addr) {
         setEditingId(addr.id);
         setFormData({
@@ -226,7 +233,23 @@ export default function AddressView({ onClose, setView, customer, onSuccess }: P
       // 🌟 TEMBAK LEWAT JALUR DALAM (BEBAS 401 UNAUTHORIZED)
       await saveAddressServerAction(payload, editingId);
 
+      // 🌟 PERBAIKAN: Suntik alamat baru langsung ke layar agar tidak perlu refresh halaman!
+      const newAddressFake = {
+        id: editingId || `temp_${Date.now()}`, // Temporary ID sampai reload asli
+        ...payload
+      };
+
+      if (editingId) {
+        // Mode Edit: Ganti data yang lama
+        setLocalAddresses(prev => prev.map(a => a.id === editingId ? { ...a, ...payload } : a));
+      } else {
+        // Mode Add: Tambah ke list paling atas
+        setLocalAddresses(prev => [newAddressFake, ...prev]);
+        setSelectedAddressId(newAddressFake.id);
+      }
+
       if (onSuccess) {
+        // Panggil parent untuk update data aslinya di background
         await onSuccess(); 
       }
       
@@ -262,7 +285,7 @@ export default function AddressView({ onClose, setView, customer, onSuccess }: P
             <ChevronLeft className="w-5 h-5 text-gray-800" />
           </button>
           <h2 className="text-sm font-bold text-gray-900 tracking-wide">List Address</h2>
-          {addresses.length < 3 ? (
+          {localAddresses.length < 3 ? (
             <button onClick={() => goToMap()} className="text-[10px] text-[#ef7044] font-medium hover:underline">
               Add Address
             </button>
@@ -270,10 +293,10 @@ export default function AddressView({ onClose, setView, customer, onSuccess }: P
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 py-6 space-y-4">
-          {addresses.length === 0 ? (
+          {localAddresses.length === 0 ? (
             <div className="text-center mt-20 text-gray-400 text-xs">Belum ada alamat, say. Yuk tambah!</div>
           ) : (
-            addresses.map((addr: any) => {
+            localAddresses.map((addr: any) => {
               const isSelected = selectedAddressId === addr.id;
               return (
                 <div 
