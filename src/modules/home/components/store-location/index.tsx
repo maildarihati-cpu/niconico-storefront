@@ -12,9 +12,9 @@ interface Store {
   image_sub2: string;
   maps_link: string;
   wa_link: string;
+  is_featured?: boolean;
 }
 
-// Tambahkan prop agar komponen tahu dia sedang di Homepage atau Our Store
 interface StoreSectionProps {
   layout?: "slider" | "grid";
 }
@@ -32,7 +32,30 @@ export default function StoreSection({ layout = "slider" }: StoreSectionProps) {
         if (!response.ok) throw new Error("Failed to fetch store locations");
         
         const data = await response.json();
-        if (data.store_locations) setStores(data.store_locations);
+        
+        if (data.store_locations) {
+          const allStoresFromBackend = data.store_locations;
+          
+          // 1. Ambil yang featured (maksimal 3)
+          const featuredStores = allStoresFromBackend
+            .filter((store: Store) => store.is_featured === true)
+            .slice(0, 3);
+            
+          // 2. Ambil sisanya (yang tidak masuk ke featured)
+          const otherStores = allStoresFromBackend.filter(
+            (store: Store) => !featuredStores.some((featured: Store) => featured.id === store.id)
+          );
+          
+          // 3. Gabungkan: Featured di paling atas/kiri, sisanya mengikuti di belakang
+          const finalDisplayStores = [...featuredStores, ...otherStores];
+
+          if (layout === "slider") {
+            setStores(featuredStores.length > 0 ? featuredStores : finalDisplayStores.slice(0, 3));
+          } else {
+            setStores(finalDisplayStores);
+          }
+        }
+        
         if (data.count) setTotalStores(data.count); 
 
       } catch (error) {
@@ -43,7 +66,7 @@ export default function StoreSection({ layout = "slider" }: StoreSectionProps) {
     };
 
     fetchStores();
-  }, []);
+  }, [layout]); 
 
   if (loading) {
     return (
@@ -63,17 +86,12 @@ export default function StoreSection({ layout = "slider" }: StoreSectionProps) {
     <section className="pt-16 pb-12 bg-white w-full">
       <div className="max-w-[1200px] mx-auto md:max-w-6xl w-full">
         
-        {/* Sembunyikan judul "Visit Our Store" jika ini di halaman /our-store karena sudah ada Header halamannya */}
         {layout === "slider" && (
           <h2 className="text-3xl font-bold text-[#ED5725] mb-8 px-4 md:px-0 uppercase">
             Visit Our Store
           </h2>
         )}
 
-        {/* CONTAINER DINAMIS: 
-          Jika slider -> flex horizontal dengan snap
-          Jika grid -> CSS Grid 3 kolom ke bawah
-        */}
         <div className={
           layout === "slider" 
             ? "flex overflow-x-auto gap-6 px-4 md:px-0 pb-8 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
@@ -83,16 +101,17 @@ export default function StoreSection({ layout = "slider" }: StoreSectionProps) {
           {stores.map((store) => (
             <div 
               key={store.id} 
-              // Lebar dinamis: shrink-0 width tetap untuk slider, w-full untuk grid
               className={`bg-[#f8f8f8] rounded-[24px] p-5 shadow-[0_4px_20px_rgb(0,0,0,0.05)] border border-gray-100 flex flex-col transition-all duration-300 hover:shadow-lg ${
                 layout === "slider" ? "snap-start shrink-0 w-[340px] md:w-[380px]" : "w-full"
               }`}
             >
-              <div className="flex justify-between items-start gap-3 mb-4 h-10">
-                <h3 className="text-xl md:text-2xl font-black text-[#ED5725] tracking-wide uppercase shrink-0">
+              
+              {/* 🌟 PERBAIKAN UI: Flex Column agar alamat turun ke bawah */}
+              <div className="flex flex-col items-start gap-1 mb-4 min-h-[4rem]">
+                <h3 className="text-lg md:text-xl font-black text-[#ED5725] tracking-wide uppercase w-full">
                   {store.name}
                 </h3>
-                <p className="text-[11px] md:text-xs text-gray-700 text-right leading-snug line-clamp-2 font-medium">
+                <p className="text-[11px] md:text-xs text-gray-600 text-left leading-relaxed font-medium w-full break-words pr-2">
                   {store.address}
                 </p>
               </div>
@@ -132,7 +151,6 @@ export default function StoreSection({ layout = "slider" }: StoreSectionProps) {
             </div>
           ))}
 
-          {/* Sembunyikan card "View All" jika kita sudah berada di halaman /our-store (layout grid) */}
           {layout === "slider" && (
             <a 
               href="/our-store" 
