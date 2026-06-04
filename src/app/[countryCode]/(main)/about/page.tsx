@@ -11,12 +11,24 @@ export default function AboutUsPage() {
   const [activeTab, setActiveTab] = useState("our-story")
 
   const brandLogos = [
-    { src: "/images/logo-1.png", alt: "Brand 1" },
-    { src: "/images/logo-2.png", alt: "Brand 2" },
-    { src: "/images/logo-3.png", alt: "Brand 3" },
-    { src: "/images/logo-4.png", alt: "Brand 4" },
-    { src: "/images/logo-5.png", alt: "Brand 5" },
-  ]
+    { src: "/about/niconico-resort-partnesrhip-ayana-komodo-1.webp", alt: "Ayana Komodo" },
+    { src: "/about/niconico-resort-partnesrhip-ayana-bali-2.webp", alt: "Ayana Bali" },
+    { src: "/about/niconico-resort-partnesrhip-atlas-beach-bali-3.webp", alt: "Atlas Beach Bali" },
+    { src: "/about/niconico-resort-partnesrhip-cafe-del-mar-bali-4.webp", alt: "Cafe Del Mar Bali" },
+    { src: "/about/niconico-resort-partnesrhip-gdas-bali-5.webp", alt: "Gdas Bali" },
+    { src: "/about/niconico-resort-partnesrhip-hanging-gardens-of-bali-6.webp", alt: "Hanging Gardens Of Bali" },
+    { src: "/about/niconico-resort-partnesrhip-hanging-locca-sea-house-bali-7.webp", alt: "Hanging Locca Sea House Bali" },
+    { src: "/about/niconico-resort-partnesrhip-luna-beach-club-bali-8.webp", alt: "Luna Beach Club Bali" },
+    { src: "/about/niconico-resort-partnesrhip-luna-beach-mandapa-bali-9.webp", alt: "Luna Beach Mandapa Bali" },
+    { src: "/about/niconico-resort-partnesrhip-luna-beach-raffles-bali-10.webp", alt: "Luna Beach Raffles Bali" },
+    { src: "/about/niconico-resort-partnesrhip-luna-beach-st-regis-bali-11.webp", alt: "Luna Beach St Regis Bali" },
+    { src: "/about/niconico-resort-partnesrhip-luna-beach-the-jungle-club-ubud-bali-12.webp", alt: "Luna Beach The Jungle Club Ubud Bali" },
+    { src: "/about/niconico-resort-partnesrhip-luna-beach-the-jungle-surfer-girl-bali-13.webp", alt: "Luna Beach The Jungle Surfer Girl Bali" },
+    { src: "/about/niconico-resort-partnesrhip-the-laguna-resort-spa-bali-14.webp", alt: "The Laguna Resort Spa Bali" },
+    { src: "/about/niconico-resort-partnesrhip-the-mulia-bali-15.webp", alt: "The Mulia Bali" },
+    { src: "/about/niconico-resort-partnesrhip-the-ritz-carlton-bali-16.webp", alt: "The Ritz Carlton Bali" },
+    { src: "/about/niconico-resort-partnesrhip-tropical-temptation-beach-club-bali-17.webp", alt: "Tropical Temptation Beach Club Bali" }
+  ];
 
   const tabs = [
     { id: "our-story", label: "OUR STORY" },
@@ -76,8 +88,16 @@ export default function AboutUsPage() {
           {/* TAB 1: OUR STORY */}
           {activeTab === "our-story" && (
             <div className="flex flex-col gap-8 animate-in fade-in duration-500">
-              <div className="relative w-full aspect-[4/1] md:aspect-[21/4] bg-gray-100">
-                <Image src="/about/Niconico-Resort-About Us-Image-2.webp" alt="Our Story" fill className="object-cover" />
+              {/* 🌟 PERBAIKAN: Lebar 100%, Tinggi Auto menyesuaikan rasio asli gambar */}
+              <div className="w-full bg-gray-100 flex">
+                <Image 
+                  src="/about/Niconico-Resort-About Us-Image-2.webp" 
+                  alt="Our Story" 
+                  width={0} 
+                  height={0} 
+                  sizes="100vw" 
+                  style={{ width: "100%", height: "auto" }} 
+                />
               </div>
               <div className="max-w-5xl mx-auto px-6 text-left pb-4">
                 <div className="text-gray-700 font-normal leading-relaxed text-sm md:text-base space-y-4">
@@ -139,8 +159,16 @@ export default function AboutUsPage() {
           {/* TAB 4: OUR HERITAGE */}
           {activeTab === "our-heritage" && (
             <div className="flex flex-col gap-8 animate-in fade-in duration-500">
-              <div className="relative w-full aspect-[4/1] md:aspect-[21/4] bg-gray-100">
-                <Image src="/about/Niconico-Resort-About Us-Image-2.webp" alt="Our Heritage" fill className="object-cover" />
+              {/* 🌟 PERBAIKAN: Lebar 100%, Tinggi Auto menyesuaikan rasio asli gambar */}
+              <div className="w-full bg-gray-100 flex">
+                <Image 
+                  src="/about/Niconico-Resort-About Us-Image-2.webp" 
+                  alt="Our Heritage" 
+                  width={0} 
+                  height={0} 
+                  sizes="100vw" 
+                  style={{ width: "100%", height: "auto" }} 
+                />
               </div>
               <div className="max-w-5xl mx-auto px-6 text-left pb-4">
                 <div className="text-gray-700 font-normal leading-relaxed text-sm md:text-base space-y-4">
