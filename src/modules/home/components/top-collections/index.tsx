@@ -338,7 +338,7 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
                 <button onClick={() => { setSelectedType("SET"); setIsSetModalOpen(true); }} className="flex-1 flex flex-col gap-1.5 group">
                   <div className={`relative aspect-[3/4] w-full rounded-[5pt] overflow-hidden border-2 transition-all ${selectedType === "SET" ? "border-[#EF7044]" : "border-transparent"}`}>
                     <img src={mainImage} className="w-full h-full object-cover object-center" alt="Set" />
-                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40"><span className="text-white text-[8px] font-bold tracking-widest">SET</span></div>
+                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40"><span className="text-white text-[8px] font-bold tracking-widest">Set</span></div>
                   </div>
                   <p className="text-[8px] text-center font-medium text-gray-500 truncate">{formatPrice(setPrice)}</p>
                 </button>
@@ -347,7 +347,7 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
                 <button onClick={() => setSelectedType("TOP")} className="flex-1 flex flex-col gap-1.5 group">
                   <div className={`relative aspect-[3/4] w-full rounded-[5pt] overflow-hidden border-2 transition-all ${selectedType === "TOP" ? "border-[#EF7044]" : "border-transparent"}`}>
                     <img src={mainImage} className="w-full h-full object-cover object-top scale-[1.3] origin-top" alt="Top" />
-                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40"><span className="text-white text-[8px] font-bold tracking-widest">TOP</span></div>
+                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40"><span className="text-white text-[8px] font-bold tracking-widest">Top</span></div>
                   </div>
                   <p className="text-[8px] text-center font-medium text-gray-500 truncate">{formatPrice(getVariantPrice(topVariants[0]) || 0)}</p>
                 </button>
@@ -356,7 +356,7 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
                 <button onClick={() => setSelectedType("BOTTOM")} className="flex-1 flex flex-col gap-1.5 group">
                   <div className={`relative aspect-[3/4] w-full rounded-[5pt] overflow-hidden border-2 transition-all ${selectedType === "BOTTOM" ? "border-[#EF7044]" : "border-transparent"}`}>
                     <img src={mainImage} className="w-full h-full object-cover object-bottom scale-[1.3] origin-bottom" alt="Bottom" />
-                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40"><span className="text-white text-[8px] font-bold tracking-widest">BOTTOM</span></div>
+                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40"><span className="text-white text-[8px] font-bold tracking-widest">Bottom</span></div>
                   </div>
                   <p className="text-[8px] text-center font-medium text-gray-500 truncate">{formatPrice(getVariantPrice(bottomVariants[0]) || 0)}</p>
                 </button>
@@ -392,7 +392,7 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
                     <img src={mainImage} className="w-full h-full object-cover" alt="Product" />
                   </div>
                   <div className="flex flex-col pt-1">
-                    <h4 className="text-[#EF7044] font-black text-sm uppercase leading-tight mb-1">{product.title}</h4>
+                    <h4 className="text-[#EF7044] font-black text-sm leading-tight mb-1">{product.title}</h4>
                     <p className="text-[#EF7044] font-bold text-base mb-3">{formatPrice(setPrice * setQuantity)}</p>
                     <div className="flex flex-col gap-1.5">
                       <span className="bg-gray-200 text-gray-700 text-[10px] font-bold px-3 py-1 rounded w-max">Set</span>
@@ -524,7 +524,6 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
 // ==========================================
 // 🌟 2. KOMPONEN UTAMA TOP COLLECTIONS 
 // ==========================================
-// 🌟 PERUBAHAN DI SINI: "Best Seller" UDAH JADI "Carvico"
 const collectionsConfig = {
   "New Arrivals": { handle: "new-arrivals", link: "/collections/new-arrivals" },
   "Carvico": { handle: "carvico", link: "/collections/carvico" },
@@ -532,7 +531,6 @@ const collectionsConfig = {
   "Island Escape": { handle: "island-escape", link: "/collections/island-escape" }
 };
 
-// 🌟 PERUBAHAN DI SINI JUGA
 const tabs = ["New Arrivals", "Carvico", "Signature", "Island Escape"];
 
 export default function TopCollections() {
@@ -608,25 +606,31 @@ export default function TopCollections() {
 
   return (
     <section className="py-12 bg-white max-w-[1200px] mx-auto md:max-w-6xl relative">
-      <h2 className="text-3xl font-bold text-center text-gray-900 mb-8 tracking-tight">Top Collections</h2>
+      
+      {/* 🌟 HEADER DESKTOP KIRI-KANAN & MOBILE BAWAH-ATAS */}
+      <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-0 md:mb-10 px-0 md:px-4">
+        <h2 className="text-3xl font-bold text-center md:text-left text-gray-900 mb-8 md:mb-0 tracking-tight">
+          Top Collections
+        </h2>
 
-      {/* TABS (UI ASLI) */}
-      <div className="flex overflow-x-auto gap-6 md:gap-8 px-4 mb-10 border-b border-gray-100 scrollbar-hide">
-        {tabs.map((tab) => (
-          <button key={tab} onClick={() => setActiveTab(tab)} className="flex flex-col items-center whitespace-nowrap min-w-max pb-3 relative group">
-            <div className={`w-1.5 h-1.5 rounded-full mb-1 transition-all duration-300 ${activeTab === tab ? "bg-[#EF7044]" : "bg-transparent"}`}></div>
-            <span className={`text-sm md:text-base transition-all duration-300 ${activeTab === tab ? "text-[#EF7044] font-bold" : "text-gray-400 hover:text-[#EF7044]"}`}>
-              {tab}
-            </span>
-            <div className={`absolute bottom-0 left-0 h-[2px] bg-[#EF7044] transition-all duration-300 ${activeTab === tab ? "w-full" : "w-0"}`}></div>
-          </button>
-        ))}
+        {/* TABS (UI ASLI MOBILE + PENYESUAIAN DESKTOP) */}
+        <div className="flex overflow-x-auto gap-6 md:gap-8 px-4 md:px-0 mb-10 md:mb-0 border-b border-gray-100 scrollbar-hide md:border-none">
+          {tabs.map((tab) => (
+            <button key={tab} onClick={() => setActiveTab(tab)} className="flex flex-col items-center md:items-start whitespace-nowrap min-w-max pb-3 relative group">
+              <div className={`md:hidden w-1.5 h-1.5 rounded-full mb-1 transition-all duration-300 ${activeTab === tab ? "bg-[#EF7044]" : "bg-transparent"}`}></div>
+              <span className={`text-sm md:text-base transition-all duration-300 ${activeTab === tab ? "text-[#EF7044] font-bold" : "text-gray-400 hover:text-[#EF7044]"}`}>
+                {tab}
+              </span>
+              <div className={`absolute bottom-0 left-0 h-[2px] bg-[#EF7044] transition-all duration-300 ${activeTab === tab ? "w-full" : "w-0"}`}></div>
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="px-4">
-        {/* HERO IMAGE */}
-        <div className="mb-10 flex justify-center">
-          <LocalizedClientLink href={activeConfig.link} className="w-full max-w-2xl aspect-[3/4] md:aspect-[4/5] rounded-[32px] overflow-hidden block relative group shadow-xl bg-gray-50 border border-gray-100">
+        {/* HERO IMAGE - HIDDEN DI DESKTOP */}
+        <div className="mb-10 flex justify-center md:hidden">
+          <LocalizedClientLink href={activeConfig.link} className="w-full max-w-2xl aspect-[3/4] rounded-[32px] overflow-hidden block relative group shadow-xl bg-gray-50 border border-gray-100">
             {isLoading ? (
                <div className="w-full h-full animate-pulse bg-gray-200" />
             ) : dynamicHeroImage ? (
@@ -644,28 +648,38 @@ export default function TopCollections() {
           </LocalizedClientLink>
         </div>
 
-        {/* PRODUCT CAROUSEL */}
+        {/* PRODUCT CAROUSEL MOBILE / GRID DESKTOP */}
         {!isLoading && products.length > 0 ? (
-          <div className="flex overflow-x-auto gap-4 md:gap-6 pb-8 scrollbar-hide flex-nowrap items-start">
+          <div className="flex overflow-x-auto md:grid md:grid-cols-4 gap-4 md:gap-6 pb-8 md:pb-0 scrollbar-hide flex-nowrap md:flex-wrap items-start">
             {products.map((product) => (
-              <div key={product.id} className="min-w-[170px] max-w-[170px] md:min-w-[240px] md:max-w-[240px] flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="w-full aspect-[3/4] bg-gray-50 rounded-[24px] overflow-hidden relative mb-4 group border border-gray-100 shadow-sm">
-                  <img src={product.thumbnail || "/placeholder.png"} alt={product.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+              <div key={product.id} className="min-w-[170px] max-w-[170px] md:min-w-0 md:max-w-none md:w-full flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500">
+                
+                {/* 🌟 CARD IMAGE DESKTOP (PUTIH BERSHADOW) & MOBILE (ABU-ABU) */}
+                <div className="w-full aspect-[3/4] bg-gray-50 md:bg-white rounded-[24px] md:rounded-[20px] overflow-hidden relative mb-4 group border border-gray-100 md:border-none shadow-sm md:shadow-[0_4px_20px_rgb(0,0,0,0.05)] md:p-2">
+                  <img src={product.thumbnail || "/placeholder.png"} alt={product.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 md:rounded-[16px]" />
                   
-                  {/* 🌟 TOMBOL + UNTUK MEMBUKA QUICK SHOP MODAL */}
-                  <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedProduct(product); }} className="absolute bottom-3 right-3 w-10 h-10 bg-[#EF7044] text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 active:scale-95 transition-all z-10 border-2 border-white">
+                  {/* TOMBOL + (TETAP ADA SEBAGAI QUICK SHOP TRIGGER) */}
+                  <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedProduct(product); }} className="absolute bottom-3 right-3 w-10 h-10 bg-[#EF7044] text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 active:scale-95 transition-all z-10 border-2 border-white md:bottom-5 md:right-5">
                     +
                   </button>
                   
                   <LocalizedClientLink href={`/products/${product.handle}`} className="absolute inset-0 z-0" />
                 </div>
-                <div className="flex flex-col items-center text-center px-2">
-                  <h3 className="text-xs md:text-sm text-gray-800 font-bold line-clamp-2 h-10 mb-1">{product.title}</h3>
-                  <p className="text-[#EF7044] text-sm md:text-base font-black">{formatMedusaPrice(product)}</p>
+                
+                {/* 🌟 JUDUL PRODUK PILL OUTLINE DI DESKTOP */}
+                <div className="flex flex-col items-center text-center px-2 md:px-0">
+                  <h3 className="text-xs text-gray-800 font-bold line-clamp-2 h-10 mb-1 md:text-sm md:text-[#EF7044] md:border md:border-[#EF7044] md:rounded-full md:px-4 md:py-1.5 md:h-auto md:w-full md:max-w-[200px] md:mx-auto md:line-clamp-1 md:bg-white md:mb-3 transition-colors">
+                    {product.title}
+                  </h3>
+                  <p className="text-[#EF7044] text-sm md:text-base font-black">
+                    {formatMedusaPrice(product)}
+                  </p>
                 </div>
               </div>
             ))}
-            <LocalizedClientLink href={activeConfig.link} className="min-w-[170px] md:min-w-[240px] aspect-[3/4] flex flex-col items-center justify-center bg-gray-50 rounded-[24px] border-2 border-dashed border-gray-200 hover:border-[#EF7044] hover:bg-orange-50 transition-all group flex-shrink-0">
+            
+            {/* VIEW ALL CARD - HANYA MUNCUL DI MOBILE */}
+            <LocalizedClientLink href={activeConfig.link} className="md:hidden min-w-[170px] aspect-[3/4] flex flex-col items-center justify-center bg-gray-50 rounded-[24px] border-2 border-dashed border-gray-200 hover:border-[#EF7044] hover:bg-orange-50 transition-all group flex-shrink-0">
                 <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center mb-3 group-hover:bg-[#EF7044] group-hover:text-white text-gray-400 transition-all shadow-sm">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
                 </div>
@@ -675,6 +689,22 @@ export default function TopCollections() {
         ) : !isLoading && (
           <div className="text-center py-20 bg-gray-50 rounded-[40px] border border-dashed border-gray-200">
             <p className="text-gray-400 font-medium italic">No products available in this collection.</p>
+          </div>
+        )}
+
+        {/* 🌟 CHECK MORE BUTTON - HANYA MUNCUL DI DESKTOP */}
+        {!isLoading && products.length > 0 && (
+          <div className="hidden md:flex justify-center mt-12">
+            <LocalizedClientLink href={activeConfig.link}>
+              <button className="flex items-center justify-center gap-3 bg-[#EF7044] text-white border-2 border-[#EF7044] px-10 py-3.5 rounded-full font-black italic text-sm tracking-widest hover:bg-white hover:text-[#EF7044] transition-all duration-300 group">
+                <div className="w-6 h-6 rounded-full border-[2px] border-white flex items-center justify-center group-hover:border-[#EF7044] transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3} className="text-white group-hover:text-[#EF7044] transition-colors">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M7 7h10v10" />
+                  </svg>
+                </div>
+                CHECK MORE
+              </button>
+            </LocalizedClientLink>
           </div>
         )}
       </div>

@@ -201,15 +201,15 @@ export default function AboutUsPage() {
           <div className="flex flex-wrap items-center justify-center gap-6 md:gap-12">
             {brandLogos.map((logo, index) => (
               <div 
-                key={index} 
-                className="h-7 md:h-9 w-auto flex items-center justify-center grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-500"
-              >
-                <img
-                  src={logo.src}
-                  alt={logo.alt}
-                  className="h-full w-auto object-contain"
-                />
-              </div>
+                  key={index} 
+                  className="h-7 md:h-9 w-auto flex items-center justify-center transition-all duration-500"
+                >
+                  <img
+                    src={logo.src}
+                    alt={logo.alt}
+                    className="h-full w-auto object-contain"
+                  />
+                </div>
             ))}
           </div>
         </div>
