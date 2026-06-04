@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { ChevronLeft, MapPin, Loader2, Tag, CheckCircle2, Mail, Plus } from "lucide-react"
+import { ChevronLeft, MapPin, Loader2, Tag, CheckCircle2, Mail, Plus, AlertCircle } from "lucide-react"
 
 // 🌟 PERBAIKAN: Import aksi untuk menyimpan alamat permanen ke profil user
 import { saveAddressServerAction } from "@/lib/address-actions";
@@ -234,41 +234,93 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
               
               {/* 🌟 FORM TAMBAH ALAMAT MANUAL */}
               {isAddingAddress ? (
-                <div className="p-4 rounded-3xl border-2 border-[#EF7044] bg-[#EF7044]/5 space-y-3">
-                  <h4 className="text-[10px] font-black text-[#EF7044] uppercase tracking-widest border-b border-[#EF7044]/20 pb-2 mb-2">New Address Details</h4>
-                  
-                  <div className="grid grid-cols-2 gap-2">
-                    <input type="text" placeholder="First Name" value={newAddress.first_name} onChange={e => setNewAddress({...newAddress, first_name: e.target.value})} className="w-full bg-white border border-gray-200 rounded-xl p-3 text-[11px] uppercase font-bold outline-none focus:border-[#EF7044]" />
-                    <input type="text" placeholder="Last Name" value={newAddress.last_name} onChange={e => setNewAddress({...newAddress, last_name: e.target.value})} className="w-full bg-white border border-gray-200 rounded-xl p-3 text-[11px] uppercase font-bold outline-none focus:border-[#EF7044]" />
-                  </div>
-                  
-                  <input type="text" placeholder="Phone Number" value={newAddress.phone} onChange={e => setNewAddress({...newAddress, phone: e.target.value})} className="w-full bg-white border border-gray-200 rounded-xl p-3 text-[11px] uppercase font-bold outline-none focus:border-[#EF7044]" />
-                  
-                  <textarea placeholder="Full Address (Street, House No.)" value={newAddress.address_1} onChange={e => setNewAddress({...newAddress, address_1: e.target.value})} className="w-full bg-white border border-gray-200 rounded-xl p-3 text-[11px] uppercase font-bold outline-none focus:border-[#EF7044] h-20 resize-none" />
-                  
-                  <div className="grid grid-cols-2 gap-2">
-                    <input type="text" placeholder="City" value={newAddress.city} onChange={e => setNewAddress({...newAddress, city: e.target.value})} className="w-full bg-white border border-gray-200 rounded-xl p-3 text-[11px] uppercase font-bold outline-none focus:border-[#EF7044]" />
-                    <input type="text" placeholder="Province / State" value={newAddress.province} onChange={e => setNewAddress({...newAddress, province: e.target.value})} className="w-full bg-white border border-gray-200 rounded-xl p-3 text-[11px] uppercase font-bold outline-none focus:border-[#EF7044]" />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-2">
-                    <input type="text" placeholder="Postal Code" value={newAddress.postal_code} onChange={e => setNewAddress({...newAddress, postal_code: e.target.value})} className="w-full bg-white border border-gray-200 rounded-xl p-3 text-[11px] uppercase font-bold outline-none focus:border-[#EF7044]" />
-                    
-                    {/* 🌟 PEMILIHAN NEGARA (Sangat Penting untuk Auto-Region) */}
-                    <select value={newAddress.country_code} onChange={e => setNewAddress({...newAddress, country_code: e.target.value})} className="w-full bg-white border border-gray-200 rounded-xl p-3 text-[11px] uppercase font-bold outline-none focus:border-[#EF7044] appearance-none">
-                      <option value="id">Indonesia (ID)</option>
-                      <option value="sg">Singapore (SG)</option>
-                      <option value="my">Malaysia (MY)</option>
-                      <option value="au">Australia (AU)</option>
-                      <option value="us">United States (US)</option>
-                      <option value="gb">United Kingdom (GB)</option>
-                      <option value="eu">Europe (EU)</option>
-                    </select>
+                <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm flex flex-col gap-4 animate-in fade-in duration-300">
+                  <div className="flex justify-between items-center mb-2 border-b border-gray-100 pb-4">
+                    <h4 className="text-sm font-bold text-gray-900 tracking-wide">Detail Address</h4>
+                    <button onClick={() => setIsAddingAddress(false)} className="p-1 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors">
+                      <ChevronLeft className="w-4 h-4 text-gray-800" />
+                    </button>
                   </div>
 
-                  <div className="flex gap-2 pt-2">
-                    <button onClick={() => setIsAddingAddress(false)} className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-500 text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 transition-all">Cancel</button>
-                    <button onClick={handleSaveNewAddress} className="flex-1 py-3 rounded-xl bg-[#EF7044] text-white text-[10px] font-black uppercase tracking-widest shadow-md hover:bg-black transition-all">Save & Use</button>
+                  <div>
+                    <label className="text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1 block">Address Detail/Street Name</label>
+                    <textarea 
+                      rows={3}
+                      required
+                      value={newAddress.address_1}
+                      onChange={(e) => setNewAddress({...newAddress, address_1: e.target.value})}
+                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-xs text-gray-800 font-medium focus:border-[#ef7044] outline-none transition-colors"
+                      placeholder="Masukkan nomor rumah, gang, atau blok..."
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1 block">City / Regency</label>
+                      <input type="text" required value={newAddress.city} onChange={(e) => setNewAddress({...newAddress, city: e.target.value})} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-xs text-gray-800 font-medium focus:border-[#ef7044] outline-none transition-colors" />
+                    </div>
+                    <div>
+                      <label className="text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1 block">Province / State</label>
+                      <input type="text" required value={newAddress.province} onChange={(e) => setNewAddress({...newAddress, province: e.target.value})} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-xs text-gray-800 font-medium focus:border-[#ef7044] outline-none transition-colors" />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1 block">Postal Code</label>
+                      <input type="text" required value={newAddress.postal_code} onChange={(e) => setNewAddress({...newAddress, postal_code: e.target.value})} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-xs text-gray-800 font-medium focus:border-[#ef7044] outline-none transition-colors" placeholder="80117" />
+                    </div>
+                    <div>
+                      <label className="text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1 block">Country (For Shipping)</label>
+                      <select value={newAddress.country_code} onChange={e => setNewAddress({...newAddress, country_code: e.target.value})} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-xs text-gray-800 font-medium focus:border-[#ef7044] outline-none appearance-none transition-colors cursor-pointer">
+                        <option value="id">Indonesia (ID)</option>
+                        <option value="sg">Singapore (SG)</option>
+                        <option value="my">Malaysia (MY)</option>
+                        <option value="au">Australia (AU)</option>
+                        <option value="us">United States (US)</option>
+                        <option value="gb">United Kingdom (GB)</option>
+                        <option value="eu">Europe (EU)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1 block">First Name</label>
+                      <input type="text" required value={newAddress.first_name} onChange={(e) => setNewAddress({...newAddress, first_name: e.target.value})} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-xs text-gray-800 font-medium focus:border-[#ef7044] outline-none transition-colors" />
+                    </div>
+                    <div>
+                      <label className="text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1 block">Last Name</label>
+                      <input type="text" required value={newAddress.last_name} onChange={(e) => setNewAddress({...newAddress, last_name: e.target.value})} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-xs text-gray-800 font-medium focus:border-[#ef7044] outline-none transition-colors" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1 block">Recipient Phone Number</label>
+                    <input type="tel" required value={newAddress.phone} onChange={(e) => setNewAddress({...newAddress, phone: e.target.value})} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-xs text-gray-800 font-medium focus:border-[#ef7044] outline-none transition-colors" />
+                  </div>
+
+                  <div className="flex gap-2 mt-2 items-start pr-4">
+                    <AlertCircle className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
+                    <p className="text-[8px] text-[#ef7044] leading-relaxed font-medium">
+                      *By saving this address, coordinate data and shipping details will be permanently stored in the Niconico Resort profile database for convenient automatic checkout.*
+                    </p>
+                  </div>
+
+                  <div className="flex gap-3 mt-4">
+                    <button 
+                      onClick={() => setIsAddingAddress(false)} 
+                      className="flex-1 py-4 rounded-xl border border-gray-200 text-gray-500 text-[10px] font-bold uppercase tracking-widest hover:bg-gray-50 transition-all"
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      onClick={handleSaveNewAddress} 
+                      disabled={isLoadingShipping}
+                      className="flex-[2] bg-[#ef7044] text-white py-4 rounded-xl font-bold border border-[#ef7044] hover:bg-black hover:border-black transition-all text-[10px] tracking-widest uppercase flex justify-center items-center gap-2 shadow-md hover:shadow-lg disabled:opacity-50"
+                    >
+                      {isLoadingShipping ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save & Verify Address"}
+                    </button>
                   </div>
                 </div>
               ) : (
