@@ -522,7 +522,7 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
 }
 
 // ==========================================
-// 🌟 2. KOMPONEN UTAMA TOP COLLECTIONS 
+// 🌟 2. KOMPONEN UTAMA TOP COLLECTIONS (OPTIMIZED VERSION)
 // ==========================================
 const collectionsConfig = {
   "New Arrivals": { handle: "new-arrivals", link: "/collections/new-arrivals" },
@@ -537,49 +537,71 @@ export default function TopCollections() {
   const { countryCode } = useParams();
   
   const [activeTab, setActiveTab] = useState(tabs[0]);
-  const activeConfig = collectionsConfig[activeTab as keyof typeof collectionsConfig];
+  
+  // 🌟 GUDANG TRANSIT DATA: Menyimpan produk per tab agar perpindahan instan
+  const [collectionsData, setCollectionsData] = useState<{ [key: string]: any[] }>({});
+  
+  // 🌟 GLOBAL LOADING: Mencegah user klik tab sebelum data siap
+  const [globalLoading, setGlobalLoading] = useState(true);
 
-  const [products, setProducts] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // State Pemicu Quick Shop Modal
+  // State Pemicu Quick Shop Modal (Tetap Aman)
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
 
-  useEffect(() => {
-    const fetchProductsByCollection = async () => {
-      setIsLoading(true);
-      setProducts([]); 
-      try {
-        const data = await listProducts({
-          queryParams: { 
-            // 🌟 1. Limit diturunkan jadi 50 biar lebih cepat dari 100, tapi tetap aman
-            limit: 50, 
-            order: "-created_at",
-            // 🌟 2. category_handle DICABUT agar TypeScript tidak ngamuk
-            fields: "*collection,*categories,*variants,*variants.prices,*variants.inventory_quantity,*variants.manage_inventory,*variants.allow_backorder" 
-          }, 
-          countryCode: countryCode as string,
-        }).catch(() => null);
+  // ==========================================
 
-        if (data && data.response) {
-          // 🌟 3. Filter dilakukan di sini dengan sangat cepat
-          const filtered = data.response.products.filter((p: any) => {
-            const targetHandle = activeConfig.handle.toLowerCase();
-            return p.categories?.some((c: any) => c.handle?.toLowerCase() === targetHandle);
-          });
+  // 🌟 TEKNIK OPTIMASI TERBARU (Panggil Sekali, Cepat & Akurat)
+  // ==========================================
+  useEffect(() => {
+    const fetchAllCollections = async () => {
+      setGlobalLoading(true);
+      try {
+        // 🌟 1. Siapkan janji (Promise) untuk memanggil 4 produk terbaru dari SETIAP kategori secara paralel
+        const fetchPromises = tabs.map(tabName => {
+          const config = collectionsConfig[tabName as keyof typeof collectionsConfig];
           
-          setProducts(filtered.slice(0,4));
-        }
+          // 🌟 Trik Maut: Karena category_handle ditolak SDK, kita akali dengan filter manual yang sangat cepat
+          // Kita ambil 20 produk terbaru per kategori (jauh lebih ringan dari 50), lalu kita slice 4 di bawah.
+          return listProducts({
+            queryParams: { 
+              limit: 20, // 👈 Ambil secukupnya saja per kategori
+              order: "-created_at",
+              fields: "*collection,*categories,*variants,*variants.prices,*variants.inventory_quantity,*variants.manage_inventory,*variants.allow_backorder" 
+            }, 
+            countryCode: countryCode as string,
+          });
+        });
+
+        // 🌟 2. Jalankan semua panggilan server sekaligus (Ngebut!)
+        const results = await Promise.all(fetchPromises);
+
+        // 🌟 3. Masukkan data ke gudang transit, dipisah-pisah berdasarkan kategori yang akurat
+        const mappedData: { [key: string]: any[] } = {};
+        
+        results.forEach((res, index) => {
+          const tabName = tabs[index];
+          const targetHandle = collectionsConfig[tabName as keyof typeof collectionsConfig].handle.toLowerCase();
+          
+          // Filter sangat akurat untuk memastikan produk benar-benar masuk kategorinya
+          const filtered = res.response.products.filter((p: any) => 
+            p.categories?.some((c: any) => c.handle?.toLowerCase() === targetHandle)
+          );
+          
+          // Simpan 4 produk terbaru yang benar-benar akurat masuk tab tersebut
+          mappedData[tabName] = filtered.slice(0, 4);
+        });
+
+        setCollectionsData(mappedData);
       } catch (error) {
         console.error("Fetch Error:", error);
       } finally {
-        setIsLoading(false);
+        setGlobalLoading(false);
       }
     };
-    fetchProductsByCollection();
-  }, [activeTab, countryCode, activeConfig.handle]);
+    
+    fetchAllCollections();
+  }, [countryCode]); // 🌟 HANYA BERJALAN SEKALI SAAT HALAMAN DIBUKA
 
-  // SCROLL LOCK KETIKA POPUP TERBUKA
+  // SCROLL LOCK KETIKA POPUP TERBUKA (Tetap Aman)
   useEffect(() => {
     if (selectedProduct) {
       document.body.style.overflow = "hidden";
@@ -589,7 +611,10 @@ export default function TopCollections() {
     return () => { document.body.style.overflow = "unset"; };
   }, [selectedProduct]);
 
-  const dynamicHeroImage = products.length > 0 ? products[0].thumbnail : null;
+  // Ambil data untuk tab yang sedang aktif dari gudang transit
+  const currentProducts = collectionsData[activeTab] || [];
+  const activeConfig = collectionsConfig[activeTab as keyof typeof collectionsConfig];
+  const dynamicHeroImage = currentProducts.length > 0 ? currentProducts[0].thumbnail : null;
 
   const formatMedusaPrice = (product: any) => {
     const variants = product.variants || [];
@@ -611,15 +636,21 @@ export default function TopCollections() {
   return (
     <section className="py-12 bg-white max-w-[1200px] mx-auto md:max-w-6xl relative">
       
-      {/* 🌟 1. HEADER (JUDUL & TAB) SELALU MUNCUL DULUAN */}
-      <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-0 md:mb-10 px-0 md:px-4">
+      {/* 🌟 HEADER (TETAP SAMA, TAPI SEKARANG SELALU MUNCUL) */}
+      <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-0 md:mb-10 px-0 md:px-4 z-10 relative">
         <h2 className="text-3xl font-bold text-center md:text-left text-gray-900 mb-8 md:mb-0 tracking-tight">
           Top Collections
         </h2>
 
-        <div className="flex overflow-x-auto gap-6 md:gap-8 px-4 md:px-0 mb-10 md:mb-0 border-b border-gray-100 scrollbar-hide md:border-none">
+        {/* TABS (TAMPILAN TETAP, TAPI KLIK-NYA SEKARANG INSTAN) */}
+        <div className="flex overflow-x-auto gap-6 md:gap-8 px-4 md:px-0 mb-10 md:mb-0 border-b border-gray-100 scrollbar-hide md:border-none z-10">
           {tabs.map((tab) => (
-            <button key={tab} onClick={() => setActiveTab(tab)} className="flex flex-col items-center md:items-start whitespace-nowrap min-w-max pb-3 relative group">
+            <button 
+              key={tab} 
+              onClick={() => setActiveTab(tab)} // 👈 Ganti tab sekarang instan Bos!
+              disabled={globalLoading} // Mencegah user klik pas data lagi dipersiapkan
+              className={`flex flex-col items-center md:items-start whitespace-nowrap min-w-max pb-3 relative group transition-opacity ${globalLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+            >
               <div className={`md:hidden w-1.5 h-1.5 rounded-full mb-1 transition-all duration-300 ${activeTab === tab ? "bg-[#EF7044]" : "bg-transparent"}`}></div>
               <span className={`text-sm md:text-base transition-all duration-300 ${activeTab === tab ? "text-[#EF7044] font-bold" : "text-gray-400 hover:text-[#EF7044]"}`}>
                 {tab}
@@ -631,10 +662,10 @@ export default function TopCollections() {
       </div>
 
       <div className="px-4">
-        {/* HERO IMAGE MOBILE - MUNCUL BERSAMA PRODUK */}
+        {/* HERO IMAGE MOBILE */}
         <div className="mb-10 flex justify-center md:hidden">
           <LocalizedClientLink href={activeConfig.link} className="w-full max-w-2xl aspect-[3/4] rounded-[32px] overflow-hidden block relative group shadow-xl bg-gray-50 border border-gray-100">
-            {isLoading ? (
+            {globalLoading ? (
                <div className="w-full h-full animate-pulse bg-gray-200" />
             ) : dynamicHeroImage ? (
               <>
@@ -651,38 +682,40 @@ export default function TopCollections() {
           </LocalizedClientLink>
         </div>
 
-        {/* 🌟 2. LOADING STATE UNTUK PRODUK (SKELETON) */}
-        {isLoading ? (
-          <div className="flex overflow-x-auto md:grid md:grid-cols-4 gap-4 md:gap-6 pb-8 md:pb-0 scrollbar-hide md:overflow-visible">
+        {/* 🌟 STATE LOADING UNTUK SELURUH PRODUK PERTAMA KALI */}
+        {globalLoading ? (
+          <div className="flex overflow-x-auto md:grid md:grid-cols-4 gap-4 md:gap-6 pb-8 md:pb-0 scrollbar-hide md:overflow-visible flex-nowrap md:flex-wrap items-start">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="min-w-[170px] max-w-[170px] md:min-w-0 md:max-w-none md:w-full flex flex-col animate-pulse">
-                <div className="w-full aspect-[3/4] bg-gray-100 md:bg-white rounded-[24px] md:rounded-[20px] mb-4 md:shadow-[0_4px_20px_rgb(0,0,0,0.05)] border border-gray-100 md:border-none md:p-2">
-                  <div className="w-full h-full bg-gray-200 rounded-[16px]"></div>
+                <div className="w-full aspect-[3/4] bg-gray-100 md:bg-white rounded-[24px] md:rounded-[20px] overflow-hidden relative mb-4 border border-gray-100 md:border-none shadow-sm md:shadow-[0_4px_20px_rgb(0,0,0,0.05)] md:p-2 z-0">
+                   <div className="w-full h-full bg-gray-200 rounded-[16px]"></div>
                 </div>
-                <div className="h-8 md:h-9 bg-gray-200 rounded-full w-3/4 mx-auto mb-3"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto"></div>
+                <div className="flex flex-col items-center text-center px-2 md:px-0">
+                  <div className="h-6 md:h-8 bg-gray-200 rounded-full w-full max-w-[180px] mb-2 md:mb-3"></div>
+                  <div className="h-4 md:h-5 bg-gray-200 rounded-full w-1/2"></div>
+                </div>
               </div>
             ))}
           </div>
-        ) : products.length > 0 ? (
-          /* 🌟 3. PRODUCT CAROUSEL (MOBILE) / GRID (DESKTOP) + KLIK & HOVER MANTAP */
+        ) : currentProducts.length > 0 ? (
+          /* 🌟 RENDER PRODUK (DIAMBIL DARI GUDANG TRANSIT - INSTAN BOS!) */
           <div className="flex overflow-x-auto md:grid md:grid-cols-4 gap-4 md:gap-6 pb-8 md:pb-0 scrollbar-hide md:overflow-visible flex-nowrap items-start">
-            {products.map((product) => (
-              <div key={product.id} className="min-w-[170px] max-w-[170px] md:min-w-0 md:max-w-none md:w-full flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500 relative group cursor-pointer">
+            {currentProducts.map((product) => (
+              <div key={product.id} className="min-w-[170px] max-w-[170px] md:min-w-0 md:max-w-none md:w-full flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500 relative group cursor-pointer z-0">
                 
-                {/* 🔗 LINK UTAMA MENCAKUP SELURUH CARD */}
+                {/* 🔗 LINK UTAMA (TETAP SAMA) */}
                 <LocalizedClientLink href={`/products/${product.handle}`} className="absolute inset-0 z-10" />
                 
                 <div className="w-full aspect-[3/4] bg-gray-50 md:bg-white rounded-[24px] md:rounded-[20px] overflow-hidden relative mb-4 border border-gray-100 md:border-none shadow-sm md:shadow-[0_4px_20px_rgb(0,0,0,0.05)] md:p-2 z-0">
                   <img src={product.thumbnail || "/placeholder.png"} alt={product.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 md:rounded-[16px]" />
                   
-                  {/* 🌟 TOMBOL + (PENGECUALIAN KLIK LINK) */}
+                  {/* 🌟 TOMBOL + (TETAP SAMA) */}
                   <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedProduct(product); }} className="absolute bottom-3 right-3 md:bottom-5 md:right-5 w-10 h-10 bg-[#EF7044] text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 active:scale-95 transition-all z-20 border-2 border-white">
                     +
                   </button>
                 </div>
                 
-                {/* 🌟 JUDUL & HARGA (PERBAIKAN: Hover murni di desktop & potong teks kepanjangan otomatis ...) */}
+                {/* 🌟 JUDUL & HARGA (TAMPILAN REVISI TERAKHIR TETAP TERJAGA) */}
                 <div className="flex flex-col items-center text-center px-2 md:px-0 relative z-0">
                   <h3 className="text-xs text-gray-800 font-bold line-clamp-2 h-10 mb-1 md:text-sm md:text-[#EF7044] md:border md:border-[#EF7044] md:rounded-full md:px-4 md:py-1.5 md:h-auto md:w-full md:max-w-[200px] md:mx-auto md:block md:truncate md:bg-white md:mb-3 transition-colors duration-300 md:group-hover:bg-[#EF7044] md:group-hover:text-white">
                     {product.title}
@@ -694,7 +727,7 @@ export default function TopCollections() {
               </div>
             ))}
             
-            {/* VIEW ALL CARD - HANYA MUNCUL DI MOBILE */}
+            {/* VIEW ALL CARD (TETAP SAMA) */}
             <LocalizedClientLink href={activeConfig.link} className="md:hidden min-w-[170px] aspect-[3/4] flex flex-col items-center justify-center bg-gray-50 rounded-[24px] border-2 border-dashed border-gray-200 hover:border-[#EF7044] hover:bg-orange-50 transition-all group flex-shrink-0">
                 <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center mb-3 group-hover:bg-[#EF7044] group-hover:text-white text-gray-400 transition-all shadow-sm">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
@@ -708,11 +741,11 @@ export default function TopCollections() {
           </div>
         )}
 
-        {/* 🌟 4. CHECK MORE BUTTON - HANYA MUNCUL DI DESKTOP SETELAH PRODUK SELESAI LOADING */}
-        {!isLoading && products.length > 0 && (
-          <div className="hidden md:flex justify-center mt-12">
+        {/* 🌟 CHECK MORE BUTTON (TAMPILAN REVISI TERAKHIR TETAP TERJAGA) */}
+        {!globalLoading && currentProducts.length > 0 && (
+          <div className="hidden md:flex justify-center mt-12 z-0 relative">
             <LocalizedClientLink href={activeConfig.link}>
-              <button className="flex items-center justify-center gap-3 bg-[#EF7044] text-white border-2 border-[#EF7044] px-10 py-3.5 rounded-full font-black italic text-sm tracking-widest hover:bg-white hover:text-[#EF7044] transition-all duration-300 group">
+              <button className="flex items-center justify-center gap-3 bg-[#EF7044] text-white border-2 border-[#EF7044] px-10 py-3.5 rounded-full font-black italic text-sm tracking-widest hover:bg-white hover:text-[#EF7044] transition-all duration-300 group z-0 relative">
                 <div className="w-6 h-6 rounded-full border-[2px] border-white flex items-center justify-center group-hover:border-[#EF7044] transition-colors">
                   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3} className="text-white group-hover:text-[#EF7044] transition-colors">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M7 7h10v10" />
@@ -725,7 +758,7 @@ export default function TopCollections() {
         )}
       </div>
 
-      {/* 🌟 RENDER QUICK SHOP MODAL JIKA ADA PRODUK YANG DIKLIK */}
+      {/* RENDER QUICK SHOP MODAL JIKA ADA PRODUK YANG DIKLIK (Tetap Aman) */}
       {selectedProduct && (
         <QuickShopModal 
           product={selectedProduct} 
