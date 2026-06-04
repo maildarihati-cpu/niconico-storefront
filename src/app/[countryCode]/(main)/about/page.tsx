@@ -76,7 +76,7 @@ export default function AboutUsPage() {
           {/* TAB 1: OUR STORY */}
           {activeTab === "our-story" && (
             <div className="flex flex-col gap-8 animate-in fade-in duration-500">
-              <div className="relative w-full aspect-[4/1] md:aspect-[6/1] bg-gray-100">
+              <div className="relative w-full aspect-[4/1] md:aspect-[21/4] bg-gray-100">
                 <Image src="/about/Niconico-Resort-About Us-Image-2.webp" alt="Our Story" fill className="object-cover" />
               </div>
               <div className="max-w-5xl mx-auto px-6 text-left pb-4">
@@ -139,8 +139,8 @@ export default function AboutUsPage() {
           {/* TAB 4: OUR HERITAGE */}
           {activeTab === "our-heritage" && (
             <div className="flex flex-col gap-8 animate-in fade-in duration-500">
-              <div className="relative w-full aspect-[4/1] md:aspect-[6/1] bg-gray-100">
-                <Image src="/public/about/Niconico-Resort-About Us-Image-2.webp" alt="Our Heritage" fill className="object-cover" />
+              <div className="relative w-full aspect-[4/1] md:aspect-[21/4] bg-gray-100">
+                <Image src="/about/Niconico-Resort-About Us-Image-2.webp" alt="Our Heritage" fill className="object-cover" />
               </div>
               <div className="max-w-5xl mx-auto px-6 text-left pb-4">
                 <div className="text-gray-700 font-normal leading-relaxed text-sm md:text-base space-y-4">
