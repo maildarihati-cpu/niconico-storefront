@@ -1,16 +1,51 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 
 export default function MakeYourOwnBrandPage() {
+  // ==========================================
+  // 🌟 STATE UNTUK DATA DARI BACKEND
+  // ==========================================
+  const [content, setContent] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // 🌟 FUNGSI PENDETEKSI VIDEO
+  const isVideo = (url: string) => {
+    if (!url) return false;
+    return url.match(/\.(mp4|webm|ogg|mov)$/i) !== null;
+  };
+
+  // 🌟 FETCH DATA DARI MEDUSA
+  useEffect(() => {
+    const fetchContent = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/myob`, { 
+          cache: 'no-store',
+          next: { revalidate: 0 } 
+        });
+        
+        const data = await res.json();
+
+        if (data && data.myob_content) {
+          setContent(data.myob_content);
+        }
+      } catch (error) {
+        console.error("Error fetching MYOB content:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchContent();
+  }, []);
+
   return (
     <main className="w-full min-h-screen bg-white text-[#111111]" style={{ fontFamily: '"Inter", sans-serif' }}>
       
       {/* ================= HERO SECTION ================= */}
       <section className="relative w-full h-[50vh] md:h-[60vh] flex items-end justify-center bg-black pb-12 md:pb-16">
         <div className="absolute inset-0 w-full h-full opacity-70">
-          {/* 🌟 Ganti src ini dengan gambar kapal Niconico yang asli */}
           <Image
             src="/about/Niconico-Resort-About Us-Image-1.webp"
             alt="Make Your Own Brand Niconico Resort"
@@ -23,45 +58,64 @@ export default function MakeYourOwnBrandPage() {
         
         <div className="relative z-10 text-center px-6 w-full">
           <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold tracking-[0.1em] text-white uppercase leading-tight drop-shadow-lg">
-            MAKE YOUR OWN BRAND
+            {/* Dinamis dari backend, kalau belum loading pakai teks default */}
+            {content?.heading || "MAKE YOUR OWN BRAND"}
           </h1>
         </div>
       </section>
 
-      {/* ================= CONTENT SECTION (VIDEO & QUOTE) ================= */}
+      {/* ================= CONTENT SECTION (SINKRON DARI MEDUSA) ================= */}
       <section className="w-full max-w-4xl mx-auto px-6 pt-10 md:pt-16 pb-6">
         
-        {/* Thumbnail Video Mockup */}
-        <div className="relative w-full aspect-[16/10] md:aspect-video bg-gray-200 rounded-[24px] md:rounded-[32px] overflow-hidden mb-8 shadow-lg group cursor-pointer">
-          {/* 🌟 Ganti src ini dengan gambar thumbnail sketsa bikini yang asli */}
-          <Image 
-            src="/sketch-thumbnail.webp" 
-            alt="Designing swimwear"
-            fill
-            className="object-cover group-hover:scale-105 transition-transform duration-700"
-          />
-          {/* Overlay Gelap Tipis & Tombol Play */}
-          <div className="absolute inset-0 bg-black/20 flex items-center justify-center transition-colors group-hover:bg-black/30">
-            <div className="w-16 h-16 md:w-20 md:h-20 bg-black/60 backdrop-blur-sm rounded-full flex items-center justify-center shadow-2xl transition-transform group-hover:scale-110">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="ml-1 md:ml-2 w-8 h-8 md:w-10 md:h-10">
-                <path d="M5 3l14 9-14 9V3z" />
-                </svg>
+        {isLoading ? (
+          // SKELETON LOADING (Biar tetep terlihat Luxury pas loading)
+          <>
+            <div className="w-full aspect-[16/10] md:aspect-video bg-gray-200 animate-pulse rounded-[24px] md:rounded-[32px] mb-8 shadow-sm"></div>
+            <div className="max-w-3xl mx-auto space-y-3 mb-12">
+              <div className="h-5 bg-gray-200 animate-pulse rounded w-3/4 mx-auto"></div>
+              <div className="h-5 bg-gray-200 animate-pulse rounded w-full mx-auto"></div>
+              <div className="h-5 bg-gray-200 animate-pulse rounded w-5/6 mx-auto"></div>
             </div>
-          </div>
-        </div>
+          </>
+        ) : (
+          content?.mediaUrl && (
+            <>
+              {/* MEDIA CARD (Otomatis menyesuaikan Gambar/Video tanpa ikon Play) */}
+              <div className="relative w-full aspect-[16/10] md:aspect-video bg-black rounded-[24px] md:rounded-[32px] overflow-hidden mb-8 shadow-lg group">
+                {isVideo(content.mediaUrl) ? (
+                  <video 
+                    src={content.mediaUrl}
+                    autoPlay 
+                    loop 
+                    muted 
+                    playsInline
+                    className="absolute inset-0 w-full h-full object-cover transform group-hover:scale-[1.02] transition-transform duration-700 ease-in-out"
+                  />
+                ) : (
+                  <Image 
+                    src={content.mediaUrl} 
+                    alt={content.heading || "MYOB Media"}
+                    fill
+                    unoptimized 
+                    priority
+                    sizes="(max-width: 768px) 100vw, 900px"
+                    className="absolute inset-0 w-full h-full object-cover transform group-hover:scale-[1.02] transition-transform duration-700 ease-in-out"
+                  />
+                )}
+              </div>
 
-        {/* Text Area */}
-        <div className="text-center max-w-3xl mx-auto mb-12 md:mb-16">
-          <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-4 px-2">
-            "We Believe True Luxury Lies in The Details and in Authenticity"
-          </h2>
-          <p className="text-sm md:text-base text-gray-800 leading-relaxed px-4 md:px-0">
-            Our velvet swimwear collection is the living embodiment of that belief. Watch as our design vision is brought to life by the masterful, from the careful selection of premium, buttery-soft velvet to the rhythmic heartbeat of a vintage sewing machine, every step is infused with precision and pride.
-          </p>
-        </div>
+              {/* QUOTE TEXT DARI BACKEND */}
+              <div className="text-center max-w-3xl mx-auto mb-12 md:mb-16">
+                <p className="text-sm md:text-base text-gray-800 font-bold leading-relaxed px-4 md:px-0">
+                  "{content.quoteVerbatim}"
+                </p>
+              </div>
+            </>
+          )
+        )}
       </section>
 
-      {/* ================= FORM SECTION (KIRIM KE EMAIL) ================= */}
+      {/* ================= FORM SECTION (KIRIM KE EMAIL NICONICO) ================= */}
       <section className="w-full max-w-lg mx-auto px-6 pb-20">
         <h3 className="text-center font-bold text-lg md:text-xl text-gray-900 mb-6">
           Let's Start Your Own Brand
@@ -144,7 +198,8 @@ export default function MakeYourOwnBrandPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M7 7h10v10" />
                 </svg>
               </div>
-              CREATE MY OWN BRAND
+              {/* Dinamis dari backend, kalau belum loading/kosong pakai teks default */}
+              {content?.buttonText || "CREATE MY OWN BRAND"}
             </button>
           </div>
         </form>
