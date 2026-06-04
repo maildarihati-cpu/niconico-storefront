@@ -2,7 +2,10 @@
 
 import React, { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { ChevronLeft, MapPin, Loader2, Tag, CheckCircle2, Mail } from "lucide-react"
+import { ChevronLeft, MapPin, Loader2, Tag, CheckCircle2, Mail, Plus } from "lucide-react"
+
+// 🌟 PERBAIKAN: Import aksi untuk menyimpan alamat permanen ke profil user
+import { saveAddressServerAction } from "@/lib/address-actions";
 
 import { 
   updateCartAddressAction, 
@@ -29,47 +32,93 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   const [shippingMethods, setShippingMethods] = useState<any[]>([])
   const [isLoadingShipping, setIsLoadingShipping] = useState(true)
   const [showAddressList, setShowAddressList] = useState(false)
+  
+  // 🌟 STATE UNTUK FORM TAMBAH ALAMAT MANUAL
+  const [isAddingAddress, setIsAddingAddress] = useState(false)
+  const [newAddress, setNewAddress] = useState({
+    first_name: customer?.first_name || "",
+    last_name: customer?.last_name || "",
+    phone: customer?.phone || "",
+    address_1: "",
+    city: "",
+    province: "",
+    postal_code: "",
+    country_code: "id", // Default Indonesia
+  })
 
-  // 1. AMBIL SHIPPING METHOD
-  useEffect(() => {
-    const fetchShippingMethods = async () => {
-      try {
-        const options = await getShippingOptionsAction(cart.id)
-        setShippingMethods(options)
-        
-        if (options.length > 0 && !cart.shipping_methods?.length) {
-          handleSelectShipping(options[0].id)
-        }
-      } catch (error) {
-        console.error("Error fetching shipping options:", error)
-      } finally {
-        setIsLoadingShipping(false)
+  // 1. FUNGSI SHIPPING (DIPISAH AGAR BISA DIPANGGIL ULANG SAAT GANTI NEGARA)
+  const fetchShippingMethods = async (currentCartId: string) => {
+    setIsLoadingShipping(true)
+    try {
+      const options = await getShippingOptionsAction(currentCartId)
+      setShippingMethods(options)
+      
+      // Auto-select kurir pertama jika belum ada yang dipilih
+      if (options.length > 0) {
+        await handleSelectShipping(options[0].id, currentCartId)
       }
+    } catch (error) {
+      console.error("Error fetching shipping options:", error)
+    } finally {
+      setIsLoadingShipping(false)
     }
-    fetchShippingMethods()
+  }
+
+  // Panggil saat komponen pertama kali dimuat
+  useEffect(() => {
+    fetchShippingMethods(cart.id)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cart.id])
 
-  const handleSelectShipping = async (optionId: string) => {
+  const handleSelectShipping = async (optionId: string, currentCartId: string = cart.id) => {
     try {
-      const updatedCart = await setShippingMethodAction(cart.id, optionId)
+      const updatedCart = await setShippingMethodAction(currentCartId, optionId)
       setCart(updatedCart)
     } catch (error) {
       console.error("Error selecting shipping method:", error)
     }
   }
 
-  // 🌟 2. FUNGSI GANTI ALAMAT SEKALIGUS SUNTIK EMAIL
+  // 2. FUNGSI GANTI ALAMAT SEKALIGUS SUNTIK EMAIL & RE-FETCH SHIPPING
   const handleUpdateAddress = async (address: any) => {
     try {
+      setIsLoadingShipping(true) // Loading kurir nyala saat ganti alamat
       const targetEmail = email || customer?.email || "";
-      // Email masuk bareng alamat, dijamin lolos inspeksi Medusa!
+      
+      // Update alamat di Cart (Otomatis mendeteksi Region/Negara di Backend Medusa)
       const updatedCart = await updateCartAddressAction(cart.id, address, targetEmail)
       setCart(updatedCart) 
       setShowAddressList(false) 
+      setIsAddingAddress(false) // Tutup form tambah alamat jika terbuka
+      
+      // 🌟 TARIK ULANG KURIR BERDASARKAN NEGARA YANG BARU DIPILIH!
+      await fetchShippingMethods(updatedCart.id)
     } catch (error) {
       console.error("Error updating address:", error)
       alert("Failed to update address. Please try again.")
+      setIsLoadingShipping(false)
+    }
+  }
+
+  // 🌟 FUNGSI SIMPAN ALAMAT MANUAL (FULL SYNC KE DATABASE & CART)
+  const handleSaveNewAddress = async () => {
+    if (!newAddress.first_name || !newAddress.address_1 || !newAddress.city) {
+      return alert("Please complete your Name, Address, and City.")
+    }
+    
+    try {
+      setIsLoadingShipping(true) // Nyalakan loading biar user tidak klik 2x
+
+      // 1. SINKRON KE ADDRESS VIEW (SIMPAN PERMANEN KE PROFIL USER)
+      await saveAddressServerAction(newAddress, customer.id) 
+
+      // 2. SINKRON KE CART CHECKOUT (Otomatis panggil ulang kurir setelahnya)
+      await handleUpdateAddress(newAddress)
+      
+    } catch (error) {
+      console.error("Gagal menyimpan alamat:", error)
+      alert("Gagal menyimpan alamat ke profil. Pastikan data sudah benar.")
+      setIsLoadingShipping(false)
     }
   }
 
@@ -89,18 +138,17 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
     }
   }
 
-  // 🌟 4. FUNGSI BAYAR (Kembali ke versi 100% aman)
+  // 4. FUNGSI BAYAR
   const handlePayNow = async () => {
     setIsPaying(true)
     
     try {
       if (!cart.shipping_methods || cart.shipping_methods.length === 0) {
-        alert("Pilih metode pengiriman dulu ya!")
+        alert("Please select a delivery method first!")
         setIsPaying(false)
         return
       }
 
-      // LANGSUNG TEMBAK XENDIT, JANGAN ADA UPDATE-UPDATE LAGI!
       const updatedCart = await initiatePaymentAction(cart.id, "pp_xendit_xendit")
 
       const xenditSession = updatedCart?.payment_collection?.payment_sessions?.find(
@@ -110,7 +158,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
       const sessionData: any = xenditSession?.data || {}
 
       if (sessionData.error) {
-        alert(`Xendit menolak pesanan: ${sessionData.error}`)
+        alert(`Error: ${sessionData.error}`)
         setIsPaying(false)
         return
       }
@@ -118,7 +166,6 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
       const invoiceUrl = sessionData.invoice_url || sessionData.invoiceUrl || sessionData.data?.invoice_url; 
 
       if (invoiceUrl) {
-        // 🌟 JURUS PARTIAL CHECKOUT: Catat barang yang dibayar untuk dihapus nanti
         const purchasedVariants = cart.items.map((item: any) => item.variant_id);
         localStorage.setItem("niconico_purchased_variants", JSON.stringify(purchasedVariants));
 
@@ -172,7 +219,10 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
           <div className="flex justify-between items-end px-1">
             <h3 className="text-[10px] font-black text-[#EF7044] uppercase tracking-[0.2em]">Shipping Address</h3>
             <button 
-              onClick={() => setShowAddressList(!showAddressList)}
+              onClick={() => {
+                setShowAddressList(!showAddressList)
+                setIsAddingAddress(false) // Reset form saat tutup/buka
+              }}
               className="text-[10px] font-bold text-gray-400 hover:text-[#EF7044] underline uppercase italic"
             >
               {showAddressList ? "Cancel" : "Change Address"}
@@ -181,29 +231,88 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
 
           {showAddressList ? (
             <div className="grid gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
-              {customer?.addresses?.map((addr: any) => (
-                <div 
-                  key={addr.id}
-                  onClick={() => handleUpdateAddress(addr)}
-                  className={`p-4 rounded-3xl border-2 transition-all cursor-pointer ${
-                    cart.shipping_address?.address_1 === addr.address_1 
-                    ? "border-[#EF7044] bg-[#EF7044]/5 shadow-sm" 
-                    : "border-gray-50 hover:border-gray-200"
-                  }`}
-                >
-                  <div className="flex justify-between items-center mb-1">
-                    <p className="text-[11px] font-black text-gray-800 uppercase italic">
-                      {addr.first_name} {addr.last_name}
-                    </p>
-                    {cart.shipping_address?.address_1 === addr.address_1 && (
-                      <CheckCircle2 className="w-4 h-4 text-[#EF7044]" />
-                    )}
+              
+              {/* 🌟 FORM TAMBAH ALAMAT MANUAL */}
+              {isAddingAddress ? (
+                <div className="p-4 rounded-3xl border-2 border-[#EF7044] bg-[#EF7044]/5 space-y-3">
+                  <h4 className="text-[10px] font-black text-[#EF7044] uppercase tracking-widest border-b border-[#EF7044]/20 pb-2 mb-2">New Address Details</h4>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <input type="text" placeholder="First Name" value={newAddress.first_name} onChange={e => setNewAddress({...newAddress, first_name: e.target.value})} className="w-full bg-white border border-gray-200 rounded-xl p-3 text-[11px] uppercase font-bold outline-none focus:border-[#EF7044]" />
+                    <input type="text" placeholder="Last Name" value={newAddress.last_name} onChange={e => setNewAddress({...newAddress, last_name: e.target.value})} className="w-full bg-white border border-gray-200 rounded-xl p-3 text-[11px] uppercase font-bold outline-none focus:border-[#EF7044]" />
                   </div>
-                  <p className="text-[10px] text-gray-400 uppercase leading-relaxed font-medium">
-                    {addr.address_1}, {addr.city}, {addr.province}
-                  </p>
+                  
+                  <input type="text" placeholder="Phone Number" value={newAddress.phone} onChange={e => setNewAddress({...newAddress, phone: e.target.value})} className="w-full bg-white border border-gray-200 rounded-xl p-3 text-[11px] uppercase font-bold outline-none focus:border-[#EF7044]" />
+                  
+                  <textarea placeholder="Full Address (Street, House No.)" value={newAddress.address_1} onChange={e => setNewAddress({...newAddress, address_1: e.target.value})} className="w-full bg-white border border-gray-200 rounded-xl p-3 text-[11px] uppercase font-bold outline-none focus:border-[#EF7044] h-20 resize-none" />
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <input type="text" placeholder="City" value={newAddress.city} onChange={e => setNewAddress({...newAddress, city: e.target.value})} className="w-full bg-white border border-gray-200 rounded-xl p-3 text-[11px] uppercase font-bold outline-none focus:border-[#EF7044]" />
+                    <input type="text" placeholder="Province / State" value={newAddress.province} onChange={e => setNewAddress({...newAddress, province: e.target.value})} className="w-full bg-white border border-gray-200 rounded-xl p-3 text-[11px] uppercase font-bold outline-none focus:border-[#EF7044]" />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <input type="text" placeholder="Postal Code" value={newAddress.postal_code} onChange={e => setNewAddress({...newAddress, postal_code: e.target.value})} className="w-full bg-white border border-gray-200 rounded-xl p-3 text-[11px] uppercase font-bold outline-none focus:border-[#EF7044]" />
+                    
+                    {/* 🌟 PEMILIHAN NEGARA (Sangat Penting untuk Auto-Region) */}
+                    <select value={newAddress.country_code} onChange={e => setNewAddress({...newAddress, country_code: e.target.value})} className="w-full bg-white border border-gray-200 rounded-xl p-3 text-[11px] uppercase font-bold outline-none focus:border-[#EF7044] appearance-none">
+                      <option value="id">Indonesia (ID)</option>
+                      <option value="sg">Singapore (SG)</option>
+                      <option value="my">Malaysia (MY)</option>
+                      <option value="au">Australia (AU)</option>
+                      <option value="us">United States (US)</option>
+                      <option value="gb">United Kingdom (GB)</option>
+                      <option value="eu">Europe (EU)</option>
+                    </select>
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    <button onClick={() => setIsAddingAddress(false)} className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-500 text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 transition-all">Cancel</button>
+                    <button onClick={handleSaveNewAddress} className="flex-1 py-3 rounded-xl bg-[#EF7044] text-white text-[10px] font-black uppercase tracking-widest shadow-md hover:bg-black transition-all">Save & Use</button>
+                  </div>
                 </div>
-              ))}
+              ) : (
+                <>
+                  {/* DAFTAR ALAMAT YANG SUDAH ADA */}
+                  {customer?.addresses?.length > 0 ? (
+                    customer.addresses.map((addr: any) => (
+                      <div 
+                        key={addr.id}
+                        onClick={() => handleUpdateAddress(addr)}
+                        className={`p-4 rounded-3xl border-2 transition-all cursor-pointer ${
+                          cart.shipping_address?.address_1 === addr.address_1 
+                          ? "border-[#EF7044] bg-[#EF7044]/5 shadow-sm" 
+                          : "border-gray-50 hover:border-gray-200"
+                        }`}
+                      >
+                        <div className="flex justify-between items-center mb-1">
+                          <p className="text-[11px] font-black text-gray-800 uppercase italic">
+                            {addr.first_name} {addr.last_name}
+                          </p>
+                          {cart.shipping_address?.address_1 === addr.address_1 && (
+                            <CheckCircle2 className="w-4 h-4 text-[#EF7044]" />
+                          )}
+                        </div>
+                        <p className="text-[10px] text-gray-400 uppercase leading-relaxed font-medium">
+                          {addr.address_1}, {addr.city}, {addr.province}
+                        </p>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-5 text-center text-[10px] text-gray-400 font-bold uppercase italic border-2 border-dashed border-gray-100 rounded-3xl">
+                      No addresses found yet.
+                    </div>
+                  )}
+
+                  {/* TOMBOL ADD NEW ADDRESS */}
+                  <button 
+                    onClick={() => setIsAddingAddress(true)}
+                    className="w-full py-4 rounded-3xl border-2 border-dashed border-gray-200 text-gray-500 text-[10px] font-black uppercase tracking-widest hover:border-[#EF7044] hover:text-[#EF7044] transition-all flex items-center justify-center gap-2 mt-2"
+                  >
+                    <Plus className="w-4 h-4" /> Add New Address
+                  </button>
+                </>
+              )}
             </div>
           ) : (
             <div className="bg-gray-50 rounded-3xl p-5 border border-gray-100 flex items-center gap-4">
@@ -216,7 +325,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                     <span className="font-black text-gray-900 italic">{cart.shipping_address.first_name} {cart.shipping_address.last_name}</span><br/>
                     {cart.shipping_address.address_1}, {cart.shipping_address.city}
                   </p>
-                ) : <p className="text-[11px] italic text-gray-400 font-bold">Pilih alamat pengirimanmu...</p>}
+                ) : <p className="text-[11px] italic text-gray-400 font-bold">Choose a shipping address...</p>}
               </div>
             </div>
           )}
@@ -268,10 +377,12 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
           
           <h4 className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80 mb-5">Delivery Method</h4>
           {isLoadingShipping ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
+            <div className="flex justify-center py-4">
+               <Loader2 className="w-5 h-5 animate-spin" />
+            </div>
           ) : (
             <div className="space-y-3">
-              {shippingMethods.map((method) => (
+              {shippingMethods.length > 0 ? shippingMethods.map((method) => (
                 <div 
                   key={method.id} 
                   onClick={() => handleSelectShipping(method.id)}
@@ -284,7 +395,11 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                   <span className="text-[10px] uppercase font-black tracking-wider">{method.name}</span>
                   <span className="text-[12px] font-black">Rp {method.amount?.toLocaleString("id-ID") || 0}</span>
                 </div>
-              ))}
+              )) : (
+                <div className="text-[10px] uppercase font-black text-white/70 italic text-center py-2">
+                  Please provide a valid shipping address to see delivery options.
+                </div>
+              )}
             </div>
           )}
 
