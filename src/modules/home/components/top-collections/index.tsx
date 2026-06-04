@@ -607,13 +607,12 @@ export default function TopCollections() {
   return (
     <section className="py-12 bg-white max-w-[1200px] mx-auto md:max-w-6xl relative">
       
-      {/* 🌟 HEADER DESKTOP KIRI-KANAN & MOBILE BAWAH-ATAS */}
+      {/* 🌟 1. HEADER (JUDUL & TAB) SELALU MUNCUL DULUAN */}
       <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-0 md:mb-10 px-0 md:px-4">
         <h2 className="text-3xl font-bold text-center md:text-left text-gray-900 mb-8 md:mb-0 tracking-tight">
           Top Collections
         </h2>
 
-        {/* TABS (UI ASLI MOBILE + PENYESUAIAN DESKTOP) */}
         <div className="flex overflow-x-auto gap-6 md:gap-8 px-4 md:px-0 mb-10 md:mb-0 border-b border-gray-100 scrollbar-hide md:border-none">
           {tabs.map((tab) => (
             <button key={tab} onClick={() => setActiveTab(tab)} className="flex flex-col items-center md:items-start whitespace-nowrap min-w-max pb-3 relative group">
@@ -628,7 +627,7 @@ export default function TopCollections() {
       </div>
 
       <div className="px-4">
-        {/* HERO IMAGE - HIDDEN DI DESKTOP */}
+        {/* HERO IMAGE MOBILE - MUNCUL BERSAMA PRODUK */}
         <div className="mb-10 flex justify-center md:hidden">
           <LocalizedClientLink href={activeConfig.link} className="w-full max-w-2xl aspect-[3/4] rounded-[32px] overflow-hidden block relative group shadow-xl bg-gray-50 border border-gray-100">
             {isLoading ? (
@@ -648,27 +647,40 @@ export default function TopCollections() {
           </LocalizedClientLink>
         </div>
 
-        {/* PRODUCT CAROUSEL MOBILE / GRID DESKTOP */}
-        {!isLoading && products.length > 0 ? (
-          <div className="flex overflow-x-auto md:grid md:grid-cols-4 gap-4 md:gap-6 pb-8 md:pb-0 scrollbar-hide flex-nowrap md:flex-wrap items-start">
+        {/* 🌟 2. LOADING STATE UNTUK PRODUK (SKELETON) */}
+        {isLoading ? (
+          <div className="flex overflow-x-auto md:grid md:grid-cols-4 gap-4 md:gap-6 pb-8 md:pb-0 scrollbar-hide md:overflow-visible">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="min-w-[170px] max-w-[170px] md:min-w-0 md:max-w-none md:w-full flex flex-col animate-pulse">
+                <div className="w-full aspect-[3/4] bg-gray-100 md:bg-white rounded-[24px] md:rounded-[20px] mb-4 md:shadow-[0_4px_20px_rgb(0,0,0,0.05)] border border-gray-100 md:border-none md:p-2">
+                  <div className="w-full h-full bg-gray-200 rounded-[16px]"></div>
+                </div>
+                <div className="h-8 md:h-9 bg-gray-200 rounded-full w-3/4 mx-auto mb-3"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto"></div>
+              </div>
+            ))}
+          </div>
+        ) : products.length > 0 ? (
+          /* 🌟 3. PRODUCT CAROUSEL (MOBILE) / GRID (DESKTOP) + KLIK & HOVER MANTAP */
+          <div className="flex overflow-x-auto md:grid md:grid-cols-4 gap-4 md:gap-6 pb-8 md:pb-0 scrollbar-hide md:overflow-visible flex-nowrap items-start">
             {products.map((product) => (
-              <div key={product.id} className="min-w-[170px] max-w-[170px] md:min-w-0 md:max-w-none md:w-full flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div key={product.id} className="min-w-[170px] max-w-[170px] md:min-w-0 md:max-w-none md:w-full flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500 relative group cursor-pointer">
                 
-                {/* 🌟 CARD IMAGE DESKTOP (PUTIH BERSHADOW) & MOBILE (ABU-ABU) */}
-                <div className="w-full aspect-[3/4] bg-gray-50 md:bg-white rounded-[24px] md:rounded-[20px] overflow-hidden relative mb-4 group border border-gray-100 md:border-none shadow-sm md:shadow-[0_4px_20px_rgb(0,0,0,0.05)] md:p-2">
+                {/* 🔗 LINK UTAMA MENCAKUP SELURUH CARD */}
+                <LocalizedClientLink href={`/products/${product.handle}`} className="absolute inset-0 z-10" />
+                
+                <div className="w-full aspect-[3/4] bg-gray-50 md:bg-white rounded-[24px] md:rounded-[20px] overflow-hidden relative mb-4 border border-gray-100 md:border-none shadow-sm md:shadow-[0_4px_20px_rgb(0,0,0,0.05)] md:p-2 z-0">
                   <img src={product.thumbnail || "/placeholder.png"} alt={product.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 md:rounded-[16px]" />
                   
-                  {/* TOMBOL + (TETAP ADA SEBAGAI QUICK SHOP TRIGGER) */}
-                  <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedProduct(product); }} className="absolute bottom-3 right-3 w-10 h-10 bg-[#EF7044] text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 active:scale-95 transition-all z-10 border-2 border-white md:bottom-5 md:right-5">
+                  {/* 🌟 TOMBOL + (PENGECUALIAN KLIK LINK) */}
+                  <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedProduct(product); }} className="absolute bottom-3 right-3 md:bottom-5 md:right-5 w-10 h-10 bg-[#EF7044] text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 active:scale-95 transition-all z-20 border-2 border-white">
                     +
                   </button>
-                  
-                  <LocalizedClientLink href={`/products/${product.handle}`} className="absolute inset-0 z-0" />
                 </div>
                 
-                {/* 🌟 JUDUL PRODUK PILL OUTLINE DI DESKTOP */}
-                <div className="flex flex-col items-center text-center px-2 md:px-0">
-                  <h3 className="text-xs text-gray-800 font-bold line-clamp-2 h-10 mb-1 md:text-sm md:text-[#EF7044] md:border md:border-[#EF7044] md:rounded-full md:px-4 md:py-1.5 md:h-auto md:w-full md:max-w-[200px] md:mx-auto md:line-clamp-1 md:bg-white md:mb-3 transition-colors">
+                {/* 🌟 JUDUL & HARGA (HOVER INVERT) */}
+                <div className="flex flex-col items-center text-center px-2 md:px-0 relative z-0">
+                  <h3 className="text-xs text-gray-800 font-bold line-clamp-2 h-10 mb-1 md:text-sm md:text-[#EF7044] md:border md:border-[#EF7044] md:rounded-full md:px-4 md:py-1.5 md:h-auto md:w-full md:max-w-[200px] md:mx-auto md:line-clamp-1 md:bg-white md:mb-3 transition-colors duration-300 group-hover:bg-[#EF7044] group-hover:text-white">
                     {product.title}
                   </h3>
                   <p className="text-[#EF7044] text-sm md:text-base font-black">
@@ -686,13 +698,13 @@ export default function TopCollections() {
                 <span className="text-gray-600 group-hover:text-[#EF7044] font-bold text-sm">View All</span>
             </LocalizedClientLink>
           </div>
-        ) : !isLoading && (
+        ) : (
           <div className="text-center py-20 bg-gray-50 rounded-[40px] border border-dashed border-gray-200">
             <p className="text-gray-400 font-medium italic">No products available in this collection.</p>
           </div>
         )}
 
-        {/* 🌟 CHECK MORE BUTTON - HANYA MUNCUL DI DESKTOP */}
+        {/* 🌟 4. CHECK MORE BUTTON - HANYA MUNCUL DI DESKTOP SETELAH PRODUK SELESAI LOADING */}
         {!isLoading && products.length > 0 && (
           <div className="hidden md:flex justify-center mt-12">
             <LocalizedClientLink href={activeConfig.link}>
