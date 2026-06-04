@@ -553,7 +553,7 @@ export default function TopCollections() {
       try {
         const data = await listProducts({
           queryParams: { 
-            limit: 150, 
+            limit: 90, 
             order: "-created_at",
             fields: "*collection,*categories,*variants,*variants.prices,*variants.inventory_quantity,*variants.manage_inventory,*variants.allow_backorder" 
           }, 
