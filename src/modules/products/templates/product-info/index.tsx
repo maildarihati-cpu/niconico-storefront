@@ -15,4 +15,5 @@ const ProductInfo = ({ product }: { product: HttpTypes.StoreProduct }) => {
   )
 }
 
+
 export default ProductInfo
