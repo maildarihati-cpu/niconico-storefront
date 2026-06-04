@@ -3,6 +3,7 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
+import StoreSection from "@modules/home/components/store-location";
 
 export default function ContactUsPage() {
   return (
@@ -12,7 +13,7 @@ export default function ContactUsPage() {
       <section className="relative w-full h-[50vh] md:h-[60vh] flex items-end justify-center bg-black pb-12 md:pb-16">
         <div className="absolute inset-0 w-full h-full opacity-70">
           <Image
-            src="/contact-hero.webp" 
+            src="/about/Niconico-Resort-About Us-Image-1.webp"
             alt="Contact Us Niconico Resort"
             fill
             className="object-cover"
@@ -120,7 +121,9 @@ export default function ContactUsPage() {
           
         </div>
       </section>
-
+        <section className="w-full mt-10">
+                <StoreSection />
+              </section>
     </main>
   );
 }
