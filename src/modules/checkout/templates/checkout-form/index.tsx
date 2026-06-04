@@ -233,6 +233,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
             <div className="grid gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
               
               {/* 🌟 FORM TAMBAH ALAMAT MANUAL */}
+              {/* 🌟 FORM TAMBAH ALAMAT MANUAL (UI KEMBAR DENGAN ADDRESSVIEW) */}
               {isAddingAddress ? (
                 <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm flex flex-col gap-4 animate-in fade-in duration-300">
                   <div className="flex justify-between items-center mb-2 border-b border-gray-100 pb-4">
@@ -240,6 +241,22 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                     <button onClick={() => setIsAddingAddress(false)} className="p-1 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors">
                       <ChevronLeft className="w-4 h-4 text-gray-800" />
                     </button>
+                  </div>
+
+                  {/* 🌟 KOTAK PIN POINT DIKEMBALIKAN UNTUK KONSISTENSI UI */}
+                  <div className="border border-[#ef7044]/20 rounded-xl p-4 relative bg-gray-50 flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-3 max-w-[75%]">
+                      <div className="p-2 bg-orange-100 rounded-lg text-[#ef7044]"><MapPin size={16}/></div>
+                      <div>
+                        <p className="text-[10px] font-bold text-gray-900 truncate">Delivery Location</p>
+                        <p className="text-[9px] text-gray-500 truncate">
+                          {newAddress.address_1 ? newAddress.address_1 : "Menyesuaikan detail alamat..."}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="bg-gray-200 text-gray-500 text-[9px] font-bold px-3 py-1.5 rounded-lg shadow-sm">
+                      Auto
+                    </div>
                   </div>
 
                   <div>

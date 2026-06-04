@@ -32,7 +32,7 @@ export default function AboutUsPage() {
       <section className="relative w-full h-[60vh] md:h-[70vh] flex items-end justify-center bg-black pb-16 md:pb-20">
         <div className="absolute inset-0 w-full h-full opacity-60">
           <Image
-            src="/images/about-hero.jpg"
+            src="/public/about/Niconico-Resort-About Us-Image-1.webp"
             alt="About Us"
             fill
             className="object-cover"
@@ -77,7 +77,7 @@ export default function AboutUsPage() {
           {activeTab === "our-story" && (
             <div className="flex flex-col gap-8 animate-in fade-in duration-500">
               <div className="relative w-full aspect-[4/1] md:aspect-[6/1] bg-gray-100">
-                <Image src="/images/our-story.jpg" alt="Our Story" fill className="object-cover" />
+                <Image src="/public/about/Niconico-Resort-About Us-Image-2.webp" alt="Our Story" fill className="object-cover" />
               </div>
               <div className="max-w-5xl mx-auto px-6 text-left pb-4">
                 <div className="text-gray-700 font-normal leading-relaxed text-sm md:text-base space-y-4">
@@ -115,7 +115,7 @@ export default function AboutUsPage() {
                 </div>
               </div>
               <div className="w-[35%] relative bg-gray-100">
-                <Image src="/images/the-craft.jpg" alt="The Craft" fill className="object-cover" />
+                <Image src="/public/about/Niconico-Resort-About Us-Image-3.webp" alt="The Craft" fill className="object-cover" />
               </div>
             </div>
           )}
@@ -124,7 +124,7 @@ export default function AboutUsPage() {
           {activeTab === "the-spirit" && (
             <div className="flex flex-row items-stretch animate-in fade-in duration-500 w-full bg-white">
               <div className="w-[35%] relative bg-gray-100">
-                <Image src="/images/the-spirit.jpg" alt="The Spirit" fill className="object-cover" />
+                <Image src="/public/about/Niconico-Resort-About Us-Image-3.webp" alt="The Spirit" fill className="object-cover" />
               </div>
               <div className="w-[65%] px-6 md:pr-20 md:pl-16 py-6 flex flex-col justify-center">
                 <div className="text-gray-700 font-normal leading-relaxed text-sm md:text-base space-y-4">
@@ -140,7 +140,7 @@ export default function AboutUsPage() {
           {activeTab === "our-heritage" && (
             <div className="flex flex-col gap-8 animate-in fade-in duration-500">
               <div className="relative w-full aspect-[4/1] md:aspect-[6/1] bg-gray-100">
-                <Image src="/images/our-heritage.jpg" alt="Our Heritage" fill className="object-cover" />
+                <Image src="/public/about/Niconico-Resort-About Us-Image-2.webp" alt="Our Heritage" fill className="object-cover" />
               </div>
               <div className="max-w-5xl mx-auto px-6 text-left pb-4">
                 <div className="text-gray-700 font-normal leading-relaxed text-sm md:text-base space-y-4">

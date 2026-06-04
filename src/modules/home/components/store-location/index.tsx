@@ -86,8 +86,9 @@ export default function StoreSection({ layout = "slider" }: StoreSectionProps) {
     <section className="pt-16 pb-12 bg-white w-full">
       <div className="max-w-[1200px] mx-auto md:max-w-6xl w-full">
         
+        {/* 🌟 KOMENTAR RUSAK SUDAH DICABUT, COMPILER AMAN */}
         {layout === "slider" && (
-          <h2 className="text-3xl font-bold text-[#ED5725] mb-8 px-4 md:px-0 uppercase">
+          <h2 className="text-3xl font-bold text-[#ED5725] mb-8 px-4 md:px-0">
             Visit Our Store
           </h2>
         )}
@@ -106,9 +107,9 @@ export default function StoreSection({ layout = "slider" }: StoreSectionProps) {
               }`}
             >
               
-              {/* 🌟 PERBAIKAN UI: Flex Column agar alamat turun ke bawah */}
               <div className="flex flex-col items-start gap-1 mb-4 min-h-[4rem]">
-                <h3 className="text-lg md:text-xl font-black text-[#ED5725] tracking-wide uppercase w-full">
+                {/* 🌟 BERSIH: Tanpa uppercase dan ukuran font proporsional */}
+                <h3 className="text-base md:text-lg font-black text-[#ED5725] tracking-wide w-full">
                   {store.name}
                 </h3>
                 <p className="text-[11px] md:text-xs text-gray-600 text-left leading-relaxed font-medium w-full break-words pr-2">
