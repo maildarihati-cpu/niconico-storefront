@@ -551,7 +551,6 @@ export default function TopCollections() {
     const fetchAllCollections = async () => {
       setGlobalLoading(true);
       try {
-        // 🌟 JARING DIBESARKAN JADI 150 BIAR SIGNATURE PASTI DAPAT!
         const data = await listProducts({
           queryParams: { 
             limit: 150, 
@@ -686,17 +685,21 @@ export default function TopCollections() {
             {currentProducts.map((product) => (
               <div key={product.id} className="min-w-[170px] max-w-[170px] md:min-w-0 md:max-w-none md:w-full flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500 relative group cursor-pointer z-0">
                 
-                <LocalizedClientLink href={`/products/${product.handle}`} className="absolute inset-0 z-10" />
+                {/* 🔗 LINK UTAMA (Z-0) Berada paling bawah menutupi seluruh card */}
+                <LocalizedClientLink href={`/products/${product.handle}`} className="absolute inset-0 z-0" />
                 
-                <div className="w-full aspect-[3/4] bg-gray-50 md:bg-white rounded-[24px] md:rounded-[20px] overflow-hidden relative mb-4 border border-gray-100 md:border-none shadow-sm md:shadow-[0_4px_20px_rgb(0,0,0,0.05)] md:p-2 z-0">
+                {/* 🌟 WADAH GAMBAR (pointer-events-none agar klik jatuh tembus ke Link) */}
+                <div className="w-full aspect-[3/4] bg-gray-50 md:bg-white rounded-[24px] md:rounded-[20px] overflow-hidden relative mb-4 border border-gray-100 md:border-none shadow-sm md:shadow-[0_4px_20px_rgb(0,0,0,0.05)] md:p-2 pointer-events-none">
                   <img src={product.thumbnail || "/placeholder.png"} alt={product.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 md:rounded-[16px]" />
                   
-                  <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedProduct(product); }} className="absolute bottom-3 right-3 md:bottom-5 md:right-5 w-10 h-10 bg-[#EF7044] text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 active:scale-95 transition-all z-20 border-2 border-white">
+                  {/* 🌟 TOMBOL + (pointer-events-auto agar dia tetap BISA diklik, dengan z-20 di atas segalanya) */}
+                  <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedProduct(product); }} className="absolute bottom-3 right-3 md:bottom-5 md:right-5 w-10 h-10 bg-[#EF7044] text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 active:scale-95 transition-all z-20 border-2 border-white pointer-events-auto">
                     +
                   </button>
                 </div>
                 
-                <div className="flex flex-col items-center text-center px-2 md:px-0 relative z-0">
+                {/* 🌟 WADAH TEKS (pointer-events-none agar klik tetap jatuh ke Link, tapi hover CSS tetap jalan dari parent) */}
+                <div className="flex flex-col items-center text-center px-2 md:px-0 relative pointer-events-none">
                   <h3 className="text-xs text-gray-800 font-bold line-clamp-2 h-10 mb-1 md:text-sm md:text-[#EF7044] md:border md:border-[#EF7044] md:rounded-full md:px-4 md:py-1.5 md:h-auto md:w-full md:max-w-[200px] md:mx-auto md:block md:truncate md:bg-white md:mb-3 transition-colors duration-300 md:group-hover:bg-[#EF7044] md:group-hover:text-white">
                     {product.title}
                   </h3>
