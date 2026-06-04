@@ -552,18 +552,22 @@ export default function TopCollections() {
       try {
         const data = await listProducts({
           queryParams: { 
-            limit: 100,
+            // 🌟 1. Limit diturunkan jadi 50 biar lebih cepat dari 100, tapi tetap aman
+            limit: 50, 
             order: "-created_at",
+            // 🌟 2. category_handle DICABUT agar TypeScript tidak ngamuk
             fields: "*collection,*categories,*variants,*variants.prices,*variants.inventory_quantity,*variants.manage_inventory,*variants.allow_backorder" 
           }, 
           countryCode: countryCode as string,
         }).catch(() => null);
 
         if (data && data.response) {
+          // 🌟 3. Filter dilakukan di sini dengan sangat cepat
           const filtered = data.response.products.filter((p: any) => {
             const targetHandle = activeConfig.handle.toLowerCase();
             return p.categories?.some((c: any) => c.handle?.toLowerCase() === targetHandle);
           });
+          
           setProducts(filtered.slice(0,4));
         }
       } catch (error) {
@@ -678,9 +682,9 @@ export default function TopCollections() {
                   </button>
                 </div>
                 
-                {/* 🌟 JUDUL & HARGA (HOVER INVERT) */}
+                {/* 🌟 JUDUL & HARGA (PERBAIKAN: Hover murni di desktop & potong teks kepanjangan otomatis ...) */}
                 <div className="flex flex-col items-center text-center px-2 md:px-0 relative z-0">
-                  <h3 className="text-xs text-gray-800 font-bold line-clamp-2 h-10 mb-1 md:text-sm md:text-[#EF7044] md:border md:border-[#EF7044] md:rounded-full md:px-4 md:py-1.5 md:h-auto md:w-full md:max-w-[200px] md:mx-auto md:line-clamp-1 md:bg-white md:mb-3 transition-colors duration-300 group-hover:bg-[#EF7044] group-hover:text-white">
+                  <h3 className="text-xs text-gray-800 font-bold line-clamp-2 h-10 mb-1 md:text-sm md:text-[#EF7044] md:border md:border-[#EF7044] md:rounded-full md:px-4 md:py-1.5 md:h-auto md:w-full md:max-w-[200px] md:mx-auto md:block md:truncate md:bg-white md:mb-3 transition-colors duration-300 md:group-hover:bg-[#EF7044] md:group-hover:text-white">
                     {product.title}
                   </h3>
                   <p className="text-[#EF7044] text-sm md:text-base font-black">
