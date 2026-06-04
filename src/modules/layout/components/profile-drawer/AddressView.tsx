@@ -254,7 +254,7 @@ const [isSettingDefault, setIsSettingDefault] = useState(false);
       setView("profile"); // Sukses simpan, baru tutup laci!
     } catch (err) {
       console.error(err);
-      alert("Gagal memilih alamat utama, say.");
+      alert("Failed to select default address, say.");
     } finally {
       setIsSettingDefault(false);
     }
@@ -279,7 +279,7 @@ const [isSettingDefault, setIsSettingDefault] = useState(false);
 
         <div className="flex-1 overflow-y-auto px-5 py-6 space-y-4">
           {localAddresses.length === 0 ? (
-            <div className="text-center mt-20 text-gray-400 text-xs">Belum ada alamat, say. Yuk tambah!</div>
+            <div className="text-center mt-20 text-gray-400 text-xs">No addresses available.</div>
           ) : (
             localAddresses.map((addr: any) => {
               const isSelected = selectedAddressId === addr.id;
@@ -376,7 +376,7 @@ const [isSettingDefault, setIsSettingDefault] = useState(false);
           <div className="flex items-start gap-3 mb-6 min-h-[40px]">
             <MapPin className="w-4 h-4 text-[#ef7044] shrink-0 mt-0.5 animate-bounce" />
             {isMapLoading ? (
-              <p className="text-[11px] text-gray-400 animate-pulse font-medium">Menerjemahkan titik koordinat peta, say...</p>
+              <p className="text-[11px] text-gray-400 animate-pulse font-medium">Translating map coordinates...</p>
             ) : (
               <p className="text-[11px] text-gray-700 leading-relaxed font-bold line-clamp-2">
                 {formData.address_1 || "Geser peta untuk menentukan titik pengiriman utama Niconico Resort."}
@@ -409,7 +409,7 @@ const [isSettingDefault, setIsSettingDefault] = useState(false);
             <div className="flex items-center gap-3 max-w-[75%]">
               <div className="p-2 bg-orange-100 rounded-lg text-[#ef7044]"><MapPin size={16}/></div>
               <div>
-                <p className="text-[10px] font-bold text-gray-900 truncate">Titik Lokasi Terpilih</p>
+                <p className="text-[10px] font-bold text-gray-900 truncate">Selected Pin Point</p>
                 <p className="text-[9px] text-gray-500 truncate">{formData.address_1}</p>
               </div>
             </div>
@@ -425,7 +425,7 @@ const [isSettingDefault, setIsSettingDefault] = useState(false);
           )}
 
           <div>
-            <label className="text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1 block">Detail Alamat / Nama Jalan Lengkap</label>
+            <label className="text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1 block">Address Detail/Street Name</label>
             <textarea 
               rows={3}
               required
@@ -437,7 +437,7 @@ const [isSettingDefault, setIsSettingDefault] = useState(false);
           </div>
 
           <div>
-            <label className="text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1 block">Patokan / Catatan Kurir</label>
+            <label className="text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1 block">Notes for Courier</label>
             <input 
               type="text" 
               value={formData.notes}
@@ -449,17 +449,17 @@ const [isSettingDefault, setIsSettingDefault] = useState(false);
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1 block">Kota / Kabupaten</label>
+              <label className="text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1 block">City / Regency</label>
               <input type="text" required value={formData.city} onChange={(e) => setFormData({...formData, city: e.target.value})} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-xs text-gray-800 font-medium bg-gray-50" />
             </div>
             <div>
-              <label className="text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1 block">Kode Pos</label>
+              <label className="text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1 block">Postal Code</label>
               <input type="text" required value={formData.postal_code} onChange={(e) => setFormData({...formData, postal_code: e.target.value})} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-xs text-gray-800 font-medium focus:border-[#ef7044] outline-none" placeholder="80117" />
             </div>
           </div>
 
           <div>
-            <label className="text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1 block">Label Alamat (Contoh: Rumah, Villa, Kantor)</label>
+            <label className="text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1 block">Address Label (Example: Home, Villa, Office)</label>
             <input 
               type="text" 
               required
@@ -471,7 +471,7 @@ const [isSettingDefault, setIsSettingDefault] = useState(false);
           </div>
 
           <div>
-            <label className="text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1 block">Nama Penerima</label>
+            <label className="text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1 block">Recipient Name</label>
             <input 
               type="text" 
               required
@@ -482,7 +482,7 @@ const [isSettingDefault, setIsSettingDefault] = useState(false);
           </div>
 
           <div>
-            <label className="text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1 block">Nomor Telepon Penerima</label>
+            <label className="text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1 block">Recipient Phone Number</label>
             <input 
               type="tel" 
               required
@@ -495,7 +495,7 @@ const [isSettingDefault, setIsSettingDefault] = useState(false);
           <div className="flex gap-2 mt-4 items-start pr-4">
             <AlertCircle className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
             <p className="text-[8px] text-[#ef7044] leading-relaxed font-medium">
-              *Dengan menyimpan alamat ini, data koordinat serta detail pengiriman akan tersimpan permanen di database profil Niconico Resort untuk kemudahan checkout otomatis.*
+              *By saving this address, coordinate data and shipping details will be permanently stored in the Niconico Resort profile database for convenient automatic checkout.*
             </p>
           </div>
 

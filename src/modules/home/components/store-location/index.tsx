@@ -29,7 +29,7 @@ export default function StoreSection({ layout = "slider" }: StoreSectionProps) {
       try {
         setLoading(true);
         const response = await fetch(`${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store-location`); 
-        if (!response.ok) throw new Error("Gagal ambil data API");
+        if (!response.ok) throw new Error("Failed to fetch store locations");
         
         const data = await response.json();
         if (data.store_locations) setStores(data.store_locations);

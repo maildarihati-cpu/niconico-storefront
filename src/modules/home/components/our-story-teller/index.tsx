@@ -19,7 +19,7 @@ const StoryTeller = () => {
         const data = await res.json()
         setReviews(data.reviews || [])
       } catch (err) {
-        console.error("Gagal narik data:", err)
+        console.error("Error fetching reviews:", err)
       }
     }
     fetchStories()

@@ -274,7 +274,7 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
         })
       }
     } catch (err) {
-      console.error("Gagal sinkronisasi wishlist ke database:", err)
+      console.error("Error synchronizing wishlist with database:", err)
     }
   }
 
@@ -282,7 +282,7 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
     setIsAdding(true)
     try {
       if (isSetBundle) {
-        if (!selectedModalTopVariant || !selectedModalBottomVariant) return alert("Pilih size Top & Bottom dulu say!")
+        if (!selectedModalTopVariant || !selectedModalBottomVariant) return alert("Please select a size for both Top and Bottom!")
         const uniqueSetId = `BUNDLE-${Date.now()}`
         await medusaAddToCart({ variantId: selectedModalTopVariant.id, quantity: setQuantity, countryCode: countryCode || "id", metadata: { is_bundle: true, bundle_id: uniqueSetId, bundle_type: "TOP", size: topSize, color: colorName }})
         await medusaAddToCart({ variantId: selectedModalBottomVariant.id, quantity: setQuantity, countryCode: countryCode || "id", metadata: { is_bundle: true, bundle_id: uniqueSetId, bundle_type: "BOTTOM", size: bottomSize, color: colorName }})
@@ -290,13 +290,13 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
         setIsSetModalOpen(false)
         onClose() 
       } else {
-        if (!selectedRegulerVariant?.id) return alert("Pilih size dulu ya say!")
+        if (!selectedRegulerVariant?.id) return alert("Please select a size first!")
         await medusaAddToCart({ variantId: selectedRegulerVariant.id, quantity: 1, countryCode: countryCode || "id", metadata: { color: colorName }})
         if (updateNavbarCartCount) updateNavbarCartCount();
         onClose() 
       }
     } catch (error) {
-      alert("Terjadi kesalahan, silakan coba lagi.")
+      alert("An error occurred. Please try again.")
     } finally {
       setIsAdding(false)
     }
@@ -339,7 +339,7 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
           <div className={selectedType === "REGULAR" ? "w-full flex flex-col" : "w-[45%] flex flex-col"}>
             {selectedType === "SET" ? (
               <div className="flex flex-col h-full justify-center">
-                <p className="text-[12px] text-gray-500 italic mb-2">Mix & Match your size!</p>
+                <p className="text-[12px] text-gray-500 italic mb-2">Choose your sizes!</p>
                 <button onClick={() => setIsSetModalOpen(true)} className="w-max bg-gray-900 text-white text-[11px] font-bold px-4 py-2 rounded-full hover:bg-[#EF7044] transition-colors">
                   Select Sizes
                 </button>

@@ -28,7 +28,7 @@ export default function MakeYourOwnBrandSection() {
           setContent(data.myob_content);
         }
       } catch (error) {
-        console.error("Gagal menarik data MYOB:", error);
+        console.error("Error fetching MYOB content:", error);
       } finally {
         setIsLoading(false);
       }

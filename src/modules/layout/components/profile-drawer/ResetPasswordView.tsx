@@ -42,7 +42,7 @@ export default function ResetPasswordView({ onClose, setView, customer }: Props)
         body: JSON.stringify({ identifier: email }),
       });
 
-      if (!response.ok) throw new Error("Gagal mengirim email reset password.");
+      if (!response.ok) throw new Error("Failed to send password reset email.");
 
       setStep("reset");
     } catch (error: any) {
@@ -59,7 +59,7 @@ export default function ResetPasswordView({ onClose, setView, customer }: Props)
     setErrorMsg(null);
 
     if (newPassword !== confirmPassword) {
-      setErrorMsg("Password dan Konfirmasi Password tidak cocok say!");
+      setErrorMsg("Password confirmation does not match.");
       setIsLoading(false);
       return;
     }
@@ -79,7 +79,7 @@ export default function ResetPasswordView({ onClose, setView, customer }: Props)
         }),
       });
 
-      if (!response.ok) throw new Error("Token salah atau sudah kedaluwarsa.");
+      if (!response.ok) throw new Error("Token is invalid or has expired.");
 
       setStep("success");
     } catch (error: any) {
@@ -131,7 +131,7 @@ export default function ResetPasswordView({ onClose, setView, customer }: Props)
           </div>
           <h3 className="text-xl font-bold text-gray-900 mb-2">Forgot Password?</h3>
           <p className="text-xs text-gray-500 leading-relaxed px-4">
-            Jangan panik say! Masukkan email yang terdaftar, kami akan kirimkan link untuk membuat password baru.
+            Don't panic! Enter your registered email, and we'll send you a link to create a new password.
           </p>
         </div>
 
@@ -176,7 +176,7 @@ export default function ResetPasswordView({ onClose, setView, customer }: Props)
           </div>
           <h3 className="text-xl font-bold text-gray-900 mb-2">Create New Password</h3>
           <p className="text-xs text-gray-500 leading-relaxed px-4">
-            Email terkirim ke <span className="font-bold text-[#ef7044]">{email}</span>. Masukkan token dari email dan buat password baru kamu.
+            Email sent to <span className="font-bold text-[#ef7044]">{email}</span>. Enter the token from the email and create a new password.
           </p>
         </div>
 
@@ -245,7 +245,7 @@ export default function ResetPasswordView({ onClose, setView, customer }: Props)
           </div>
           <h3 className="text-2xl font-bold text-gray-900 mb-2">Yeay, Berhasil!</h3>
           <p className="text-xs text-gray-500 text-center leading-relaxed mb-10 max-w-[250px]">
-            Password kamu sudah berhasil diperbarui, say. Sekarang kamu bisa login menggunakan password baru.
+            Your password has been successfully updated. You can now login using your new password.
           </p>
 
           <button

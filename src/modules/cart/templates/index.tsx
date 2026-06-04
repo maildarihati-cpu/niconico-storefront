@@ -96,7 +96,7 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
       }
       await refreshCart(false); 
     } catch (error) {
-      console.error("Gagal update qty", error);
+      console.error("Error updating quantity:", error);
     } finally {
       setIsLoadingItem(null);
     }
@@ -112,7 +112,7 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
       }
       await refreshCart(false); 
     } catch (error) {
-      console.error("Gagal hapus item", error);
+      console.error("Error removing item:", error);
     } finally {
       setIsLoadingItem(null);
     }
@@ -165,11 +165,11 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
         if (checkoutCartId) {
           router.push(`/${countryCode}/checkout?cart_id=${checkoutCartId}`);
         } else {
-          console.error("Gagal membuat checkout cart");
+          console.error("Error creating checkout cart");
         }
       }
     } catch (error) {
-      console.error("Error saat persiapan checkout:", error);
+      console.error("Error preparing checkout:", error);
     } finally {
       setTimeout(() => setIsCheckoutLoading(false), 2000);
     }

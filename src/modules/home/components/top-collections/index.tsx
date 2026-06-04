@@ -238,7 +238,7 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
     setIsAdding(true)
     try {
       if (isSetBundle) {
-        if (!selectedModalTopVariant || !selectedModalBottomVariant) return alert("Pilih size Top & Bottom dulu say!")
+        if (!selectedModalTopVariant || !selectedModalBottomVariant) return alert("Choose Top & Bottom sizes first, please!")
         const uniqueSetId = `BUNDLE-${Date.now()}`
         await addToCart({ variantId: selectedModalTopVariant.id, quantity: setQuantity, countryCode: countryCode || "id", metadata: { is_bundle: true, bundle_id: uniqueSetId, bundle_type: "TOP", size: topSize, color: colorName }})
         await addToCart({ variantId: selectedModalBottomVariant.id, quantity: setQuantity, countryCode: countryCode || "id", metadata: { is_bundle: true, bundle_id: uniqueSetId, bundle_type: "BOTTOM", size: bottomSize, color: colorName }})
@@ -246,13 +246,13 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
         setIsSetModalOpen(false)
         onClose() 
       } else {
-        if (!selectedRegulerVariant?.id) return alert("Pilih size dulu ya say!")
+        if (!selectedRegulerVariant?.id) return alert("Choose a size first, please!")
         await addToCart({ variantId: selectedRegulerVariant.id, quantity: 1, countryCode: countryCode || "id", metadata: { color: colorName }})
         if (updateNavbarCartCount) updateNavbarCartCount();
         onClose() 
       }
     } catch (error) {
-      alert("Terjadi kesalahan, silakan coba lagi.")
+      alert("An error occurred, please try again.")
     } finally {
       setIsAdding(false)
     }
@@ -295,7 +295,7 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
           <div className={selectedType === "REGULAR" ? "w-full flex flex-col" : "w-[45%] flex flex-col"}>
             {selectedType === "SET" ? (
               <div className="flex flex-col h-full justify-center">
-                <p className="text-[12px] text-gray-500 italic mb-2">Mix & Match your size!</p>
+                <p className="text-[12px] text-gray-500 italic mb-2">Choose your sizes!</p>
                 <button onClick={() => setIsSetModalOpen(true)} className="w-max bg-gray-900 text-white text-[11px] font-bold px-4 py-2 rounded-full hover:bg-[#EF7044] transition-colors">
                   Select Sizes
                 </button>
@@ -384,7 +384,7 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
                 <button onClick={() => setIsSetModalOpen(false)} className="absolute left-4 p-1 text-gray-500 hover:text-black">
                   <X className="w-6 h-6" />
                 </button>
-                <h3 className="font-bold text-lg">Mix & Match Set</h3>
+                <h3 className="font-bold text-lg">Choose Your Sizes</h3>
               </div>
               <div className="p-5 flex-1 overflow-y-auto pb-32">
                 <div className="flex gap-4 mb-6">
@@ -674,7 +674,7 @@ export default function TopCollections() {
           </div>
         ) : !isLoading && (
           <div className="text-center py-20 bg-gray-50 rounded-[40px] border border-dashed border-gray-200">
-            <p className="text-gray-400 font-medium italic">Koleksi ini sedang disiapkan.</p>
+            <p className="text-gray-400 font-medium italic">No products available in this collection.</p>
           </div>
         )}
       </div>

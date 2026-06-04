@@ -73,7 +73,7 @@ useEffect(() => {
       }
     })
       .then((res) => {
-        if (!res.ok) throw new Error("Gagal mengambil produk");
+        if (!res.ok) throw new Error("Failed to fetch products");
         return res.json();
       })
       .then((data) => {
@@ -81,7 +81,7 @@ useEffect(() => {
           setProducts(data.products);
         }
       })
-      .catch((err) => console.error("Gagal menarik data database:", err));
+      .catch((err) => console.error("Error fetching products:", err));
   }, []);
 
   const formatPrice = (product: any) => {

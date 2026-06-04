@@ -41,7 +41,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
           handleSelectShipping(options[0].id)
         }
       } catch (error) {
-        console.error("Gagal ambil shipping:", error)
+        console.error("Error fetching shipping options:", error)
       } finally {
         setIsLoadingShipping(false)
       }
@@ -55,7 +55,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
       const updatedCart = await setShippingMethodAction(cart.id, optionId)
       setCart(updatedCart)
     } catch (error) {
-      console.error("Gagal set shipping:", error)
+      console.error("Error selecting shipping method:", error)
     }
   }
 
@@ -68,7 +68,8 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
       setCart(updatedCart) 
       setShowAddressList(false) 
     } catch (error) {
-      alert("Gagal mengganti alamat, silakan coba lagi.")
+      console.error("Error updating address:", error)
+      alert("Failed to update address. Please try again.")
     }
   }
 
@@ -80,9 +81,9 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
       const updatedCart = await applyPromoCodeAction(cart.id, promoCode)
       setCart(updatedCart)
       setPromoCode("")
-      alert("Voucher berhasil dipasang!")
+      alert("Yeay, voucher applied!")
     } catch (error) {
-      alert("Yah, kode vouchernya gak valid nih.")
+      alert("Failed to apply promo code. Please check the code and try again.")
     } finally {
       setIsApplyingPromo(false)
     }
@@ -123,12 +124,13 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
 
         window.location.href = String(invoiceUrl) 
       } else {
-        alert("Gagal mendapatkan link pembayaran dari gateway. Silakan coba lagi.")
+        alert("Failed to initiate payment. Please try again.")
         setIsPaying(false)
       }
 
     } catch (error) {
-      alert("Terjadi kesalahan jaringan, silakan coba lagi.")
+      console.error("Error initiating payment:", error)
+      alert("Failed to initiate payment. Please try again.")
       setIsPaying(false)
     }
   }

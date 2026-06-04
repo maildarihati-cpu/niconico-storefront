@@ -250,7 +250,7 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
         })
       }
     } catch (err) {
-      console.error("Gagal sinkronisasi wishlist ke database:", err)
+      console.error("Error synchronizing wishlist with database:", err)
     }
   }
 
@@ -259,7 +259,7 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
     setIsAdding(true)
     try {
       if (isSetBundle) {
-        if (!selectedModalTopVariant || !selectedModalBottomVariant) return alert("Pilih size Top & Bottom dulu say!")
+        if (!selectedModalTopVariant || !selectedModalBottomVariant) return alert("Please select a size for both Top and Bottom!")
         const uniqueSetId = `BUNDLE-${Date.now()}`
         
         await addToCart({ 
@@ -290,12 +290,12 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
         if (redirectToCart) {
           router.push(`/${countryCode}/cart`);
         } else {
-          alert(`Berhasil masuk keranjang!`);
+          alert(`Successfully added ${setQuantity} bundle(s) to cart!`);
           setIsSetModalOpen(false);
         }
 
       } else {
-        if (!selectedRegulerVariant?.id) return alert("Pilih size dulu ya say!")
+        if (!selectedRegulerVariant?.id) return alert("Please select a size first!")
         await addToCart({ 
           variantId: selectedRegulerVariant.id, 
           quantity: 1, 
@@ -318,11 +318,11 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
         if (redirectToCart) {
           router.push(`/${countryCode}/cart`);
         } else {
-          alert(`Berhasil masuk keranjang!`);
+          alert(`Successfully added 1 item to cart!`);
         }
       }
     } catch (error) {
-      alert("Terjadi kesalahan, silakan coba lagi.")
+      alert("An error occurred. Please try again.")
     } finally {
       setIsAdding(false)
     }

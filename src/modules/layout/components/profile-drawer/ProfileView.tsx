@@ -78,7 +78,7 @@ export default function ProfileView({ onClose, setView, customer, onSuccess }: P
 
     } catch (error: any) {
       console.error("💥 Error Update:", error);
-      setErrorMessage(error.message || "Gagal simpan perubahan.");
+      setErrorMessage(error.message || "An unexpected error occurred.");
     } finally {
       setIsSaving(false);
     }
@@ -94,7 +94,7 @@ export default function ProfileView({ onClose, setView, customer, onSuccess }: P
       // Tendang paksa ke Home tanpa ampun
       window.location.href = "/"; 
     } catch (err) {
-      console.error("Gagal logout", err);
+      console.error("Failed to logout", err);
       setIsLoggingOut(false);
     }
   };
@@ -238,7 +238,7 @@ export default function ProfileView({ onClose, setView, customer, onSuccess }: P
         {showSuccess ? (
           <div className="flex-1 flex flex-col items-center justify-center px-10 animate-in zoom-in duration-300">
             <CheckCircle2 className="w-14 h-14 text-green-500 mb-4" />
-            <p className="text-xs text-gray-400 text-center font-medium">Updated! Data sudah aman di database Medusa, say.</p>
+            <p className="text-xs text-gray-400 text-center font-medium">Updated! Data is securely saved in the database.</p>
           </div>
         ) : (
           <form onSubmit={handleUpdateProfile} className="flex-1 flex flex-col px-8 pt-6 pb-10 overflow-y-auto">
