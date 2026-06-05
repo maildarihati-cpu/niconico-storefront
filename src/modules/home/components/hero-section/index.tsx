@@ -3,13 +3,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+// 🌟 DITAMBAHKAN ArrowRight untuk ikon button
+import { ArrowRight } from "lucide-react"; 
 
 export default function HeroSection() {
   const [slides, setSlides] = useState<any[]>([]);
-  const [globalTitle, setGlobalTitle] = useState("Simply Be Your Moment\nYour Confidence");
+  const [globalTitle, setGlobalTitle] = useState("Simply Be Your Own\nKind Of Confidence");
   const [heroIndex, setHeroIndex] = useState(0);
   
-  // 1. TAMBAH STATE LOADING DI SINI BOS
   const [isLoading, setIsLoading] = useState(true); 
 
   useEffect(() => {
@@ -33,7 +34,6 @@ export default function HeroSection() {
       } catch (error) {
         console.error("Error Hero:", error);
       } finally {
-        // 2. MATIKAN LOADING SETELAH SELESAI (Berhasil ataupun Gagal)
         setIsLoading(false);
       }
     };
@@ -51,12 +51,10 @@ export default function HeroSection() {
     return () => clearInterval(interval);
   }, [slides.length]);
 
-  // 3. TAMPILAN LOADING ELEGAN (Mencegah gambar lama bocor)
   if (isLoading) {
     return (
       <section className="relative w-full h-[100vh] bg-gray-900 flex flex-col items-center justify-center">
-         {/* Spinner simpel ala Niconico */}
-         <div className="w-8 h-8 border-2 border-white/20 border-t-[#ED5725] rounded-full animate-spin mb-4"></div>
+         <div className="w-8 h-8 border-2 border-white/20 border-t-[#EF7044] rounded-full animate-spin mb-4"></div>
          <p className="text-[10px] font-bold tracking-[0.2em] text-white/40 uppercase animate-pulse">
            Loading Niconico...
          </p>
@@ -89,7 +87,6 @@ export default function HeroSection() {
           </div>
         ))
       ) : (
-        // Gambar default ini HANYA akan muncul jika Backend benar-benar kosong melompong
         <div className="absolute inset-0">
           <Image src="/hero-1.png" alt="Niconico Hero Campaign" fill className="object-cover" priority />
         </div>
@@ -99,13 +96,12 @@ export default function HeroSection() {
       <div className="absolute inset-0 bg-black/30 z-[5] pointer-events-none" />
       
       {/* KONTEN TEKS & TOMBOL */}
-      {/* 🌟 PERUBAHAN DI SINI: Flex items-center dicabut dari pembungkus luar */}
       <div className="absolute inset-0 flex flex-col justify-end pb-24 px-8 z-10 bg-gradient-to-t from-black/60 via-transparent to-transparent">
         
-        {/* 🌟 WRAPPER BARU: Di Mobile rata tengah (items-center text-center), di Desktop rata kiri (lg:items-start lg:text-left) */}
-        <div className="w-full max-w-[1200px] mx-auto flex flex-col items-center lg:items-start text-center lg:text-left">
+        <div className="w-full max-w-[1200px] mx-auto flex flex-col items-center lg:items-start text-center lg:text-left mb-4 lg:mb-12">
           
-          <h1 className="text-[32px] md:text-[42px] lg:text-[56px] leading-[1.1] font-regular text-white mb-3 tracking-tight whitespace-pre-line drop-shadow-md">
+          {/* 🌟 PERUBAHAN FONT: font-semibold (600) lebih tipis dari bold (700) tapi lebih tebal dari regular (400) */}
+          <h1 className="text-[32px] md:text-[42px] lg:text-[56px] font-semibold leading-[1.1] text-white mb-3 tracking-tight whitespace-pre-line drop-shadow-md">
             {globalTitle}
           </h1>
           
@@ -113,25 +109,29 @@ export default function HeroSection() {
             Resort & Swimwear Est. 2004
           </p>
           
-          <Link href="/store" className="w-full max-w-[280px] mb-8">
-            <button className="w-full bg-[#ED5725] text-white py-4 rounded-full font-bold text-xs tracking-widest uppercase transition-all shadow-lg hover:bg-white hover:text-[#ED5725]">
-              SHOP NOW
+          <Link href="/store" className="w-full max-w-[280px]">
+            {/* 🌟 PERUBAHAN BUTTON: Tambah ikon lingkaran panah dengan efek hover revert */}
+            <button className="group w-full bg-[#EF7044] text-white py-2.5 pr-6 pl-2.5 rounded-full font-bold text-xs tracking-widest uppercase transition-all shadow-lg hover:bg-white hover:text-[#EF7044] flex items-center justify-center gap-4">
+              <div className="w-8 h-8 rounded-full bg-white text-[#EF7044] flex items-center justify-center group-hover:bg-[#EF7044] group-hover:text-white transition-colors shrink-0 shadow-sm">
+                <ArrowRight className="w-4 h-4" strokeWidth={3} />
+              </div>
+              <span>SHOP NOW</span>
             </button>
           </Link>
 
-          {/* HERO DOTS */}
-          <div className="flex gap-2">
-            {Array.from({ length: totalDots }).map((_, i) => (
-              <div 
-                key={i} 
-                onClick={() => setHeroIndex(i)}
-                className={`h-1.5 rounded-full transition-all duration-500 cursor-pointer ${
-                  i === heroIndex ? "w-8 bg-[#ED5725]" : "w-2 bg-white/50 hover:bg-white/80"
-                }`}
-              />
-            ))}
-          </div>
+        </div>
 
+        {/* 🌟 PERUBAHAN DOTS: Dikunci mati di tengah bawah layar pakai absolute */}
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-2">
+          {Array.from({ length: totalDots }).map((_, i) => (
+            <div 
+              key={i} 
+              onClick={() => setHeroIndex(i)}
+              className={`h-1.5 rounded-full transition-all duration-500 cursor-pointer ${
+                i === heroIndex ? "w-8 bg-[#EF7044]" : "w-2 bg-white/50 hover:bg-white/80"
+              }`}
+            />
+          ))}
         </div>
 
       </div>

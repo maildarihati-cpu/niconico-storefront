@@ -21,11 +21,11 @@ const ImageGallery = ({ images }: { images: any[] }) => {
   if (!images?.length) return null
 
   return (
-    // PERHATIKAN BARIS INI SAY: rounded-b-[40px] diganti jadi rounded-[5pt]
-    <div className="relative w-full aspect-[4/5] bg-gray-100 overflow-hidden rounded-[10pt]">
+    // 🌟 LOGIK DESKTOP: Bikin aspect ratio jadi auto, tinggi maksimal selebar layar (h-[calc...]), dan sticky melayang ngikutin scroll di desktop!
+    <div className="relative w-full aspect-[4/5] lg:aspect-auto lg:h-[calc(100vh-140px)] lg:sticky lg:top-[120px] bg-gray-100 overflow-hidden rounded-[10pt] lg:rounded-[20px] shadow-sm">
       
-      {/* FLOATING BUTTONS (BACK & WISHLIST) */}
-      <div className="absolute top-5 left-5 right-5 flex justify-between items-center z-10">
+      {/* FLOATING BUTTONS (HILANG DI DESKTOP KARENA SUDAH ADA NAVBAR & MENU DI KANAN) */}
+      <div className="absolute top-5 left-5 right-5 flex lg:hidden justify-between items-center z-10">
         <button onClick={() => router.back()} className="w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm text-gray-800 hover:bg-white transition-colors">
           <ChevronLeft className="w-6 h-6 -ml-0.5" />
         </button>

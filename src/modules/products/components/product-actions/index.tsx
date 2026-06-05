@@ -22,14 +22,12 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
   const { cart: mainCart, addToCart: refreshCartCount } = useCart() 
   const posthog = usePostHog()
 
-  // 🌟 LOGIKA WARNA
   const colorName = product?.metadata?.color_name || "White"
   const colorId = product?.metadata?.color_id || "#FFFFFF" 
   const groupId = product?.metadata?.group_id || null 
 
   const [relatedProducts, setRelatedProducts] = useState<any[]>([])
 
-  // 🌟 FETCH PRODUK SAUDARA (PAKAI HANDLE LOGIC BYPASS MEDUSA)
   useEffect(() => {
     const fetchRelatedColors = async () => {
       if (!groupId) {
@@ -41,7 +39,6 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
         const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000";
         const apiKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "";
 
-        // Tarik 100 produk terbaru
         const res = await fetch(`${backendUrl}/store/products?limit=100`, {
           method: "GET",
           headers: {
@@ -52,8 +49,6 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
 
         if (res.ok) {
           const data = await res.json();
-          
-          // Filter saudara berdasarkan kemiripan 'handle' (karena metadata disembunyikan API)
           const trueSiblings = data.products?.filter((p: any) => {
             return p.handle?.toLowerCase().includes(groupId.toLowerCase());
           }) || [];
@@ -118,13 +113,8 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
 
     const sizes = variantsToUse.map((v: any) => {
       const sizeOpt = v.options?.find((o: any) => !["top", "bottom"].includes(o.value?.toLowerCase().trim()))
-      
       let sizeVal = sizeOpt?.value || v.title?.replace(/top|bottom/i, '').trim() || "All Size"
-      
-      if (sizeVal.toLowerCase().includes("default option")) {
-        sizeVal = "All Size"
-      }
-
+      if (sizeVal.toLowerCase().includes("default option")) sizeVal = "All Size"
       const qty = v.inventory_quantity || 0
       const inStock = v.manage_inventory === false || v.allow_backorder === true || qty > 0
       return { label: sizeVal, inStock, variant: v, qty }
@@ -154,14 +144,9 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
   const getModalSizes = (variants: any[]) => {
     return variants.map((v: any) => {
       let sizeVal = v.options?.find((o: any) => !["top", "bottom"].includes(o.value?.toLowerCase().trim()))?.value || "All Size"
-      
-      if (sizeVal.toLowerCase().includes("default option")) {
-        sizeVal = "All Size"
-      }
-
+      if (sizeVal.toLowerCase().includes("default option")) sizeVal = "All Size"
       const qty = v.inventory_quantity || 0
       const inStock = v.manage_inventory === false || v.allow_backorder === true || qty > 0
-      
       return { label: sizeVal, inStock, variant: v, qty }
     })
   }
@@ -211,7 +196,6 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
     }
   }, [product.id])
 
-  // 🌟 LOGIKA WISHLIST YANG SUDAH DIPERBAIKI (SINKRONISASI AKTIF)
   const toggleWishlist = async () => {
     const localWishlist = JSON.parse(localStorage.getItem("wishlist") || "[]")
     let updatedWishlist = []
@@ -222,11 +206,9 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
       updatedWishlist = [...localWishlist, product.id]
     }
     
-    // 1. Selalu simpan di Local Storage agar responsif di sisi kustomer
     localStorage.setItem("wishlist", JSON.stringify(updatedWishlist))
     setIsWishlisted(!isWishlisted)
 
-    // 2. Jurus Update Database Medusa Jika Login
     const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://api.niconicoresort.com"
     try {
       const customerRes = await fetch(`${backendUrl}/store/customers/me`, {
@@ -254,7 +236,6 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
     }
   }
 
-  // 🌟 LOGIKA BUY NOW YANG SUDAH DIUBAH (Langsung Lempar ke Cart)
   const handleBuyNow = async (isSetBundle = false, redirectToCart = false) => {
     setIsAdding(true)
     try {
@@ -275,7 +256,6 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
           metadata: { is_bundle: true, bundle_id: uniqueSetId, bundle_type: "BOTTOM", size: bottomSize, color: colorName }
         })
 
-        // 🌟 SUNTIKKAN SENSOR 'ADD TO CART' UNTUK PEMBELIAN BUNDLE DI SINI
         if (posthog) {
           posthog.capture('add_to_cart', {
             product_id: product.id,
@@ -303,12 +283,11 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
           metadata: { color: colorName }
         })
         
-        // 🌟 SUNTIKKAN SENSOR 'ADD TO CART' UNTUK PEMBELIAN REGULER DI SINI
         if (posthog) {
           posthog.capture('add_to_cart', {
             product_id: product.id,
             product_name: product.title,
-            product_type: selectedType, // Mencatat apakah dia beli Top saja atau Bottom saja
+            product_type: selectedType, 
             quantity: 1
           })
         }
@@ -331,21 +310,19 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
   if (!selectedType) return null;
 
   return (
-    <div className="flex flex-col mt-1">
-      <h2 className="text-xl md:text-2xl font-black text-[#EF7044] mb-4">{mainDisplayPrice}</h2>
+    <div className="flex flex-col mt-4 lg:mt-0">
+      <h2 className="text-xl md:text-2xl lg:text-3xl font-black text-[#EF7044] mb-4 lg:mb-6">{mainDisplayPrice}</h2>
 
       {/* 🌟 TAMPILAN WARNA BERJEJER */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-6 lg:mb-8">
         <div className="flex items-center gap-3">
-          <p className="text-[13px] text-gray-500 font-medium">Color : {colorName}</p>
+          <p className="text-[13px] lg:text-[15px] text-gray-500 font-medium">Color : {colorName}</p>
           
-          {/* List Warna Berjejer ke Samping */}
           <div className="flex flex-wrap gap-2">
             {relatedProducts.length > 0 ? (
               relatedProducts.map((relProd: any) => {
                 const isActive = relProd.id === product.id;
                 
-                // 🌟 JURUS HACKER LEBIH PINTAR: Cari warna spesifik di dalam URL
                 let extractedColor = "#eeeeee"; 
                 let displayName = "Unknown";
                 
@@ -354,8 +331,6 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
                    displayName = relProd.metadata.color_name || "Unknown";
                 } else if (relProd.handle) {
                    const handleStr = relProd.handle.toLowerCase();
-                   
-                   // Kamus warna lengkap
                    const colorDictionary: Record<string, string> = {
                       "black": "#222222", "white": "#FFFFFF", "navy": "#000080", 
                       "nude": "#E3BC9A", "pink": "#FFC0CB", "red": "#FF0000", 
@@ -368,7 +343,6 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
 
                    let foundColor = false;
                    for (const [cName, cHex] of Object.entries(colorDictionary)) {
-                     // Jika URL mengandung kata warna (contoh: eliana-swimsuit-black)
                      if (handleStr.includes(`-${cName}`) || handleStr.endsWith(cName)) {
                        extractedColor = cHex;
                        displayName = cName.toUpperCase();
@@ -377,7 +351,6 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
                      }
                    }
 
-                   // Jika tidak ada di kamus, ambil kata terakhir di URL sebagai warna paksaan
                    if (!foundColor) {
                      const parts = handleStr.split('-');
                      const lastWord = parts[parts.length - 1];
@@ -395,7 +368,7 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
                         router.push(`/${countryCode}/products/${relProd.handle}`);
                       }
                     }}
-                    className={`w-7 h-7 rounded-full p-[2px] transition-all hover:scale-110 ${isActive ? 'border-2 border-[#EF7044] cursor-default' : 'border border-gray-300 hover:border-gray-500 shadow-sm'}`}
+                    className={`w-7 h-7 lg:w-8 lg:h-8 rounded-full p-[2px] transition-all hover:scale-110 ${isActive ? 'border-2 border-[#EF7044] cursor-default' : 'border border-gray-300 hover:border-gray-500 shadow-sm'}`}
                   >
                     <div 
                       className="w-full h-full rounded-full border border-gray-100" 
@@ -405,8 +378,7 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
                 )
               })
             ) : (
-              // Fallback ketika data masih loading atau gagal ditarik
-              <div className="w-7 h-7 rounded-full p-[2px] border-2 border-[#EF7044] shadow-sm cursor-default">
+              <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-full p-[2px] border-2 border-[#EF7044] shadow-sm cursor-default">
                 <div className="w-full h-full rounded-full border border-gray-100" style={{ backgroundColor: colorId }}></div>
               </div>
             )}
@@ -414,35 +386,35 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
         </div>
 
         <div className="flex items-center gap-2">
-          <button onClick={toggleWishlist} className={`p-2 border rounded-full transition-colors ${isWishlisted ? "border-[#EF7044] bg-[#EF7044] text-white" : "border-[#EF7044] text-[#EF7044] hover:bg-orange-50"}`}>
-            <Heart className={`w-5 h-5 ${isWishlisted ? "fill-current" : ""}`} />
+          <button onClick={toggleWishlist} className={`p-2 lg:p-2.5 border rounded-full transition-colors ${isWishlisted ? "border-[#EF7044] bg-[#EF7044] text-white" : "border-[#EF7044] text-[#EF7044] hover:bg-orange-50"}`}>
+            <Heart className={`w-5 h-5 lg:w-6 lg:h-6 ${isWishlisted ? "fill-current" : ""}`} />
           </button>
-          <button onClick={() => selectedType === "SET" ? setIsSetModalOpen(true) : handleBuyNow(false, false)} disabled={isAdding || (selectedType !== "SET" && !selectedRegulerVariant)} className="p-2 border border-[#EF7044] rounded-full hover:bg-orange-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-            <ShoppingCart className={`w-5 h-5 ${isAdding ? "text-gray-400" : "text-[#EF7044]"}`} />
+          <button onClick={() => selectedType === "SET" ? setIsSetModalOpen(true) : handleBuyNow(false, false)} disabled={isAdding || (selectedType !== "SET" && !selectedRegulerVariant)} className="p-2 lg:p-2.5 border border-[#EF7044] rounded-full hover:bg-orange-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            <ShoppingCart className={`w-5 h-5 lg:w-6 lg:h-6 ${isAdding ? "text-gray-400" : "text-[#EF7044]"}`} />
           </button>
         </div>
       </div>
 
-      <div className="flex flex-row items-start justify-between gap-3 mb-8">
+      <div className="flex flex-row items-start justify-between gap-3 mb-8 lg:mb-12">
         <div className={selectedType === "REGULAR" ? "w-full flex flex-col" : "w-[45%] flex flex-col"}>
           {selectedType === "SET" ? (
             <div className="flex flex-col h-full justify-center">
-              <p className="text-[12px] text-gray-500 italic mb-2">Mix & Match your size!</p>
-              <button onClick={() => setIsSetModalOpen(true)} className="w-max bg-gray-900 text-white text-[11px] font-bold px-4 py-2 rounded-full hover:bg-[#EF7044] transition-colors">
+              <p className="text-[12px] lg:text-[14px] text-gray-500 italic mb-2">Mix & Match your size!</p>
+              <button onClick={() => setIsSetModalOpen(true)} className="w-max bg-gray-900 text-white text-[11px] lg:text-[13px] font-bold px-4 py-2 lg:py-2.5 rounded-full hover:bg-[#EF7044] transition-colors">
                 Select Sizes
               </button>
             </div>
           ) : (
             <>
               <div className="flex justify-between items-center mb-3">
-                <p className="text-[13px] text-gray-500 font-medium">
+                <p className="text-[13px] lg:text-[15px] text-gray-500 font-medium">
                   Size <span className="ml-2">: {selectedSize || "Select"}</span>
                 </p>
                 {(() => {
                   const currentSize = sizesForType.find((s: SizeData) => s.label === selectedSize);
                   if (currentSize?.variant?.manage_inventory) {
                     return (
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${currentSize.qty <= 3 ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-600'}`}>
+                      <span className={`text-[10px] lg:text-[11px] font-bold px-2 py-0.5 rounded-full ${currentSize.qty <= 3 ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-600'}`}>
                         Stock Available: {currentSize.qty}
                       </span>
                     )
@@ -455,8 +427,8 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
                 <div className="flex flex-row flex-wrap gap-1.5 mb-4">
                   {sizesForType.map((size: SizeData) => (
                     <button key={size.label} disabled={!size.inStock} onClick={() => setSelectedSize(size.label)}
-                      className={`relative h-8 shrink-0 rounded-full border flex items-center justify-center text-[10px] font-bold transition-all
-                        ${size.label === "All Size" ? "w-max px-3" : "w-8"}
+                      className={`relative h-8 lg:h-10 shrink-0 rounded-full border flex items-center justify-center text-[10px] lg:text-[12px] font-bold transition-all
+                        ${size.label === "All Size" ? "w-max px-3 lg:px-5" : "w-8 lg:w-10"}
                         ${!size.inStock ? 'border-gray-200 text-gray-300 cursor-not-allowed' : selectedSize === size.label ? 'bg-[#EF7044] border-[#EF7044] text-white shadow-md' : 'border-gray-300 text-gray-700 hover:border-[#EF7044]'}
                       `}>
                       {size.label}
@@ -468,54 +440,56 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
             </>
           )}
 
-          <button onClick={() => setIsSizeGuideOpen(true)} className="flex items-center gap-1.5 text-[11px] font-bold text-black hover:text-[#EF7044] transition-colors w-max mt-auto">
-            <Ruler className="w-3 h-3" /> Size Guide <span className="ml-1">›</span>
+          <button onClick={() => setIsSizeGuideOpen(true)} className="flex items-center gap-1.5 text-[11px] lg:text-[13px] font-bold text-black hover:text-[#EF7044] transition-colors w-max mt-auto">
+            <Ruler className="w-3 h-3 lg:w-4 lg:h-4" /> Size Guide <span className="ml-1">›</span>
           </button>
         </div>
 
         {selectedType !== "REGULAR" && (
-          <div className="w-[55%] flex flex-row gap-1.5">
+          <div className="w-[55%] flex flex-row gap-1.5 lg:gap-3">
             {availableTypes.includes("SET") && (
               <button onClick={() => { setSelectedType("SET"); setIsSetModalOpen(true); }} className="flex-1 flex flex-col gap-1.5 group">
-                <div className={`relative aspect-[3/4] w-full rounded-[5pt] overflow-hidden border-2 transition-all ${selectedType === "SET" ? "border-[#EF7044]" : "border-transparent"}`}>
+                <div className={`relative aspect-[3/4] w-full rounded-[5pt] lg:rounded-xl overflow-hidden border-2 transition-all ${selectedType === "SET" ? "border-[#EF7044]" : "border-transparent"}`}>
                   <img src={mainImage} className="w-full h-full object-cover object-center" alt="Set" />
-                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40"><span className="text-white text-[8px] font-bold tracking-widest">SET</span></div>
+                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40"><span className="text-white text-[8px] lg:text-[10px] font-bold tracking-widest">SET</span></div>
                 </div>
-                <p className="text-[8px] text-center font-medium text-gray-500 truncate">{formatPrice(setPrice)}</p>
+                <p className="text-[8px] lg:text-[11px] text-center font-medium text-gray-500 truncate">{formatPrice(setPrice)}</p>
               </button>
             )}
 
             {availableTypes.includes("TOP") && (
               <button onClick={() => setSelectedType("TOP")} className="flex-1 flex flex-col gap-1.5 group">
-                <div className={`relative aspect-[3/4] w-full rounded-[5pt] overflow-hidden border-2 transition-all ${selectedType === "TOP" ? "border-[#EF7044]" : "border-transparent"}`}>
+                <div className={`relative aspect-[3/4] w-full rounded-[5pt] lg:rounded-xl overflow-hidden border-2 transition-all ${selectedType === "TOP" ? "border-[#EF7044]" : "border-transparent"}`}>
                   <img src={mainImage} className="w-full h-full object-cover object-top scale-[1.3] origin-top" alt="Top" />
-                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40"><span className="text-white text-[8px] font-bold tracking-widest">TOP</span></div>
+                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40"><span className="text-white text-[8px] lg:text-[10px] font-bold tracking-widest">TOP</span></div>
                 </div>
-                <p className="text-[8px] text-center font-medium text-gray-500 truncate">{formatPrice(getVariantPrice(topVariants[0]) || 0)}</p>
+                <p className="text-[8px] lg:text-[11px] text-center font-medium text-gray-500 truncate">{formatPrice(getVariantPrice(topVariants[0]) || 0)}</p>
               </button>
             )}
 
             {availableTypes.includes("BOTTOM") && (
               <button onClick={() => setSelectedType("BOTTOM")} className="flex-1 flex flex-col gap-1.5 group">
-                <div className={`relative aspect-[3/4] w-full rounded-[5pt] overflow-hidden border-2 transition-all ${selectedType === "BOTTOM" ? "border-[#EF7044]" : "border-transparent"}`}>
+                <div className={`relative aspect-[3/4] w-full rounded-[5pt] lg:rounded-xl overflow-hidden border-2 transition-all ${selectedType === "BOTTOM" ? "border-[#EF7044]" : "border-transparent"}`}>
                   <img src={mainImage} className="w-full h-full object-cover object-bottom scale-[1.3] origin-bottom" alt="Bottom" />
-                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40"><span className="text-white text-[8px] font-bold tracking-widest">BOTTOM</span></div>
+                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40"><span className="text-white text-[8px] lg:text-[10px] font-bold tracking-widest">BOTTOM</span></div>
                 </div>
-                <p className="text-[8px] text-center font-medium text-gray-500 truncate">{formatPrice(getVariantPrice(bottomVariants[0]) || 0)}</p>
+                <p className="text-[8px] lg:text-[11px] text-center font-medium text-gray-500 truncate">{formatPrice(getVariantPrice(bottomVariants[0]) || 0)}</p>
               </button>
             )}
           </div>
         )}
       </div>
 
-      <div className="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-md border-t border-gray-100 p-4 z-40 rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
-        <div className="container mx-auto max-w-[480px]">
-          <button onClick={() => selectedType === "SET" ? setIsSetModalOpen(true) : handleBuyNow(false, true)} disabled={isAdding || (selectedType !== "SET" && !selectedRegulerVariant)} className="w-full bg-[#EF7044] text-white py-4 rounded-full font-bold text-lg tracking-wide hover:bg-[#d65f36] active:scale-95 transition-all shadow-lg disabled:bg-gray-300">
+      {/* 🌟 LOGIC DESKTOP: FIXED BOTTOM BAR BERUBAH JADI STATIC MENYATU KE ATAS SAAT LAYAR LEBAR */}
+      <div className="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-md border-t border-gray-100 p-4 z-40 rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.05)] lg:static lg:bg-transparent lg:backdrop-blur-none lg:border-none lg:p-0 lg:shadow-none lg:rounded-none lg:z-auto">
+        <div className="container mx-auto max-w-[480px] lg:max-w-full lg:mx-0">
+          <button onClick={() => selectedType === "SET" ? setIsSetModalOpen(true) : handleBuyNow(false, true)} disabled={isAdding || (selectedType !== "SET" && !selectedRegulerVariant)} className="w-full bg-[#EF7044] text-white py-4 lg:py-5 rounded-full font-bold text-lg lg:text-xl tracking-wide hover:bg-[#d65f36] active:scale-95 transition-all shadow-lg disabled:bg-gray-300">
             {isAdding ? "PROCESSING..." : "BUY NOW"}
           </button>
         </div>
       </div>
 
+      {/* MODAL SET SIZES (SUDAH OTOMATIS RAPI DI DESKTOP KARENA CLASS sm:items-center Bawaan) */}
       {isSetModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity">
           <div className="relative bg-white w-full max-w-[480px] h-[85vh] sm:h-auto sm:max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col animate-in slide-in-from-bottom-10 sm:slide-in-from-bottom-0 sm:fade-in-20">
@@ -548,8 +522,6 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
                   </div>
                 </div>
               </div>
-
-              {/* THUMBNAIL TOP DAN BOTTOM DIHAPUS DARI SINI SESUAI REQUEST */}
 
               <div className="flex items-center gap-3 mb-6">
                 <span className="text-[13px] text-gray-500 font-medium">Color : {colorName}</span>

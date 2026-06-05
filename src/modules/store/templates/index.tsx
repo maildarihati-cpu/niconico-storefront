@@ -652,7 +652,7 @@ export default function StoreTemplate() {
   const fetchStoreProducts = useCallback(async (pageNumber: number, reset = false) => {
     setIsLoading(true);
     try {
-      const limit = 10; // 🌟 10 PRODUK SAJA BIAR RINGAN!
+      const limit = 10; 
       const offset = (pageNumber - 1) * limit;
       
       const data = await listProducts({
@@ -770,7 +770,7 @@ export default function StoreTemplate() {
   };
 
   const handleResetFilter = () => {
-    setMinPrice(0); // 🌟 Reset minPrice ke 0
+    setMinPrice(0); 
     setMaxPrice(5000000);
     setSelectedSize("");
     setSelectedColor("");
@@ -785,7 +785,6 @@ export default function StoreTemplate() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // 🌟 PERBAIKAN 2: SINKRONISASI DATABASE DI TOMBOL GRID UTAMA
   const toggleWishlist = async (e: React.MouseEvent, productId: string) => {
     e.preventDefault();
     e.stopPropagation();
@@ -834,13 +833,11 @@ export default function StoreTemplate() {
   };
 
   return (
-    // 🌟 PERUBAHAN DESKTOP: flex-col ke flex-row saat Desktop (lg:flex-row)
     <div className="bg-white min-h-screen pb-20 mx-auto w-full md:max-w-md lg:max-w-[1400px] relative flex flex-col lg:flex-row lg:items-start lg:gap-8 lg:px-8">
       
       {/* =========================================
           🌟 DESKTOP SIDEBAR FILTER (STICKY KIRI)
-          🌟 PERBAIKAN: top-[120px] agar pas di bawah navbar, spasi antar menu diperkecil (space-y-3 & mb-1.5)
-          ========================================= */}
+          ======================================== */}
       <aside className="hidden lg:flex flex-col w-[260px] xl:w-[280px] shrink-0 sticky top-[120px] max-h-[calc(100vh-140px)] overflow-y-auto scrollbar-hide border-r border-gray-100 pr-6 z-20">
         <h2 className="text-[16px] font-black text-gray-900 mb-6 uppercase tracking-widest pt-2">Filter</h2>
         
@@ -912,11 +909,9 @@ export default function StoreTemplate() {
           ========================================= */}
       <div className="flex-1 w-full min-w-0">
         
-        {/* HEADER STICKY */}
-        {/* 🌟 PERBAIKAN: lg:pt-[120px] agar tidak menabrak navbar di Desktop, Title hilang total di Desktop */}
-        <div className="sticky top-0 lg:top-[70px] z-30 bg-white/85 backdrop-blur-lg pt-[100px] lg:pt-[30px] pb-4 px-4 lg:px-0 shadow-[0_10px_30px_rgba(0,0,0,0.03)] lg:shadow-none border-b lg:border-b-0 border-gray-50">
+        {/* 🌟 PERBAIKAN: sticky top-0 agar blur menyentuh atap layar, dan pt-[110px] untuk kompensasi jarak navbar utama */}
+        <div className="sticky top-0 z-30 bg-white/85 backdrop-blur-lg pt-[100px] lg:pt-[110px] pb-4 lg:pb-6 px-4 lg:px-0 shadow-[0_10px_30px_rgba(0,0,0,0.03)] lg:shadow-none border-b lg:border-b-0 border-gray-50">
           
-          {/* 🌟 HILANGKAN SEARCH BAR DI DESKTOP */}
           <div className="relative mb-6 lg:hidden">
             <input 
               type="text" 
@@ -934,10 +929,7 @@ export default function StoreTemplate() {
           </div>
 
           <div className="flex justify-between items-center mb-6 lg:mb-0 relative lg:hidden">
-            {/* Mobile Title - Hanya muncul di Mobile */}
             <h1 className="text-2xl font-black text-gray-900 tracking-tight w-max">Product Category</h1>
-            
-            {/* 🌟 HILANGKAN TOMBOL FILTER DRAWER DI DESKTOP */}
             <button 
               onClick={() => setIsFilterOpen(true)}
               className="flex items-center gap-2 border border-orange-200 text-[#EF7044] bg-orange-50/70 px-5 py-2 rounded-full text-sm font-bold hover:bg-orange-100 transition-colors ml-auto"
@@ -946,8 +938,8 @@ export default function StoreTemplate() {
             </button>
           </div>
 
-          {/* 🌟 KATEGORI ATAS (Center di Desktop) */}
-          <div className="flex overflow-x-auto lg:flex-wrap lg:justify-center gap-5 lg:gap-8 scrollbar-hide pb-2 lg:mb-6">
+          {/* KATEGORI ATAS */}
+          <div className="flex overflow-x-auto lg:flex-wrap lg:justify-center gap-5 lg:gap-8 scrollbar-hide pb-2 lg:mb-0">
             {topCategories.map((cat) => (
               <button key={cat.handle} onClick={() => setActiveCategory(cat.handle)} className="flex flex-col items-center min-w-[70px] gap-2 group">
                 <div className={`w-[72px] h-[72px] lg:w-[80px] lg:h-[80px] rounded-full overflow-hidden border-2 transition-all p-0.5 ${activeCategory === cat.handle ? "border-[#EF7044]" : "border-transparent"}`}>
@@ -963,20 +955,18 @@ export default function StoreTemplate() {
           </div>
         </div>
 
-        {/* 🌟 GRID PRODUK (5 Kolom di Desktop) */}
-        <div className="px-4 lg:px-0 pt-6 grid grid-cols-2 lg:grid-cols-5 gap-x-3 lg:gap-x-5 gap-y-6 lg:gap-y-8 mb-10">
+        {/* 🌟 PERBAIKAN: Padding atas grid diperbesar (pt-8 lg:pt-10) supaya produk baris pertama tidak nabrak kategori */}
+        <div className="px-4 lg:px-0 pt-8 lg:pt-10 grid grid-cols-2 lg:grid-cols-5 gap-x-3 lg:gap-x-5 gap-y-6 lg:gap-y-8 mb-10">
           {products.length > 0 ? (
             products.map((product) => (
               <LocalizedClientLink key={product.id} href={`/products/${product.handle}`} className="flex flex-col group block animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="relative aspect-[3/4] bg-gray-50 rounded-[20px] overflow-hidden mb-3 border border-gray-100 shadow-sm">
                   <img src={product.thumbnail || "/placeholder.png"} alt={product.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   
-                  {/* WISHLIST BUTTON */}
                   <button onClick={(e) => toggleWishlist(e, product.id)} className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-all ${wishlist.includes(product.id) ? "bg-[#EF7044] text-white" : "bg-white/80 backdrop-blur-sm text-gray-300 hover:text-[#EF7044]"}`}>
                     <Heart className={`w-4 h-4 ${wishlist.includes(product.id) ? "fill-current" : ""}`} />
                   </button>
 
-                  {/* ADD TO CART BUTTON (+) MEMBUKA QUICK SHOP MODAL */}
                   <button 
                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedProduct(product); }} 
                     className="absolute bottom-3 right-3 w-9 h-9 bg-[#EF7044] text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white active:scale-90 transition-transform z-10"
@@ -1000,14 +990,9 @@ export default function StoreTemplate() {
           )}
         </div>
 
-        {/* =========================================
-            🌟 TRIGGER INFINITE SCROLL & LOADING
-            ========================================= */}
         <div className="px-4 pb-12 flex flex-col items-center justify-center">
-          {/* Sensor Gaib untuk memuat data */}
           <div ref={observerTarget} className="h-4 w-full" />
           
-          {/* Animasi Loading */}
           {isLoading && hasMore && (
             <div className="flex gap-2 items-center justify-center py-6 animate-pulse">
                <div className="w-2 h-2 bg-[#EF7044] rounded-full"></div>
@@ -1016,7 +1001,6 @@ export default function StoreTemplate() {
             </div>
           )}
           
-          {/* Pesan Mentok */}
           {!hasMore && products.length > 0 && (
             <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px] mt-6">
               You have reached the end
@@ -1036,9 +1020,6 @@ export default function StoreTemplate() {
         )}
       </div>
 
-      {/* =========================================
-          🌟 POPUP PILIH VARIAN (QUICK SHOP)
-          ========================================= */}
       {selectedProduct && (
         <QuickShopModal 
           product={selectedProduct} 
@@ -1046,10 +1027,7 @@ export default function StoreTemplate() {
         />
       )}
 
-
-      {/* =========================================
-          DRAWER FILTER (TETAP AMAN UNTUK MOBILE)
-          ========================================= */}
+      {/* DRAWER FILTER MOBILE */}
       <div className={`fixed inset-0 z-[1000] transition-opacity duration-300 lg:hidden ${isFilterOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsFilterOpen(false)} />
         <div className={`absolute top-0 right-0 h-full w-[85%] max-w-[400px] bg-white shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col ${isFilterOpen ? "translate-x-0" : "translate-x-full"}`}>

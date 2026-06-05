@@ -152,8 +152,8 @@ const Navbar = () => {
 
           <LocalizedClientLink href="/make-your-own-brand" className={desktopLinkClass}>MAKE YOUR OWN BRAND</LocalizedClientLink>
           <LocalizedClientLink href="/our-store" className={desktopLinkClass}>OUR STORE</LocalizedClientLink>
-          <LocalizedClientLink href="/about-us" className={desktopLinkClass}>ABOUT US</LocalizedClientLink>
-          <LocalizedClientLink href="/contact-us" className={desktopLinkClass}>CONTACT US</LocalizedClientLink>
+          <LocalizedClientLink href="/about" className={desktopLinkClass}>ABOUT US</LocalizedClientLink>
+          <LocalizedClientLink href="/contact" className={desktopLinkClass}>CONTACT US</LocalizedClientLink>
         </div>
 
         {/* ========================================= */}
