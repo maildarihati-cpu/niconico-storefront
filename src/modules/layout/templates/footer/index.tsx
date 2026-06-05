@@ -95,7 +95,7 @@ const Footer = () => {
         {/* ========================================== */}
         {/* SECTION: MENU & LOGO (Urutan 2 di Mobile, Urutan 1 di Desktop) */}
         {/* ========================================== */}
-        <div className="w-full lg:w-auto flex flex-row justify-between lg:justify-start items-start lg:items-center gap-4 lg:gap-16 xl:gap-24 order-2 lg:order-1 mb-16 lg:mb-0">
+        <div className="w-full lg:w-auto flex flex-row justify-between lg:justify-start items-start lg:items-center gap-4 lg:gap-16 xl:gap-24 order-2 lg:order-1 mb-16 lg:mb-20px">
           
           <div className="w-1/3 lg:w-[200px] shrink-0">
             <img 

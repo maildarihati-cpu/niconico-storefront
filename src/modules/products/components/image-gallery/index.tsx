@@ -31,15 +31,11 @@ const ImageGallery = ({ images }: { images: any[] }) => {
   if (!images?.length) return null
 
   return (
-    // 🌟 KUNCI UTAMA DESKTOP: Menggunakan tinggi kalkulasi viewport (100vh dikurangi kompensasi top padding navbar)
-    // flex-col memastikan ruang dibagi vertikal secara presisi antara gambar utama dan thumbnail.
     <div className="flex flex-col gap-3 lg:gap-4 w-full lg:h-[calc(100vh-180px)] lg:max-h-[780px]">
       
       {/* ======================================================= */}
       {/* WADAH GAMBAR UTAMA */}
       {/* ======================================================= */}
-      {/* 🌟 lg:flex-1 dan lg:min-h-0 adalah jurus sakti agar gambar utama otomatis mengalah mengecil */}
-      {/* jika layar monitor kustomer vertikalnya pendek, sehingga tidak akan mendorong thumbnail ke bawah screen */}
       <div className="relative w-full aspect-[4/5] lg:aspect-auto lg:flex-1 lg:min-h-0 bg-gray-100 overflow-hidden rounded-[10pt] lg:rounded-[20px] shadow-sm">
         
         {/* PANAH NAVIGASI DESKTOP (Kiri & Kanan) */}
@@ -76,11 +72,12 @@ const ImageGallery = ({ images }: { images: any[] }) => {
         >
           {images.map((image, index) => (
             <div key={index} className="w-full h-full flex-shrink-0 snap-center relative">
+              {/* 🌟 PERBAIKAN SAKTI: object-contain memastikan baju tidak kepotong */}
               <Image 
                 src={image.url} 
                 alt={`Product image ${index + 1}`}
                 fill
-                className="object-cover object-top"
+                className="object-contain object-center"
                 priority={index === 0}
                 sizes="(max-width: 768px) 100vw, 50vw"
               />
@@ -102,7 +99,6 @@ const ImageGallery = ({ images }: { images: any[] }) => {
       {/* ======================================================= */}
       {/* 🌟 THUMBNAILS ROW (DESKTOP ONLY) */}
       {/* ======================================================= */}
-      {/* shrink-0 mengunci mati dimensi baris ini agar tidak bisa mengecil/terpotong oleh pergeseran layout */}
       <div className="hidden lg:grid grid-cols-4 xl:grid-cols-5 gap-3 h-[90px] xl:h-[110px] shrink-0">
         {images.map((image, index) => (
           <button 
@@ -112,6 +108,7 @@ const ImageGallery = ({ images }: { images: any[] }) => {
               index === activeIndex ? "border-[#EF7044] shadow-md scale-[0.98]" : "border-transparent hover:border-gray-300"
             }`}
           >
+            {/* 🌟 Note: Thumbnail sengaja dibiarkan object-cover object-top agar kotaknya rapi penuh */}
             <Image 
               src={image.url} 
               alt={`Thumbnail ${index + 1}`}

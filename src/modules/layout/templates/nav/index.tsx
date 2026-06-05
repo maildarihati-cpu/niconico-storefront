@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useSearchParams, useRouter } from "next/navigation"; 
-import { Menu, Search, ShoppingBag, User, ChevronDown, X } from "lucide-react";
+import { usePathname, useSearchParams, useRouter, useParams } from "next/navigation"; 
+import { Menu, Search, ShoppingBag, User, ChevronDown, X, Loader2 } from "lucide-react";
 import CartPreview from "@modules/cart/templates/preview";
 import { useCart } from "@/context/cart-context/cart-context";
 
@@ -21,13 +21,18 @@ const Navbar = () => {
   const [profileView, setProfileView] = useState<any>("menu");
   
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
-  
-  // 🌟 STATE BARU UNTUK LACI KHUSUS SEARCH
   const [isSearchDrawerOpen, setIsSearchDrawerOpen] = useState(false);
+  
+  // 🌟 LOGIC SEARCH PINTAR (LIVE SEARCH)
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearchingLive, setIsSearchingLive] = useState(false);
   
   const pathname = usePathname(); 
   const searchParams = useSearchParams();
   const router = useRouter();
+  const params = useParams();
+  const countryCode = (params?.countryCode as string) || "id";
   
   const { cart, cartCount, isCartBouncing, showPreview } = useCart();
 
@@ -55,35 +60,73 @@ const Navbar = () => {
     setIsCartDrawerOpen(false);
     setIsProfileOpen(false);
     setIsNavOpen(false);
-    setIsSearchDrawerOpen(false); // 🌟 Tutup search kalau pindah halaman
+    setIsSearchDrawerOpen(false);
+    setSearchQuery(""); // Reset pencarian saat pindah halaman
   }, [pathname]);
+
+  // 🌟 MESIN LIVE SEARCH (Debounce Fetching)
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (searchQuery.trim().length > 1) {
+        setIsSearchingLive(true);
+        try {
+          const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://api.niconicoresort.com";
+          // Tarik data 5 produk teratas berdasarkan kata kunci
+          const res = await fetch(`${backendUrl}/store/products?q=${encodeURIComponent(searchQuery)}&limit=5`);
+          if (res.ok) {
+            const data = await res.json();
+            setSearchResults(data.products || []);
+          }
+        } catch (e) {
+          console.error("Search error", e);
+        } finally {
+          setIsSearchingLive(false);
+        }
+      } else {
+        setSearchResults([]);
+      }
+    }, 400); // Tunggu kustomer selesai ngetik 0.4 detik baru cari (Biar server aman)
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
+
+  // Eksekusi tekan ENTER / tombol Search (Lempar ke Halaman Store)
+  const handleSearchSubmit = (e: React.FormEvent | any) => {
+    if (e?.preventDefault) e.preventDefault();
+    if (searchQuery.trim()) {
+      setIsSearchDrawerOpen(false);
+      router.push(`/${countryCode}/store?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery(""); 
+    }
+  };
+
+  const handlePopularSearch = (term: string) => {
+    setIsSearchDrawerOpen(false);
+    router.push(`/${countryCode}/store?q=${encodeURIComponent(term)}`);
+  };
+
+  // Helper Harga untuk Live Search
+  const getProductPrice = (p: any) => {
+    const price = p.variants?.[0]?.calculated_price?.calculated_amount || p.variants?.[0]?.prices?.[0]?.amount || 0;
+    const finalPrice = countryCode === "id" ? price : price / 100;
+    return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(finalPrice);
+  };
 
   if (pathname?.includes("/cart")) {
     return (
       <>
         {isProfileOpen && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[90] transition-opacity" onClick={() => setIsProfileOpen(false)} />
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[90] transition-opacity" onClick={() => setIsProfileOpen(false)} />
         )}
-        <div className={`fixed top-0 right-0 h-full w-[90%] max-w-[480px] bg-white z-[100] shadow-2xl transform transition-transform duration-300 overflow-hidden ${isProfileOpen ? "translate-x-0" : "translate-x-full"}`}>
-          <ProfileContent 
-            view={profileView} 
-            setView={setProfileView} 
-            onClose={() => setIsProfileOpen(false)} 
-          />
+        <div className={`fixed top-0 right-0 h-full w-[90%] max-w-[480px] bg-white z-[100] shadow-2xl transform transition-transform duration-300 ease-out will-change-transform overflow-hidden ${isProfileOpen ? "translate-x-0" : "translate-x-full"}`}>
+          <ProfileContent view={profileView} setView={setProfileView} onClose={() => setIsProfileOpen(false)} />
         </div>
       </>
     );
   }
 
-  const isOrangeNav = 
-    pathname?.includes("/store") || 
-    pathname?.includes("/products") || 
-    pathname?.includes("/collections");
-
-  const navBgClass = isOrangeNav 
-    ? "bg-[#EF7044]/85 backdrop-blur-md border-[#EF7044]/10" 
-    : "bg-white/40 backdrop-blur-md border-gray-100/50";     
-
+  const isOrangeNav = pathname?.includes("/store") || pathname?.includes("/products") || pathname?.includes("/collections");
+  const navBgClass = isOrangeNav ? "bg-[#EF7044]/85 backdrop-blur-md border-[#EF7044]/10" : "bg-white/40 backdrop-blur-md border-gray-100/50";     
   const iconColorClass = isOrangeNav ? "text-white" : "text-gray-800";
   const logoSrc = isOrangeNav ? "/logo-niconico-white.png" : "/logo-niconico-black.png";
 
@@ -95,35 +138,28 @@ const Navbar = () => {
 
   return (
     <>
-      <nav className={`fixed top-5 left-5 right-5 z-40 flex items-center justify-between px-6 py-3.5 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-500 ${navBgClass}`}>
+      <nav className={`fixed top-5 left-5 right-5 z-40 flex items-center justify-between px-6 py-3.5 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 ${navBgClass}`}>
         
-        {/* ========================================= */}
-        {/* 📱 KIRI MOBILE: SISA MENU SAJA (Search Pindah Kanan) */}
-        {/* ========================================= */}
+        {/* MOBILE MENU KIRI */}
         <div className="flex lg:hidden items-center gap-4 -ml-1">
           <button onClick={() => { setNavView("menu"); setIsNavOpen(true); }} className="p-1 hover:opacity-70 transition-opacity">
             <Menu className={`w-5 h-5 transition-colors duration-300 ${iconColorClass}`} />
           </button>
         </div>
         
+        {/* LOGO */}
         <Link href="/" className="hidden lg:flex relative items-center justify-center w-32 h-8 xl:w-36 xl:h-10 hover:scale-105 transition-transform shrink-0">
           <Image src={logoSrc} alt="Niconico Logo" fill className="object-contain" priority sizes="150px" />
         </Link>
-
         <Link href="/" className="lg:hidden relative flex items-center justify-center w-28 h-8 hover:scale-105 transition-transform">
           <Image src={logoSrc} alt="Niconico Logo" fill className="object-contain" priority sizes="150px" />
         </Link>
 
+        {/* DESKTOP MENU TENGAH */}
         <div className="hidden lg:flex items-center justify-center gap-4 xl:gap-6 flex-1 px-2">
-          
-          <LocalizedClientLink href="/store" className={desktopLinkClass}>
-            NEW ARRIVALS
-          </LocalizedClientLink>
-
+          <LocalizedClientLink href="/store" className={desktopLinkClass}>NEW ARRIVALS</LocalizedClientLink>
           <div className="relative group">
-            <div className={desktopLinkClass}>
-              SHOPS <ChevronDown className="w-3 h-3 ml-0.5" />
-            </div>
+            <div className={desktopLinkClass}>SHOPS <ChevronDown className="w-3 h-3 ml-0.5" /></div>
             <div className={dropdownWrapperClass}>
               <div className={dropdownInnerClass}>
                 <div className={dropdownArrowClass}></div>
@@ -135,11 +171,8 @@ const Navbar = () => {
               </div>
             </div>
           </div>
-
           <div className="relative group">
-            <div className={desktopLinkClass}>
-              TOP COLLECTION <ChevronDown className="w-3 h-3 ml-0.5" />
-            </div>
+            <div className={desktopLinkClass}>TOP COLLECTION <ChevronDown className="w-3 h-3 ml-0.5" /></div>
             <div className={dropdownWrapperClass}>
               <div className={dropdownInnerClass}>
                 <div className={dropdownArrowClass}></div>
@@ -149,19 +182,15 @@ const Navbar = () => {
               </div>
             </div>
           </div>
-
           <LocalizedClientLink href="/make-your-own-brand" className={desktopLinkClass}>MAKE YOUR OWN BRAND</LocalizedClientLink>
           <LocalizedClientLink href="/our-store" className={desktopLinkClass}>OUR STORE</LocalizedClientLink>
           <LocalizedClientLink href="/about" className={desktopLinkClass}>ABOUT US</LocalizedClientLink>
           <LocalizedClientLink href="/contact" className={desktopLinkClass}>CONTACT US</LocalizedClientLink>
         </div>
 
-        {/* ========================================= */}
-        {/* KANAN: Search (Dipindah ke Sini!), Cart & Profile */}
-        {/* ========================================= */}
+        {/* KANAN: Search, Cart, Profile */}
         <div className="flex gap-3 md:gap-4 items-center -mr-1 shrink-0">
           
-          {/* 🌟 SEARCH SEKARANG DI KANAN DAN BISA DI-KLIK DI MOBILE MAUPUN DESKTOP */}
           <button onClick={() => setIsSearchDrawerOpen(true)} className="flex p-1 hover:opacity-70 transition-opacity">
             <Search className={`w-5 h-5 transition-colors duration-300 ${iconColorClass}`} />
           </button>
@@ -169,11 +198,8 @@ const Navbar = () => {
           <div className="relative group">
             <button 
               onClick={() => {
-                if (window.innerWidth >= 1024) {
-                  setIsCartDrawerOpen(true);
-                } else {
-                  router.push("/cart");
-                }
+                if (window.innerWidth >= 1024) setIsCartDrawerOpen(true);
+                else router.push("/cart");
               }} 
               className="p-1 block"
             >
@@ -195,22 +221,19 @@ const Navbar = () => {
             )}
           </div>
 
-          <button 
-            onClick={() => { setProfileView("menu"); setIsProfileOpen(true); }} 
-            className="p-1 hover:opacity-70 transition-opacity"
-          >
+          <button onClick={() => { setProfileView("menu"); setIsProfileOpen(true); }} className="p-1 hover:opacity-70 transition-opacity">
             <User className={`w-5 h-5 transition-colors duration-300 ${iconColorClass}`} />
           </button>
         </div>
       </nav>
 
       {/* ======================================================= */}
-      {/* 🌟 LACI SEARCH (Murni Search Saja, Meluncur dari Kanan) */}
+      {/* 🌟 LACI SEARCH DENGAN LIVE RESULTS */}
       {/* ======================================================= */}
       {isSearchDrawerOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80] transition-opacity" onClick={() => setIsSearchDrawerOpen(false)} />
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[80] transition-opacity" onClick={() => setIsSearchDrawerOpen(false)} />
       )}
-      <div className={`fixed top-0 right-0 h-full w-[90%] max-w-[480px] bg-white z-[90] shadow-2xl transform transition-transform duration-500 overflow-hidden ${isSearchDrawerOpen ? "translate-x-0" : "translate-x-full"}`}>
+      <div className={`fixed top-0 right-0 h-full w-[90%] max-w-[480px] bg-white z-[90] shadow-2xl transform transition-transform duration-300 ease-out will-change-transform overflow-y-auto ${isSearchDrawerOpen ? "translate-x-0" : "translate-x-full"}`}>
         <div className="flex flex-col h-full bg-white">
           
           <div className="flex items-center justify-between p-6 border-b border-gray-100">
@@ -221,27 +244,69 @@ const Navbar = () => {
           </div>
           
           <div className="p-6">
-            <form action={`/id/store`} className="relative w-full" onSubmit={() => setIsSearchDrawerOpen(false)}>
+            <form onSubmit={handleSearchSubmit} className="relative w-full">
               <input 
                 type="text" 
-                name="q" 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search products..." 
                 className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-full focus:outline-none focus:border-[#EF7044] focus:ring-1 focus:ring-[#EF7044] transition-all text-[14px] font-medium text-gray-900"
                 autoFocus
               />
               <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              {isSearchingLive && (
+                 <Loader2 className="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#EF7044] animate-spin" />
+              )}
               <button type="submit" className="hidden">Search</button>
             </form>
             
-            <div className="mt-8">
-              <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Popular Searches</h3>
-              <div className="flex flex-wrap gap-2">
-                <Link href={`/id/store?q=bikini`} onClick={() => setIsSearchDrawerOpen(false)} className="px-4 py-2 bg-gray-50 border border-gray-200 hover:border-[#EF7044] hover:bg-orange-50 text-gray-600 hover:text-[#EF7044] text-[11px] font-bold rounded-full transition-colors">Bikini</Link>
-                <Link href={`/id/store?q=swimsuit`} onClick={() => setIsSearchDrawerOpen(false)} className="px-4 py-2 bg-gray-50 border border-gray-200 hover:border-[#EF7044] hover:bg-orange-50 text-gray-600 hover:text-[#EF7044] text-[11px] font-bold rounded-full transition-colors">Swimsuit</Link>
-                <Link href={`/id/store?q=resort`} onClick={() => setIsSearchDrawerOpen(false)} className="px-4 py-2 bg-gray-50 border border-gray-200 hover:border-[#EF7044] hover:bg-orange-50 text-gray-600 hover:text-[#EF7044] text-[11px] font-bold rounded-full transition-colors">Resort Wear</Link>
-                <Link href={`/id/store?q=carvico`} onClick={() => setIsSearchDrawerOpen(false)} className="px-4 py-2 bg-gray-50 border border-gray-200 hover:border-[#EF7044] hover:bg-orange-50 text-gray-600 hover:text-[#EF7044] text-[11px] font-bold rounded-full transition-colors">Carvico</Link>
+            {/* 🌟 LOGIC TAMPILAN: Jika sedang ngetik, tunjukkan hasil produk. Jika kosong, tunjukkan Popular Search */}
+            {searchQuery.trim().length > 1 ? (
+              <div className="mt-8 animate-in fade-in duration-300">
+                <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">
+                  {isSearchingLive ? "Searching..." : "Products"}
+                </h3>
+                
+                <div className="flex flex-col gap-4">
+                  {searchResults.length > 0 ? (
+                    searchResults.map(product => (
+                      <Link 
+                        key={product.id}
+                        href={`/${countryCode}/products/${product.handle}`} 
+                        onClick={() => setIsSearchDrawerOpen(false)} 
+                        className="flex items-center gap-4 group hover:bg-gray-50 p-2 -m-2 rounded-xl transition-colors"
+                      >
+                        <div className="w-14 h-16 bg-gray-100 rounded-[10px] overflow-hidden shrink-0 border border-gray-100 shadow-sm">
+                          <img src={product.thumbnail || "/placeholder.png"} alt={product.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                        </div>
+                        <div className="flex flex-col">
+                          <h4 className="text-[13px] font-bold text-gray-900 group-hover:text-[#EF7044] transition-colors">{product.title}</h4>
+                          <p className="text-[12px] text-[#EF7044] font-black">{getProductPrice(product)}</p>
+                        </div>
+                      </Link>
+                    ))
+                  ) : !isSearchingLive ? (
+                    <p className="text-xs text-gray-400 italic">No products found for "{searchQuery}"</p>
+                  ) : null}
+                </div>
+
+                {searchResults.length > 0 && (
+                  <button onClick={handleSearchSubmit} className="mt-6 w-full py-3.5 rounded-full border border-gray-200 text-[11px] font-bold text-gray-600 uppercase tracking-widest hover:border-[#EF7044] hover:text-[#EF7044] hover:bg-orange-50 transition-colors">
+                    View All Results
+                  </button>
+                )}
               </div>
-            </div>
+            ) : (
+              <div className="mt-8 animate-in fade-in duration-300">
+                <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Popular Searches</h3>
+                <div className="flex flex-wrap gap-2">
+                  <button onClick={() => handlePopularSearch("bikini")} className="px-4 py-2 bg-gray-50 border border-gray-200 hover:border-[#EF7044] hover:bg-orange-50 text-gray-600 hover:text-[#EF7044] text-[11px] font-bold rounded-full transition-colors">Bikini</button>
+                  <button onClick={() => handlePopularSearch("swimsuit")} className="px-4 py-2 bg-gray-50 border border-gray-200 hover:border-[#EF7044] hover:bg-orange-50 text-gray-600 hover:text-[#EF7044] text-[11px] font-bold rounded-full transition-colors">Swimsuit</button>
+                  <button onClick={() => handlePopularSearch("resort wear")} className="px-4 py-2 bg-gray-50 border border-gray-200 hover:border-[#EF7044] hover:bg-orange-50 text-gray-600 hover:text-[#EF7044] text-[11px] font-bold rounded-full transition-colors">Resort Wear</button>
+                  <button onClick={() => handlePopularSearch("carvico")} className="px-4 py-2 bg-gray-50 border border-gray-200 hover:border-[#EF7044] hover:bg-orange-50 text-gray-600 hover:text-[#EF7044] text-[11px] font-bold rounded-full transition-colors">Carvico</button>
+                </div>
+              </div>
+            )}
           </div>
 
         </div>
@@ -251,27 +316,22 @@ const Navbar = () => {
       {/* 🌟 LACI PROFILE */}
       {/* ======================================================= */}
       {isProfileOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] transition-opacity" onClick={() => setIsProfileOpen(false)} />
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] transition-opacity" onClick={() => setIsProfileOpen(false)} />
       )}
-      <div className={`fixed top-0 right-0 h-full w-[90%] max-w-[480px] bg-white z-[70] shadow-2xl transform transition-transform duration-300 overflow-hidden ${isProfileOpen ? "translate-x-0" : "translate-x-full"}`}>
-        <ProfileContent 
-          view={profileView} 
-          setView={setProfileView} 
-          onClose={() => setIsProfileOpen(false)} 
-        />
+      <div className={`fixed top-0 right-0 h-full w-[90%] max-w-[480px] bg-white z-[70] shadow-2xl transform transition-transform duration-300 ease-out will-change-transform overflow-hidden ${isProfileOpen ? "translate-x-0" : "translate-x-full"}`}>
+        <ProfileContent view={profileView} setView={setProfileView} onClose={() => setIsProfileOpen(false)} />
       </div>
 
       {/* ======================================================= */}
       {/* 🌟 LACI CART KHUSUS DESKTOP */}
       {/* ======================================================= */}
       {isCartDrawerOpen && (
-        <div className="hidden lg:block fixed inset-0 bg-black/60 backdrop-blur-sm z-[80] transition-opacity" onClick={() => setIsCartDrawerOpen(false)} />
+        <div className="hidden lg:block fixed inset-0 bg-black/40 backdrop-blur-sm z-[80] transition-opacity" onClick={() => setIsCartDrawerOpen(false)} />
       )}
-      <div className={`hidden lg:block fixed top-0 right-0 h-full w-[480px] bg-white z-[90] shadow-2xl transform transition-transform duration-500 overflow-y-auto scrollbar-hide ${isCartDrawerOpen ? "translate-x-0" : "translate-x-full"}`}>
+      <div className={`hidden lg:block fixed top-0 right-0 h-full w-[480px] bg-white z-[90] shadow-2xl transform transition-transform duration-300 ease-out will-change-transform overflow-y-auto scrollbar-hide ${isCartDrawerOpen ? "translate-x-0" : "translate-x-full"}`}>
          <CartTemplate cart={cart} />
       </div>
 
-      {/* Laci Navigasi Kiri (Hanya Menu Saja) */}
       <NavDrawer isOpen={isNavOpen} onClose={() => setIsNavOpen(false)} view={navView} setView={setNavView} />
     </>
   );
