@@ -147,6 +147,9 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
     
     // CEGATAN LOGIN 
     if (!customer || !customer.id) {
+      // 🌟 PERBAIKAN: Tinggalkan jejak sebelum dilempar ke login
+      document.cookie = "return_to=/" + countryCode + "/cart; path=/; max-age=3600";
+      
       router.push(`/${countryCode}/cart?auth=login`, { scroll: false });
       return; 
     }

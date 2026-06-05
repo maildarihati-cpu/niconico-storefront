@@ -44,10 +44,10 @@ const StoryTeller = () => {
           grabCursor={true}
           centeredSlides={true}
           slidesPerView={"auto"} 
-          loop={reviews.length > 2}
+          // 🌟 CUKUP PAKAI INI SAJA DI SWIPER VERSI BARU
+          loop={true}
           coverflowEffect={{
             rotate: 0,
-            // Stretch ditarik lebih dalam (-60) biar tetangganya beneran keliatan ngintip
             stretch: -60, 
             depth: 150,    
             modifier: 1.2,

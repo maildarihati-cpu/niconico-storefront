@@ -36,13 +36,13 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   // 🌟 STATE UNTUK FORM TAMBAH ALAMAT MANUAL
   const [isAddingAddress, setIsAddingAddress] = useState(false)
   const [newAddress, setNewAddress] = useState({
-    first_name: customer?.first_name || "",
-    last_name: customer?.last_name || "",
-    phone: customer?.phone || "",
-    address_1: "",
-    city: "",
-    province: "",
-    postal_code: "",
+    first_name: customer?.first_name || "No addresses found",
+    last_name: customer?.last_name || "No addresses found",
+    phone: customer?.phone || "No addresses found",
+    address_1: "No addresses found",
+    city: "No addresses found",
+    province: "No addresses found",
+    postal_code: "No addresses found",
     country_code: "id", // Default Indonesia
   })
 
@@ -233,7 +233,6 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
             <div className="grid gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
               
               {/* 🌟 FORM TAMBAH ALAMAT MANUAL */}
-              {/* 🌟 FORM TAMBAH ALAMAT MANUAL (UI KEMBAR DENGAN ADDRESSVIEW) */}
               {isAddingAddress ? (
                 <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm flex flex-col gap-4 animate-in fade-in duration-300">
                   <div className="flex justify-between items-center mb-2 border-b border-gray-100 pb-4">
@@ -243,7 +242,6 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                     </button>
                   </div>
 
-                  {/* 🌟 KOTAK PIN POINT DIKEMBALIKAN UNTUK KONSISTENSI UI */}
                   <div className="border border-[#ef7044]/20 rounded-xl p-4 relative bg-gray-50 flex items-center justify-between mb-2">
                     <div className="flex items-center gap-3 max-w-[75%]">
                       <div className="p-2 bg-orange-100 rounded-lg text-[#ef7044]"><MapPin size={16}/></div>
@@ -369,7 +367,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                     ))
                   ) : (
                     <div className="p-5 text-center text-[10px] text-gray-400 font-bold uppercase italic border-2 border-dashed border-gray-100 rounded-3xl">
-                      No addresses found yet.
+                      No addresses found.
                     </div>
                   )}
 
@@ -389,12 +387,14 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                 <MapPin className="w-5 h-5 text-[#EF7044]" />
               </div>
               <div className="flex-1">
-                {cart.shipping_address ? (
+                {cart.shipping_address && cart.shipping_address.address_1 ? (
                   <p className="text-[11px] text-gray-600 leading-relaxed uppercase font-medium">
                     <span className="font-black text-gray-900 italic">{cart.shipping_address.first_name} {cart.shipping_address.last_name}</span><br/>
                     {cart.shipping_address.address_1}, {cart.shipping_address.city}
                   </p>
-                ) : <p className="text-[11px] italic text-gray-400 font-bold">Choose a shipping address...</p>}
+                ) : (
+                  <p className="text-[11px] italic text-gray-400 font-bold">No Address Found</p>
+                )}
               </div>
             </div>
           )}

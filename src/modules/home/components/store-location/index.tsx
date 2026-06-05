@@ -86,11 +86,26 @@ export default function StoreSection({ layout = "slider" }: StoreSectionProps) {
     <section className="pt-16 pb-12 bg-white w-full">
       <div className="max-w-[1200px] mx-auto md:max-w-6xl w-full">
         
-        {/* 🌟 KOMENTAR RUSAK SUDAH DICABUT, COMPILER AMAN */}
         {layout === "slider" && (
-          <h2 className="text-3xl font-bold text-[#ED5725] mb-8 px-4 md:px-0">
-            Visit Our Store
-          </h2>
+          <>
+            {/* Mobile tetap pakai card View All */}
+            <a
+              href="/our-store"
+              className="snap-start shrink-0 w-[340px] block md:hidden bg-white rounded-[24px] p-5 shadow-[0_4px_20px_rgb(0,0,0,0.03)] border-2 border-dashed border-gray-200 hover:border-[#ED5725] hover:bg-orange-50/50 flex flex-col items-center justify-center group transition-all duration-300 cursor-pointer"
+            >
+              <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4 group-hover:bg-[#ED5725] group-hover:scale-110 transition-all duration-300 shadow-sm">
+                <ArrowRight className="w-8 h-8 text-gray-400 group-hover:text-white transition-colors duration-300" />
+              </div>
+
+              <span className="text-xl font-bold text-gray-800 group-hover:text-[#ED5725] transition-colors duration-300">
+                View All Stores
+              </span>
+
+              <span className="text-sm text-gray-500 font-medium mt-2">
+                Explore all locations
+              </span>
+            </a>
+          </>
         )}
 
         <div className={
@@ -170,6 +185,17 @@ export default function StoreSection({ layout = "slider" }: StoreSectionProps) {
           )}
 
         </div>
+                {layout === "slider" && (
+          <div className="hidden md:flex justify-center mt-10">
+            <a
+              href="/our-store"
+              className="inline-flex items-center gap-2 px-8 py-3 rounded-full border-2 border-[#DF714B] bg-[#DF714B] text-white font-semibold transition-all duration-300 hover:bg-white hover:text-[#DF714B]"
+            >
+              View All Stores
+              <ArrowRight className="w-4 h-4" />
+            </a>
+          </div>
+        )}
       </div>
     </section>
   );
