@@ -48,11 +48,9 @@ export default function MakeYourOwnBrandSection() {
   const hasVideo = isVideo(content.mediaUrl);
 
   return (
-    // 🌟 PERBAIKAN DESKTOP VIEW: Ditambah lg:flex-row & max-w dilebarkan sedikit (1100px)
     <section className="py-16 px-4 md:px-8 max-w-[1100px] mx-auto bg-white flex flex-col lg:flex-row lg:items-center lg:gap-16">
       
-      {/* 🌟 BAGIAN KIRI DI DESKTOP (Media Card) 
-          Di mobile, kita pakai order-2 agar posisinya tetap di tengah (di bawah Heading) */}
+      {/* 🌟 BAGIAN KIRI DI DESKTOP (Media Card) */}
       <div className="order-2 lg:order-1 w-full lg:w-1/2 aspect-video rounded-3xl md:rounded-[2rem] overflow-hidden relative shadow-md mb-8 lg:mb-0 bg-black group cursor-pointer shrink-0">
         {hasVideo ? (
           <video 
@@ -79,22 +77,21 @@ export default function MakeYourOwnBrandSection() {
       </div>
 
       {/* 🌟 BAGIAN KANAN DI DESKTOP (Teks & Button)
-          Di mobile, kita pakai "contents" agar anak-anaknya langsung nurut ke flex-col utama. 
-          Jadi urutan mobile tetap utuh tak tersentuh! */}
-      <div className="contents lg:flex lg:flex-col lg:w-1/2 lg:order-2 lg:items-start lg:justify-center">
+          Perbaikan: lg:items-center agar tombol dan teks rata tengah di desktop */}
+      <div className="contents lg:flex lg:flex-col lg:w-1/2 lg:order-2 lg:items-center lg:justify-center">
         
-        {/* HEADING (order-1: Selalu paling atas di mobile) */}
-        <h2 className="order-1 lg:order-none text-4xl md:text-5xl font-bold text-center text-black tracking-tight mb-8 lg:mb-6 text-center lg:text-left uppercase w-full">
+        {/* HEADING (Perbaikan: Ukuran desktop dikecilkan ke lg:text-[32px] & teks dipaksa rata tengah) */}
+        <h2 className="order-1 lg:order-none text-3xl md:text-4xl lg:text-[32px] font-bold text-center text-black tracking-tight mb-8 lg:mb-6 uppercase w-full">
           {content.heading}
         </h2>
 
-        {/* QUOTE TEXT (order-3: Di bawah Media saat mobile) */}
-        <p className="order-3 lg:order-none text-black text-sm md:text-base font-medium max-w-3xl leading-relaxed text-center lg:text-left mb-10 lg:mb-8 w-full">
+        {/* QUOTE TEXT (Perbaikan: Teks dipaksa rata tengah di semua device) */}
+        <p className="order-3 lg:order-none text-black text-sm md:text-base font-medium max-w-3xl leading-relaxed text-center mb-10 lg:mb-8 w-full px-4 lg:px-0">
           {content.quoteVerbatim}
         </p>
 
-        {/* CTA BUTTON (order-4: Selalu paling bawah di mobile) */}
-        <div className="order-4 lg:order-none flex justify-center lg:justify-start w-full">
+        {/* CTA BUTTON (Perbaikan: justify-center di semua device) */}
+        <div className="order-4 lg:order-none flex justify-center w-full">
           <Link 
             href={content.buttonLink || "#"}
             className="px-8 py-3.5 bg-[#EF7044] text-white font-bold tracking-wide rounded-full uppercase italic flex items-center justify-center gap-3 shadow-md hover:shadow-lg border-2 border-transparent hover:bg-white hover:text-[#EF7044] hover:border-[#EF7044] transition-all duration-300 group active:scale-[0.98] w-fit"
