@@ -405,15 +405,19 @@ const [isSettingDefault, setIsSettingDefault] = useState(false);
 
         <form onSubmit={(e) => { e.preventDefault(); handleSaveAddress(); }} className="flex-1 overflow-y-auto px-6 pt-6 pb-10 flex flex-col gap-4">
           
-          <div className="border border-[#ef7044]/20 rounded-xl p-4 relative bg-gray-50 flex items-center justify-between mb-2">
-            <div className="flex items-center gap-3 max-w-[75%]">
-              <div className="p-2 bg-orange-100 rounded-lg text-[#ef7044]"><MapPin size={16}/></div>
-              <div>
-                <p className="text-[10px] font-bold text-gray-900 truncate">Selected Pin Point</p>
-                <p className="text-[9px] text-gray-500 truncate">{formData.address_1}</p>
+          <div className="border border-[#ef7044]/20 rounded-xl p-4 relative bg-gray-50 flex items-center justify-between gap-3 mb-2">
+            <div className="flex items-start gap-3 flex-1 min-w-0">
+              <div className="p-2 bg-orange-100 rounded-lg text-[#ef7044] shrink-0 mt-0.5">
+                <MapPin size={16}/>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-bold text-gray-900">Selected Pin Point</p>
+                <p className="text-[9px] text-gray-500 break-words leading-relaxed mt-0.5">
+                  {formData.address_1}
+                </p>
               </div>
             </div>
-            <button type="button" onClick={() => setStep("map")} className="bg-[#ef7044] text-white text-[9px] font-bold px-3 py-1.5 rounded-lg shadow-sm hover:bg-black transition-colors">
+            <button type="button" onClick={() => setStep("map")} className="bg-[#ef7044] text-white text-[9px] font-bold px-3 py-1.5 rounded-lg shadow-sm hover:bg-black transition-colors shrink-0">
               Re-Pin
             </button>
           </div>
