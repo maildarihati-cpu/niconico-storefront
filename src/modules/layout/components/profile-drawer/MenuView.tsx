@@ -41,9 +41,9 @@ export default function MenuView({ onClose, setView, customer }: Props) {
         {/* Header Drawer */}
         <div className="flex justify-between items-center mb-10">
           <div className="relative">
-            <h2 className="text-[#ED5725] text-xl font-medium tracking-wide">Account Details</h2>
+            <h2 className="text-[#EF7044] text-xl font-medium tracking-wide">Account Details</h2>
             {/* Garis bawah tipis sesuai desain */}
-            <div className="absolute -bottom-1 left-0 w-full h-[1px] bg-[#ED5725]/30"></div>
+            <div className="absolute -bottom-1 left-0 w-full h-[1px] bg-[#EF7044]/30"></div>
           </div>
           <button onClick={onClose} className="p-1 hover:opacity-70 transition-opacity">
             <X className="w-6 h-6 text-gray-800" />
@@ -58,10 +58,10 @@ export default function MenuView({ onClose, setView, customer }: Props) {
             onClick={handleProfileClick}
             className="flex justify-between items-center w-full group transition-all"
           >
-            <span className="text-[#ED5725] text-lg font-medium tracking-tight group-hover:translate-x-1 transition-transform">
+            <span className="text-[#EF7044] text-lg font-medium tracking-tight group-hover:translate-x-1 transition-transform">
               My Profile
             </span>
-            <ChevronRight className="w-5 h-5 text-[#ED5725]" />
+            <ChevronRight className="w-5 h-5 text-[#EF7044]" />
           </button>
 
           {/* 🌟 Menu Order (Sudah Diubah Jadi Button & Panggil OrderHistory) */}
@@ -69,10 +69,10 @@ export default function MenuView({ onClose, setView, customer }: Props) {
             onClick={handleOrderClick}
             className="flex justify-between items-center w-full group transition-all"
           >
-            <span className="text-[#ED5725] text-lg font-medium tracking-tight group-hover:translate-x-1 transition-transform">
+            <span className="text-[#EF7044] text-lg font-medium tracking-tight group-hover:translate-x-1 transition-transform">
               Order
             </span>
-            <ChevronRight className="w-5 h-5 text-[#ED5725]" />
+            <ChevronRight className="w-5 h-5 text-[#EF7044]" />
           </button>
 
           {/* Menu Cart */}
@@ -81,10 +81,10 @@ export default function MenuView({ onClose, setView, customer }: Props) {
             onClick={onClose}
             className="flex justify-between items-center w-full group transition-all"
           >
-            <span className="text-[#ED5725] text-lg font-medium tracking-tight group-hover:translate-x-1 transition-transform">
+            <span className="text-[#EF7044] text-lg font-medium tracking-tight group-hover:translate-x-1 transition-transform">
               Cart
             </span>
-            <ChevronRight className="w-5 h-5 text-[#ED5725]" />
+            <ChevronRight className="w-5 h-5 text-[#EF7044]" />
           </LocalizedClientLink>
 
           {/* Menu Wishlist */}
@@ -93,10 +93,10 @@ export default function MenuView({ onClose, setView, customer }: Props) {
             onClick={onClose}
             className="flex justify-between items-center w-full group transition-all"
           >
-            <span className="text-[#ED5725] text-lg font-medium tracking-tight group-hover:translate-x-1 transition-transform">
+            <span className="text-[#EF7044] text-lg font-medium tracking-tight group-hover:translate-x-1 transition-transform">
               Wishlist
             </span>
-            <ChevronRight className="w-5 h-5 text-[#ED5725]" />
+            <ChevronRight className="w-5 h-5 text-[#EF7044]" />
           </LocalizedClientLink>
 
           {/* Menu FAQ */}
@@ -105,10 +105,10 @@ export default function MenuView({ onClose, setView, customer }: Props) {
             onClick={onClose}
             className="flex justify-between items-center w-full group transition-all"
           >
-            <span className="text-[#ED5725] text-lg font-medium tracking-tight group-hover:translate-x-1 transition-transform">
+            <span className="text-[#EF7044] text-lg font-medium tracking-tight group-hover:translate-x-1 transition-transform">
               FAQ
             </span>
-            <ChevronRight className="w-5 h-5 text-[#ED5725]" />
+            <ChevronRight className="w-5 h-5 text-[#EF7044]" />
           </LocalizedClientLink>
 
         </div>

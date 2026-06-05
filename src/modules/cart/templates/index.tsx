@@ -223,14 +223,14 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
                   <div className="flex-1 py-1 flex flex-col justify-between">
                     <div className="flex justify-between items-start">
                       <h3 className="font-bold text-[15px] text-gray-900 leading-tight pr-2">{displayTitle}</h3>
-                      <button onClick={() => handleToggleSelect(group)} className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 transition-colors ${isSelected ? "bg-[#e28564] text-white" : "border-2 border-gray-200 bg-white"}`}>
+                      <button onClick={() => handleToggleSelect(group)} className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 transition-colors ${isSelected ? "bg-[#EF7044] text-white" : "border-2 border-gray-200 bg-white"}`}>
                         {isSelected && <Check className="w-4 h-4 stroke-[3]" />}
                       </button>
                     </div>
                     <p className="font-bold text-[15px] text-gray-900 mt-1">{formatPrice(getPrice(displayPrice))}</p>
                     
                     {group.isBundle ? (
-                       <span className="block mt-1 text-[11px] text-[#e28564] font-bold">{displayVariant}</span>
+                       <span className="block mt-1 text-[11px] text-[#EF7044] font-bold">{displayVariant}</span>
                     ) : (
                       <span className="block mt-1 text-[11px] text-gray-400 font-medium">{displayVariant}</span>
                     )}
@@ -273,7 +273,7 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
             disabled={selectedItems.length === 0 || isCheckoutLoading} 
             className={`w-full py-4 rounded-full font-bold text-[15px] transition-all flex items-center justify-center gap-2 ${
               selectedItems.length > 0 && !isCheckoutLoading
-                ? "bg-white text-[#DF714B] shadow-lg active:scale-95 hover:bg-gray-50" 
+                ? "bg-white text-[#EF7044] shadow-lg active:scale-95 hover:bg-gray-50" 
                 : "bg-white/50 text-white/50 cursor-not-allowed"
             }`}
           >

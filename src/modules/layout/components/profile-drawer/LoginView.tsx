@@ -125,11 +125,11 @@ export default function LoginView({ onClose, setView, onSuccess }: Props) {
     <div className="flex flex-col h-full bg-white px-8 pt-8 pb-6 overflow-y-auto [&::-webkit-scrollbar]:hidden">
       
       <div className="flex justify-between items-center mb-4">
-        <button onClick={() => setView("menu")} className="p-1.5 bg-gray-50 hover:bg-white hover:border-[#ED5725] border border-gray-100 rounded-full transition-all group">
-          <ChevronLeft className="w-4 h-4 text-gray-500 group-hover:text-[#ED5725]" />
+        <button onClick={() => setView("menu")} className="p-1.5 bg-gray-50 hover:bg-white hover:border-[#EF7044] border border-gray-100 rounded-full transition-all group">
+          <ChevronLeft className="w-4 h-4 text-gray-500 group-hover:text-[#EF7044]" />
         </button>
-        <button onClick={onClose} className="p-1.5 bg-gray-50 hover:bg-white hover:border-[#ED5725] border border-gray-100 rounded-full transition-all group">
-          <X className="w-4 h-4 text-gray-500 group-hover:text-[#ED5725]" />
+        <button onClick={onClose} className="p-1.5 bg-gray-50 hover:bg-white hover:border-[#EF7044] border border-gray-100 rounded-full transition-all group">
+          <X className="w-4 h-4 text-gray-500 group-hover:text-[#EF7044]" />
         </button>
       </div>
 
@@ -162,7 +162,7 @@ export default function LoginView({ onClose, setView, onSuccess }: Props) {
             placeholder="yourname@email.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full border-b border-gray-200 py-2 focus:outline-none focus:border-[#ED5725] text-sm transition-colors placeholder:text-gray-200"
+            className="w-full border-b border-gray-200 py-2 focus:outline-none focus:border-[#EF7044] text-sm transition-colors placeholder:text-gray-200"
           />
         </div>
         
@@ -174,17 +174,17 @@ export default function LoginView({ onClose, setView, onSuccess }: Props) {
             placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full border-b border-gray-200 py-2 focus:outline-none focus:border-[#ED5725] text-sm transition-colors placeholder:text-gray-200"
+            className="w-full border-b border-gray-200 py-2 focus:outline-none focus:border-[#EF7044] text-sm transition-colors placeholder:text-gray-200"
           />
         </div>
 
         <div className="flex justify-end mt-[-10px]">
-          <button type="button" onClick={() => setView("reset-password")} className="text-[10px] text-gray-400 hover:text-[#ED5725] transition-colors italic font-medium">
+          <button type="button" onClick={() => setView("reset-password")} className="text-[10px] text-gray-400 hover:text-[#EF7044] transition-colors italic font-medium">
             Forgot Password?
           </button>
         </div>
 
-        <button type="submit" disabled={isLoading} className="w-full bg-[#ED5725] text-white rounded-xl py-3.5 font-bold mt-2 border border-[#ED5725] hover:bg-white hover:text-[#ED5725] transition-all flex items-center justify-center gap-2 text-xs tracking-widest uppercase">
+        <button type="submit" disabled={isLoading} className="w-full bg-[#EF7044] text-white rounded-xl py-3.5 font-bold mt-2 border border-[#EF7044] hover:bg-white hover:text-[#EF7044] transition-all flex items-center justify-center gap-2 text-xs tracking-widest uppercase">
           {isLoading ? (
             <><Loader2 className="w-4 h-4 animate-spin" />Authenticating...</>
           ) : (
@@ -218,7 +218,7 @@ export default function LoginView({ onClose, setView, onSuccess }: Props) {
       <div className="mt-auto pt-8 pb-4 text-center">
         <p className="text-xs text-gray-400 font-medium">
           Don't have an account?{" "}
-          <button onClick={() => setView("signup")} className="text-[#ED5725] font-bold hover:underline uppercase tracking-wider ml-1">
+          <button onClick={() => setView("signup")} className="text-[#EF7044] font-bold hover:underline uppercase tracking-wider ml-1">
             Sign Up
           </button>
         </p>

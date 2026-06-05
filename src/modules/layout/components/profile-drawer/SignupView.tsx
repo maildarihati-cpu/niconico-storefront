@@ -85,41 +85,41 @@ export default function SignupView({ onClose, setView }: Props) {
           type="text"
           name="first_name" 
           placeholder="First Name"
-          className="w-full border-b border-gray-300 py-2 focus:outline-none focus:border-[#ED5725] text-sm transition-colors"
+          className="w-full border-b border-gray-300 py-2 focus:outline-none focus:border-[#EF7044] text-sm transition-colors"
         />
         <input
           required
           type="text"
           name="last_name"
           placeholder="Last Name"
-          className="w-full border-b border-gray-300 py-2 focus:outline-none focus:border-[#ED5725] text-sm transition-colors"
+          className="w-full border-b border-gray-300 py-2 focus:outline-none focus:border-[#EF7044] text-sm transition-colors"
         />
         <input
           required
           type="email"
           name="email"
           placeholder="Email address"
-          className="w-full border-b border-gray-300 py-2 focus:outline-none focus:border-[#ED5725] text-sm transition-colors"
+          className="w-full border-b border-gray-300 py-2 focus:outline-none focus:border-[#EF7044] text-sm transition-colors"
         />
         {/* INI DIA TAMBAHANNYA BOS 👇 */}
         <input
           type="tel"
           name="phone"
           placeholder="Phone Number"
-          className="w-full border-b border-gray-300 py-2 focus:outline-none focus:border-[#ED5725] text-sm transition-colors"
+          className="w-full border-b border-gray-300 py-2 focus:outline-none focus:border-[#EF7044] text-sm transition-colors"
         />
         <input
           required
           type="password"
           name="password"
           placeholder="Password"
-          className="w-full border-b border-gray-300 py-2 focus:outline-none focus:border-[#ED5725] text-sm transition-colors"
+          className="w-full border-b border-gray-300 py-2 focus:outline-none focus:border-[#EF7044] text-sm transition-colors"
         />
 
         <button
           type="submit"
           disabled={isPending}
-          className="w-full bg-[#ED5725] text-white rounded-full py-3.5 font-bold mt-4 hover:bg-[#d64a1d] transition-colors flex items-center justify-center gap-2"
+          className="w-full bg-[#EF7044] text-white rounded-full py-3.5 font-bold mt-4 hover:bg-[#d65f36] transition-colors flex items-center justify-center gap-2"
         >
           {isPending ? (
             <>
@@ -155,7 +155,7 @@ export default function SignupView({ onClose, setView }: Props) {
       </div>
 
       <div className="mt-8 pb-4 text-center">
-        <p className="text-sm text-[#ED5725] font-medium">
+        <p className="text-sm text-[#EF7044] font-medium">
           Already have account?{" "}
           <button onClick={() => setView("login")} className="font-bold hover:underline">
             Log In

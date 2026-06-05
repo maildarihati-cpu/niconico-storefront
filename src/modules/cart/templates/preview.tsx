@@ -14,7 +14,7 @@ const CartPreview = ({ cart }: CartPreviewProps) => {
     <div className="bg-white/95 backdrop-blur-xl p-5 overflow-hidden">
       {/* Header */}
       <div className="flex justify-between items-center mb-4 px-2">
-        <span className="text-[10px] uppercase tracking-[0.2em] font-black text-[#ED5725]">
+        <span className="text-[10px] uppercase tracking-[0.2em] font-black text-[#EF7044]">
           Added to Cart
         </span>
         <span className="text-[10px] text-gray-400 font-bold">
@@ -32,7 +32,7 @@ const CartPreview = ({ cart }: CartPreviewProps) => {
             <div className="flex-1 min-w-0">
               <h4 className="text-sm font-bold text-gray-900 truncate">{item.title}</h4>
               <p className="text-[11px] text-gray-400 font-medium text-left">Qty: {item.quantity}</p>
-              <p className="text-sm font-black text-[#ED5725] mt-0.5 text-left">
+              <p className="text-sm font-black text-[#EF7044] mt-0.5 text-left">
                 {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(item.unit_price)}
               </p>
             </div>
@@ -50,7 +50,7 @@ const CartPreview = ({ cart }: CartPreviewProps) => {
         </LocalizedClientLink>
         <LocalizedClientLink 
           href="/checkout" 
-          className="py-3 rounded-full bg-[#ED5725] text-center text-[10px] font-black uppercase tracking-widest text-white shadow-lg shadow-orange-100 hover:scale-[1.02] active:scale-95 transition-all"
+          className="py-3 rounded-full bg-[#EF7044] text-center text-[10px] font-black uppercase tracking-widest text-white shadow-lg shadow-orange-100 hover:scale-[1.02] active:scale-95 transition-all"
         >
           Checkout
         </LocalizedClientLink>

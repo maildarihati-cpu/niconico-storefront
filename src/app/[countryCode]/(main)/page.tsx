@@ -132,7 +132,7 @@ useEffect(() => {
                 className="object-cover transition-transform duration-700 group-hover:scale-105" 
               />
               
-              <div className="absolute inset-0 bg-black/40 transition-colors duration-500 group-hover:bg-[#ED5725]/20"></div>
+              <div className="absolute inset-0 bg-black/40 transition-colors duration-500 group-hover:bg-[#EF7044]/20"></div>
               
               <div className="absolute inset-0 flex items-center justify-center">
                 <h3 className="font-inter text-white text-[28px] lg:text-[22px] xl:text-[28px] text-center px-2 font-black italic tracking-[0.15em] drop-shadow-lg uppercase">

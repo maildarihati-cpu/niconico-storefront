@@ -16,7 +16,7 @@ export default function OurStorePage() {
         
         {/* Page Header */}
         <div className="mb-8 border-b border-gray-100 pb-8 px-4 md:px-0">
-          <h1 className="text-3xl md:text-4xl font-bold text-[#ED5725] uppercase tracking-wide">
+          <h1 className="text-3xl md:text-4xl font-bold text-[#EF7044] uppercase tracking-wide">
             Our Stores
           </h1>
           <p className="mt-4 text-gray-500 text-sm md:text-base max-w-xl">

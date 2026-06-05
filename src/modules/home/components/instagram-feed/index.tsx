@@ -7,7 +7,7 @@ export default function InstagramFeed() {
       
       {/* HEADER TITLE (Di-center saat Desktop) */}
       <div className="mb-4 lg:mb-8 lg:text-center text-left">
-        <h2 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-[#ED5725]">
+        <h2 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-[#EF7044]">
           #niconiconfidence
         </h2>
       </div>

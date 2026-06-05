@@ -97,9 +97,9 @@ export default function MakeYourOwnBrandSection() {
         <div className="order-4 lg:order-none flex justify-center lg:justify-start w-full">
           <Link 
             href={content.buttonLink || "#"}
-            className="px-8 py-3.5 bg-[#ED5725] text-white font-bold tracking-wide rounded-full uppercase italic flex items-center justify-center gap-3 shadow-md hover:shadow-lg border-2 border-transparent hover:bg-white hover:text-[#ED5725] hover:border-[#ED5725] transition-all duration-300 group active:scale-[0.98] w-fit"
+            className="px-8 py-3.5 bg-[#EF7044] text-white font-bold tracking-wide rounded-full uppercase italic flex items-center justify-center gap-3 shadow-md hover:shadow-lg border-2 border-transparent hover:bg-white hover:text-[#EF7044] hover:border-[#EF7044] transition-all duration-300 group active:scale-[0.98] w-fit"
           >
-            <div className="w-6 h-6 rounded-full bg-white text-[#ED5725] flex items-center justify-center group-hover:bg-[#ED5725] group-hover:text-white transition-colors">
+            <div className="w-6 h-6 rounded-full bg-white text-[#EF7044] flex items-center justify-center group-hover:bg-[#EF7044] group-hover:text-white transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
                     <path fillRule="evenodd" d="M14 2.5a.5.5 0 0 0-.5-.5h-6a.5.5 0 0 0 0 1h4.793L2.146 13.146a.5.5 0 0 0 .708.708L13 3.707V8.5a.5.5 0 0 0 1 0v-6z"/>
                 </svg>
