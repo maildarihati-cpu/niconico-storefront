@@ -42,7 +42,7 @@ const FadeInSection = ({ children, delay = 0 }: { children: React.ReactNode, del
     <div
       ref={domRef}
       // Durasinya diubah jadi 2000ms (2 detik) dan translate-y-16 (mulai dari lebih bawah)
-      className={`transition-all duration-[2000ms] ease-in-out ${
+      className={`transition-all duration-[2000ms] ease-in-out h-full ${
         isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-16"
       }`}
       style={{ transitionDelay: `${delay}ms` }}
@@ -108,7 +108,8 @@ useEffect(() => {
         Feature Products
       </h2>
       
-      <div className="flex flex-col w-full">
+      {/* 🌟 PERUBAHAN DI SINI: flex-col untuk mobile, grid-cols-5 untuk desktop */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 w-full">
         {[
           { title: "BIKINIS", img: "/bikinis.png", handle: "bikinis" },
           { title: "SWIMSUIT", img: "/swimsuit.png", handle: "swimsuit" },
@@ -117,10 +118,10 @@ useEffect(() => {
           { title: "ACCESSORIES", img: "/accessories.png", handle: "accessories" }
         ].map((item, idx) => (
           <FadeInSection key={idx} delay={idx * 150}>
-            {/* 🌟 Bungkus div dengan LocalizedClientLink agar bisa diklik dan tembus filter Store */}
+            {/* 🌟 PERUBAHAN DI SINI: Tinggi disesuaikan lg:h-[600px] khusus desktop agar proporsional saat berjejer */}
             <LocalizedClientLink 
               href={`/store?category=${item.handle}`} 
-              className="relative w-full h-[150px] group cursor-pointer overflow-hidden block"
+              className="relative w-full h-[150px] lg:h-[500px] xl:h-[600px] group cursor-pointer overflow-hidden block"
             >
               
               <Image 
@@ -134,7 +135,7 @@ useEffect(() => {
               <div className="absolute inset-0 bg-black/40 transition-colors duration-500 group-hover:bg-[#ED5725]/20"></div>
               
               <div className="absolute inset-0 flex items-center justify-center">
-                <h3 className="font-inter text-white text-[28px] font-black italic tracking-[0.15em] drop-shadow-lg uppercase">
+                <h3 className="font-inter text-white text-[28px] lg:text-[22px] xl:text-[28px] text-center px-2 font-black italic tracking-[0.15em] drop-shadow-lg uppercase">
                   {item.title}
                 </h3>
               </div>

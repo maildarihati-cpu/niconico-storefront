@@ -98,7 +98,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
           }));
         }
       } catch (err) {
-        console.error("Gagal menjabarkan koordinat peta:", err);
+        console.error("Failed to parse map coordinates:", err);
       } finally {
         setIsMapLoading(false);
       }
@@ -120,7 +120,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
         const { lat, lon } = data[0];
         mapInstance.setView([parseFloat(lat), parseFloat(lon)], 16);
       } else {
-        alert("Lokasi tidak ditemukan, silakan ketik lebih spesifik, say.");
+        alert("Location not found. Please refine your search and try again.");
       }
     } catch (err) {
       console.error(err);
@@ -137,7 +137,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
           const { latitude, longitude } = position.coords;
           mapInstance.setView([latitude, longitude], 16);
         },
-        (err) => { alert("Gagal mendeteksi GPS. Pastikan izin lokasi browser aktif, say."); }
+        (err) => { alert("Unable to detect GPS. Please enable location permissions in your browser."); }
       );
     }
   };
@@ -185,7 +185,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
           // Load ulang kurir
           await fetchShippingMethods(updatedCart.id);
         } catch (error) {
-          console.error("Gagal auto-sync alamat default:", error);
+          console.error("Failed to auto-sync default address:", error);
           setIsLoadingShipping(false);
         }
       }
@@ -248,8 +248,8 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
       await handleUpdateAddress(payload)
       
     } catch (error) {
-      console.error("Gagal menyimpan alamat:", error)
-      alert("Gagal menyimpan alamat ke profil. Pastikan data sudah benar.")
+      console.error("Failed to save address:", error)
+      alert("Failed to save address to profile. Please make sure your information is correct.")
       setIsLoadingShipping(false)
     }
   }
@@ -380,11 +380,11 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                           type="text" 
                           value={searchQueryMap}
                           onChange={(e) => setSearchQueryMap(e.target.value)}
-                          placeholder="Cari lokasi di Bali..." 
+                          placeholder="Search for a location in Bali..." 
                           className="w-full text-xs outline-none text-gray-700 py-1.5 bg-transparent" 
                         />
                         <button type="submit" disabled={isSearchingMap} className="text-[9px] bg-black text-white px-3 py-1.5 rounded-full font-bold uppercase tracking-wider shrink-0 ml-2">
-                          Cari
+                          Search
                         </button>
                       </div>
                     </form>
@@ -413,7 +413,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                       <p className="text-[11px] text-gray-400 animate-pulse font-medium">Translating map coordinates...</p>
                     ) : (
                       <p className="text-[10px] text-gray-700 leading-relaxed font-bold">
-                        {newAddress.address_1 || "Geser peta untuk menentukan titik pengiriman utama."}
+                        {newAddress.address_1 || "Drag the map to determine the main delivery point."}
                       </p>
                     )}
                   </div>
@@ -426,7 +426,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                       value={newAddress.address_1}
                       onChange={(e) => setNewAddress({...newAddress, address_1: e.target.value})}
                       className="w-full border border-gray-200 rounded-xl px-4 py-3 text-xs text-gray-800 font-medium focus:border-[#ef7044] outline-none transition-colors"
-                      placeholder="Masukkan nomor rumah, gang, atau blok..."
+                      placeholder="Input your full address here, including street name, building number, etc..."
                     />
                   </div>
 

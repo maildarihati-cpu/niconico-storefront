@@ -72,7 +72,6 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
 
-  // 🌟 LOGIKA WARNA PINTAR (Metadata + Fallback Ekstrak URL)
   let colorName = product?.metadata?.color_name;
   let colorId = product?.metadata?.color_id;
 
@@ -143,7 +142,6 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
       const sizeOpt = v.options?.find((o: any) => !["top", "bottom"].includes(o.value?.toLowerCase().trim()))
       let sizeVal = sizeOpt?.value || v.title?.replace(/top|bottom/i, '').trim() || "All Size"
       
-      // 🌟 FIX: Cegah bocornya teks 'Default Option' atau 'Option'
       if (sizeVal.toLowerCase().includes("default") || sizeVal.toLowerCase().includes("option")) {
         sizeVal = "All Size"
       }
@@ -841,16 +839,16 @@ export default function StoreTemplate() {
       
       {/* =========================================
           🌟 DESKTOP SIDEBAR FILTER (STICKY KIRI)
-          🌟 PERBAIKAN: top-[120px] agar pas di bawah navbar, spasi antar menu diperkecil (space-y-4 & mb-2)
+          🌟 PERBAIKAN: top-[120px] agar pas di bawah navbar, spasi antar menu diperkecil (space-y-3 & mb-1.5)
           ========================================= */}
-      <aside className="hidden lg:flex flex-col w-[260px] xl:w-[300px] shrink-0 sticky top-[120px] max-h-[calc(100vh-140px)] overflow-y-auto scrollbar-hide border-r border-gray-100 pr-6 z-20">
-        <h2 className="text-xl font-black text-gray-900 mb-6 uppercase tracking-widest pt-2">Filter</h2>
+      <aside className="hidden lg:flex flex-col w-[260px] xl:w-[280px] shrink-0 sticky top-[120px] max-h-[calc(100vh-140px)] overflow-y-auto scrollbar-hide border-r border-gray-100 pr-6 z-20">
+        <h2 className="text-[16px] font-black text-gray-900 mb-6 uppercase tracking-widest pt-2">Filter</h2>
         
-        <div className="flex-1 space-y-4">
+        <div className="flex-1 space-y-5">
           {/* Price */}
           <div>
-            <p className="text-[14px] font-bold text-gray-900 mb-2">Price</p>
-            <div className="px-2">
+            <p className="text-[13px] font-bold text-gray-900 mb-1.5">Price</p>
+            <div className="px-1">
               <input type="range" min="0" max="5000000" step="50000" value={maxPrice} onChange={(e) => setMaxPrice(Number(e.target.value))} className="w-full accent-[#EF7044]" />
               <div className="flex justify-between mt-1 text-[11px] font-medium text-gray-600">
                 <span>Rp 0</span>
@@ -861,7 +859,7 @@ export default function StoreTemplate() {
 
           {/* Size */}
           <div>
-            <p className="text-[14px] font-bold text-gray-900 mb-2">Size</p>
+            <p className="text-[13px] font-bold text-gray-900 mb-1.5">Size</p>
             <div className="flex flex-wrap gap-2">
               {["S", "M", "L", "XL"].map(size => (
                 <button key={size} onClick={() => setSelectedSize(selectedSize === size ? "" : size)} className={`px-5 py-1.5 rounded-full border transition-colors text-xs font-medium ${selectedSize === size ? "border-[#EF7044] bg-orange-50/50 text-[#EF7044]" : "border-gray-200 text-gray-700 bg-white hover:border-[#EF7044]"}`}>{size}</button>
@@ -871,12 +869,12 @@ export default function StoreTemplate() {
 
           {/* Color */}
           <div>
-            <p className="text-[14px] font-bold text-gray-900 mb-2.5">Color</p>
-            <div className="flex flex-wrap gap-4">
+            <p className="text-[13px] font-bold text-gray-900 mb-2">Color</p>
+            <div className="flex flex-wrap gap-3">
               {Object.entries(COLOR_IDENTITY).map(([colorName, colorHex]) => (
-                <button key={colorName} onClick={() => setSelectedColor(selectedColor === colorName ? "" : colorName)} className="flex flex-col items-center gap-1.5 group">
-                  <div className={`w-7 h-7 rounded-full transition-all ${selectedColor === colorName ? "ring-2 ring-offset-2 ring-gray-900 scale-110" : "border border-gray-200 group-hover:scale-110"}`} style={{ backgroundColor: colorHex }} />
-                  <span className={`text-[9px] uppercase tracking-wider transition-all ${selectedColor === colorName ? "font-bold text-gray-900" : "font-medium text-gray-400"}`}>{colorName}</span>
+                <button key={colorName} onClick={() => setSelectedColor(selectedColor === colorName ? "" : colorName)} className="flex flex-col items-center gap-1 group">
+                  <div className={`w-6 h-6 rounded-full transition-all ${selectedColor === colorName ? "ring-2 ring-offset-2 ring-gray-900 scale-110" : "border border-gray-200 group-hover:scale-110"}`} style={{ backgroundColor: colorHex }} />
+                  <span className={`text-[8px] uppercase tracking-wider transition-all ${selectedColor === colorName ? "font-bold text-gray-900" : "font-medium text-gray-400"}`}>{colorName}</span>
                 </button>
               ))}
             </div>
@@ -884,7 +882,7 @@ export default function StoreTemplate() {
 
           {/* Category */}
           <div>
-            <p className="text-[14px] font-bold text-gray-900 mb-2">Category</p>
+            <p className="text-[13px] font-bold text-gray-900 mb-1.5">Category</p>
             <div className="flex flex-wrap gap-2">
               {topCategories.map(cat => (
                 <button key={cat.handle} onClick={() => setActiveCategory(activeCategory === cat.handle ? "all" : cat.handle)} className={`px-4 py-1.5 rounded-full border transition-colors text-xs font-medium ${activeCategory === cat.handle ? "border-[#EF7044] bg-orange-50/50 text-[#EF7044]" : "border-gray-200 text-gray-700 bg-white hover:border-[#EF7044]"}`}>{cat.name}</button>
@@ -894,7 +892,7 @@ export default function StoreTemplate() {
 
           {/* Collections */}
           <div>
-            <p className="text-[14px] font-bold text-gray-900 mb-2">Collections</p>
+            <p className="text-[13px] font-bold text-gray-900 mb-1.5">Collections</p>
             <div className="flex flex-wrap gap-2">
               {["Carvico", "New Arrivals", "Signature", "Island Escape", "Discount"].map(col => (
                 <button key={col} onClick={() => setSelectedCollection(selectedCollection === col ? "" : col)} className={`px-4 py-1.5 rounded-full border transition-colors text-xs font-medium ${selectedCollection === col ? "border-[#EF7044] bg-orange-50/50 text-[#EF7044]" : "border-gray-200 text-gray-700 bg-white hover:border-[#EF7044]"}`}>{col}</button>
@@ -903,9 +901,9 @@ export default function StoreTemplate() {
           </div>
         </div>
 
-        <div className="border-t border-gray-100 pt-5 mt-6 pb-4 bg-white flex gap-3 flex-shrink-0 sticky bottom-0 z-30">
-          <button onClick={handleResetFilter} className="flex-1 py-3 rounded-full border-2 border-orange-200 text-orange-400 font-bold text-[13px] hover:bg-orange-50 transition-colors">Reset</button>
-          <button onClick={handleApplyFilter} className="flex-1 py-3 rounded-full bg-[#EF7044] text-white font-bold text-[13px] hover:bg-[#d65f36] shadow-md transition-colors">Apply</button>
+        <div className="border-t border-gray-100 pt-5 mt-6 pb-4 bg-white flex gap-2 flex-shrink-0 sticky bottom-0 z-30">
+          <button onClick={handleResetFilter} className="flex-1 py-2.5 rounded-full border border-orange-200 text-orange-400 font-bold text-xs hover:bg-orange-50 transition-colors">Reset</button>
+          <button onClick={handleApplyFilter} className="flex-1 py-2.5 rounded-full bg-[#EF7044] text-white font-bold text-xs hover:bg-[#d65f36] shadow-sm transition-colors">Apply</button>
         </div>
       </aside>
 
@@ -915,8 +913,8 @@ export default function StoreTemplate() {
       <div className="flex-1 w-full min-w-0">
         
         {/* HEADER STICKY */}
-        {/* 🌟 PERBAIKAN: lg:pt-[120px] agar tidak menabrak navbar di Desktop */}
-        <div className="sticky top-0 lg:top-0 z-30 bg-white/85 backdrop-blur-lg pt-[100px] lg:pt-[120px] pb-4 px-4 lg:px-0 shadow-[0_10px_30px_rgba(0,0,0,0.03)] lg:shadow-none border-b lg:border-b-0 border-gray-50">
+        {/* 🌟 PERBAIKAN: lg:pt-[120px] agar tidak menabrak navbar di Desktop, Title hilang total di Desktop */}
+        <div className="sticky top-0 lg:top-[70px] z-30 bg-white/85 backdrop-blur-lg pt-[100px] lg:pt-[30px] pb-4 px-4 lg:px-0 shadow-[0_10px_30px_rgba(0,0,0,0.03)] lg:shadow-none border-b lg:border-b-0 border-gray-50">
           
           {/* 🌟 HILANGKAN SEARCH BAR DI DESKTOP */}
           <div className="relative mb-6 lg:hidden">
@@ -935,35 +933,29 @@ export default function StoreTemplate() {
             )}
           </div>
 
-          <div className="flex justify-between items-center mb-6 relative">
-            
-            {/* 🌟 CENTER TITLE DI DESKTOP RELATIF TERHADAP LAYAR PENUH */}
-            <div className="hidden lg:flex absolute lg:-left-[292px] xl:-left-[332px] right-0 justify-center pointer-events-none">
-              <h1 className="text-2xl font-black text-gray-900 tracking-tight pointer-events-auto">Product Category</h1>
-            </div>
-
-            {/* Mobile Title */}
-            <h1 className="text-2xl font-black text-gray-900 tracking-tight lg:hidden w-max">Product Category</h1>
+          <div className="flex justify-between items-center mb-6 lg:mb-0 relative lg:hidden">
+            {/* Mobile Title - Hanya muncul di Mobile */}
+            <h1 className="text-2xl font-black text-gray-900 tracking-tight w-max">Product Category</h1>
             
             {/* 🌟 HILANGKAN TOMBOL FILTER DRAWER DI DESKTOP */}
             <button 
               onClick={() => setIsFilterOpen(true)}
-              className="flex items-center gap-2 border border-orange-200 text-[#EF7044] bg-orange-50/70 px-5 py-2 rounded-full text-sm font-bold hover:bg-orange-100 transition-colors lg:hidden ml-auto"
+              className="flex items-center gap-2 border border-orange-200 text-[#EF7044] bg-orange-50/70 px-5 py-2 rounded-full text-sm font-bold hover:bg-orange-100 transition-colors ml-auto"
             >
               Filter <ChevronDown className="w-4 h-4" />
             </button>
           </div>
 
           {/* 🌟 KATEGORI ATAS (Center di Desktop) */}
-          <div className="flex overflow-x-auto lg:flex-wrap lg:justify-left gap-5 lg:gap-8 scrollbar-hide pb-2">
+          <div className="flex overflow-x-auto lg:flex-wrap lg:justify-center gap-5 lg:gap-8 scrollbar-hide pb-2 lg:mb-6">
             {topCategories.map((cat) => (
               <button key={cat.handle} onClick={() => setActiveCategory(cat.handle)} className="flex flex-col items-center min-w-[70px] gap-2 group">
-                <div className={`w-[72px] h-[72px] rounded-full overflow-hidden border-2 transition-all p-0.5 ${activeCategory === cat.handle ? "border-[#EF7044]" : "border-transparent"}`}>
+                <div className={`w-[72px] h-[72px] lg:w-[80px] lg:h-[80px] rounded-full overflow-hidden border-2 transition-all p-0.5 ${activeCategory === cat.handle ? "border-[#EF7044]" : "border-transparent"}`}>
                   <div className="w-full h-full rounded-full overflow-hidden bg-gray-100">
                      <img src={cat.img} alt={cat.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
                   </div>
                 </div>
-                <span className={`text-[10px] font-black uppercase tracking-wider text-center leading-tight ${activeCategory === cat.handle ? "text-gray-900" : "text-gray-400"}`}>
+                <span className={`text-[10px] lg:text-[11px] font-black uppercase tracking-wider text-center leading-tight ${activeCategory === cat.handle ? "text-gray-900" : "text-gray-400"}`}>
                   {cat.name}
                 </span>
               </button>

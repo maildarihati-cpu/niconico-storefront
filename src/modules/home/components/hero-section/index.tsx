@@ -99,33 +99,39 @@ export default function HeroSection() {
       <div className="absolute inset-0 bg-black/30 z-[5] pointer-events-none" />
       
       {/* KONTEN TEKS & TOMBOL */}
-      <div className="absolute inset-0 flex flex-col items-center justify-end pb-24 px-8 text-center z-10 bg-gradient-to-t from-black/60 via-transparent to-transparent">
+      {/* 🌟 PERUBAHAN DI SINI: Flex items-center dicabut dari pembungkus luar */}
+      <div className="absolute inset-0 flex flex-col justify-end pb-24 px-8 z-10 bg-gradient-to-t from-black/60 via-transparent to-transparent">
         
-        <h1 className="text-[32px] font-bold leading-[1.1] text-white mb-3 tracking-tight whitespace-pre-line drop-shadow-md">
-          {globalTitle}
-        </h1>
-        
-        <p className="text-[10px] font-bold tracking-[0.2em] text-white/90 uppercase mb-8 drop-shadow-md">
-          Resort & Swimwear Est. 2004
-        </p>
-        
-        <Link href="/store" className="w-full max-w-[280px] mb-8">
-          <button className="w-full bg-[#ED5725] text-white py-4 rounded-full font-bold text-xs tracking-widest uppercase transition-all shadow-lg hover:bg-white hover:text-[#ED5725]">
-            SHOP NOW
-          </button>
-        </Link>
+        {/* 🌟 WRAPPER BARU: Di Mobile rata tengah (items-center text-center), di Desktop rata kiri (lg:items-start lg:text-left) */}
+        <div className="w-full max-w-[1200px] mx-auto flex flex-col items-center lg:items-start text-center lg:text-left">
+          
+          <h1 className="text-[32px] md:text-[42px] lg:text-[56px] font-bold leading-[1.1] text-white mb-3 tracking-tight whitespace-pre-line drop-shadow-md">
+            {globalTitle}
+          </h1>
+          
+          <p className="text-[10px] lg:text-xs font-bold tracking-[0.2em] text-white/90 uppercase mb-8 drop-shadow-md">
+            Resort & Swimwear Est. 2004
+          </p>
+          
+          <Link href="/store" className="w-full max-w-[280px] mb-8">
+            <button className="w-full bg-[#ED5725] text-white py-4 rounded-full font-bold text-xs tracking-widest uppercase transition-all shadow-lg hover:bg-white hover:text-[#ED5725]">
+              SHOP NOW
+            </button>
+          </Link>
 
-        {/* HERO DOTS */}
-        <div className="flex gap-2">
-          {Array.from({ length: totalDots }).map((_, i) => (
-            <div 
-              key={i} 
-              onClick={() => setHeroIndex(i)}
-              className={`h-1.5 rounded-full transition-all duration-500 cursor-pointer ${
-                i === heroIndex ? "w-8 bg-[#ED5725]" : "w-2 bg-white/50 hover:bg-white/80"
-              }`}
-            />
-          ))}
+          {/* HERO DOTS */}
+          <div className="flex gap-2">
+            {Array.from({ length: totalDots }).map((_, i) => (
+              <div 
+                key={i} 
+                onClick={() => setHeroIndex(i)}
+                className={`h-1.5 rounded-full transition-all duration-500 cursor-pointer ${
+                  i === heroIndex ? "w-8 bg-[#ED5725]" : "w-2 bg-white/50 hover:bg-white/80"
+                }`}
+              />
+            ))}
+          </div>
+
         </div>
 
       </div>

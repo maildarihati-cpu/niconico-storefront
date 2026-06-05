@@ -156,7 +156,7 @@ export default function ProfileView({ onClose, setView, customer, onSuccess }: P
                   {defaultAddress.address_1}, {defaultAddress.city}, {defaultAddress.province}
                 </p>
               ) : (
-                <p className="text-[10px] text-gray-300 italic">No address saved yet, say.</p>
+                <p className="text-[10px] text-gray-300 italic">No address saved yet.</p>
               )}
             </div>
 

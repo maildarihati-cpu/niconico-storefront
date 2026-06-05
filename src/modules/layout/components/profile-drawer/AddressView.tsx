@@ -99,7 +99,7 @@ export default function AddressView({ onClose, setView, customer, onSuccess }: P
           }));
         }
       } catch (err) {
-        console.error("Gagal menjabarkan koordinat peta:", err);
+        console.error("Failed to parse map coordinates:", err);
       } finally {
         setIsMapLoading(false);
       }
@@ -121,7 +121,7 @@ export default function AddressView({ onClose, setView, customer, onSuccess }: P
         const { lat, lon } = data[0];
         mapInstance.setView([parseFloat(lat), parseFloat(lon)], 16);
       } else {
-        alert("Lokasi tidak ditemukan, silakan ketik lebih spesifik, say.");
+        alert("Location not found. Please refine your search and try again.");
       }
     } catch (err) {
       console.error(err);
@@ -138,7 +138,7 @@ export default function AddressView({ onClose, setView, customer, onSuccess }: P
           const { latitude, longitude } = position.coords;
           mapInstance.setView([latitude, longitude], 16);
         },
-        (err) => { alert("Gagal mendeteksi GPS. Pastikan izin lokasi browser aktif, say."); }
+        (err) => { alert("Unable to detect GPS. Please enable location permissions in your browser."); }
       );
     }
   };
@@ -254,7 +254,7 @@ const [isSettingDefault, setIsSettingDefault] = useState(false);
       setView("profile"); // Sukses simpan, baru tutup laci!
     } catch (err) {
       console.error(err);
-      alert("Failed to select default address, say.");
+      alert("Failed to select default address. Please try again.");
     } finally {
       setIsSettingDefault(false);
     }
@@ -341,11 +341,11 @@ const [isSettingDefault, setIsSettingDefault] = useState(false);
               type="text" 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Ketik daerah / nama jalan di Bali..." 
+              placeholder="Enter area or street name in Bali..." 
               className="w-full text-xs outline-none text-gray-700 py-2 bg-transparent" 
             />
             <button type="submit" disabled={isSearching} className="text-[10px] bg-black text-white px-3 py-1.5 rounded-full font-bold uppercase tracking-wider shrink-0 ml-2">
-              {isSearching ? "..." : "Cari"}
+              {isSearching ? "..." : "Search"}
             </button>
           </div>
         </form>
@@ -379,7 +379,7 @@ const [isSettingDefault, setIsSettingDefault] = useState(false);
               <p className="text-[11px] text-gray-400 animate-pulse font-medium">Translating map coordinates...</p>
             ) : (
               <p className="text-[11px] text-gray-700 leading-relaxed font-bold line-clamp-2">
-                {formData.address_1 || "Geser peta untuk menentukan titik pengiriman utama Niconico Resort."}
+                {formData.address_1 || "Drag the map to set the main Niconico Resort delivery point."}
               </p>
             )}
           </div>
@@ -447,7 +447,7 @@ const [isSettingDefault, setIsSettingDefault] = useState(false);
               value={formData.notes}
               onChange={(e) => setFormData({...formData, notes: e.target.value})}
               className="w-full border border-gray-200 rounded-xl px-4 py-3 text-xs text-gray-800 font-medium focus:border-[#ef7044] outline-none transition-colors"
-              placeholder="Contoh: Gerbang warna putih, taruh di depan pintu aja"
+              placeholder="Example: White gate, leave at the front door"
             />
           </div>
 
@@ -470,7 +470,7 @@ const [isSettingDefault, setIsSettingDefault] = useState(false);
               value={formData.label}
               onChange={(e) => setFormData({...formData, label: e.target.value})}
               className="w-full border border-gray-200 rounded-xl px-4 py-3 text-xs text-gray-800 font-medium focus:border-[#ef7044] outline-none transition-colors"
-              placeholder="Ex: Rumah Canggu, Villa Uluwatu"
+              placeholder="Ex: Canggu Home, Uluwatu Villa"
             />
           </div>
 

@@ -60,7 +60,7 @@ export default function OrderHistory({ orders = [], setView, onClose }: OrderHis
       setSelectedOrder(null)
       setActiveTab("Delivered")
     } catch (error) {
-      alert("Gagal memperbarui pesanan.")
+      alert("Failed to update order.")
     } finally {
       setIsUpdating(false)
     }
@@ -221,7 +221,7 @@ export default function OrderHistory({ orders = [], setView, onClose }: OrderHis
                     {selectedOrder.shipping_address ? (
                       `${selectedOrder.shipping_address.address_1 || ""}, ${selectedOrder.shipping_address.city || ""}`
                     ) : (
-                      <span className="text-red-400 italic text-[11px] font-normal">Data alamat tidak tersedia</span>
+                      <span className="text-red-400 italic text-[11px] font-normal">Address data not available</span>
                     )}
                   </span>
                 </div>
@@ -248,7 +248,7 @@ export default function OrderHistory({ orders = [], setView, onClose }: OrderHis
                     </div>
                   ))
                 ) : (
-                  <p className="text-red-400 italic text-center text-[11px]">Data barang tidak ditarik oleh server.</p>
+                  <p className="text-red-400 italic text-center text-[11px]">Item data not fetched from server.</p>
                 )}
               </div>
 

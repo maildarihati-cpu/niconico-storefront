@@ -179,7 +179,7 @@ export default function StoreSection({ layout = "slider" }: StoreSectionProps) {
           <div className="hidden md:flex justify-center mt-10 w-full">
             <a 
               href="/our-store"
-              className="bg-[#DF714B] border-2 border-[#DF714B] text-white px-10 py-3.5 rounded-full font-bold text-sm hover:bg-white hover:text-[#DF714B] transition-all duration-300 flex items-center gap-3 shadow-md hover:shadow-lg uppercase tracking-wider"
+              className="bg-[#DF714B] border-2 border-[#EF7044] text-white px-10 py-3.5 rounded-full font-bold text-sm hover:bg-white hover:text-[#DF714B] transition-all duration-300 flex items-center gap-3 shadow-md hover:shadow-lg uppercase tracking-wider"
             >
               View All Stores <ArrowRight className="w-4 h-4" />
             </a>
