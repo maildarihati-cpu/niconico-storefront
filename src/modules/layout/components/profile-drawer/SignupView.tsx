@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useActionState, useEffect } from "react";
+import Image from "next/image"; // 🌟 DITAMBAH UNTUK OPTIMASI LOGO
 import { X, Loader2 } from "lucide-react";
 import { signup } from "@lib/data/customer"; 
 
@@ -23,33 +24,32 @@ export default function SignupView({ onClose, setView }: Props) {
 
   // 🌟 FUNGSI GOOGLE AUTH
   const handleGoogleAuth = async (e: React.MouseEvent) => {
-  e.preventDefault();
-  
-  const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://api.niconicoresort.com";
-  
-  // 🌟 Ini "tiket pulang"-nya. Pastikan mengarah ke halaman web kamu!
-  const storefrontUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://dev.niconicoresort.com";
-  
-  try {
-    // 🌟 PERBAIKAN: Kita selipkan ?redirect_to= di sini biar Medusa tahu harus balikin user ke mana
-    const response = await fetch(`${backendUrl}/auth/customer/google?redirect_to=${encodeURIComponent(storefrontUrl)}`, {
-      method: "GET"
-    });
+    e.preventDefault();
+    const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://api.niconicoresort.com";
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://dev.niconicoresort.com";
     
-    const data = await response.json();
+    // 🌟 PERBAIKAN: Arahkan ke rute file google-callback Bos!
+    // Asumsi rute callback Bos ada di "/google-callback" atau "/api/auth/callback"
+    const callbackUrl = `${baseUrl}/google-callback`; 
+    
+    try {
+      const response = await fetch(`${backendUrl}/auth/customer/google?redirect_to=${encodeURIComponent(callbackUrl)}`, {
+        method: "GET"
+      });
+      
+      const data = await response.json();
 
-    if (data.location) {
-      // Pergi ke halaman Google
-      window.location.href = data.location;
-    } else {
-      console.error("Gagal mendapatkan link Google:", data);
-      alert("Terjadi kesalahan saat menghubungi server.");
+      if (data.location) {
+        window.location.href = data.location;
+      } else {
+        console.error("Gagal mendapatkan link Google:", data);
+        alert("Terjadi kesalahan saat menghubungi server.");
+      }
+    } catch (error) {
+      console.error("Error Auth:", error);
+      alert("Tidak dapat terhubung ke server.");
     }
-  } catch (error) {
-    console.error("Error Auth:", error);
-    alert("Tidak dapat terhubung ke server.");
-  }
-};
+  };
 
   return (
     <div className="flex flex-col h-full bg-white px-8 pt-8 pb-6 overflow-y-auto [&::-webkit-scrollbar]:hidden">
@@ -60,9 +60,15 @@ export default function SignupView({ onClose, setView }: Props) {
       </div>
 
       <div className="text-center mb-8 flex flex-col items-center">
-        <div className="text-black text-center flex flex-col items-center mb-6">
-          <h1 className="text-2xl font-serif tracking-widest mb-0.5">niconico</h1>
-          <p className="text-[10px] tracking-[0.3em] font-light uppercase">resort</p>
+        {/* 🌟 LOGO MENGGANTIKAN TEKS */}
+        <div className="relative w-36 h-10 mb-6">
+          <Image 
+            src="/logo-niconico-black.png" 
+            alt="Niconico Resort Logo" 
+            fill 
+            className="object-contain" 
+            priority
+          />
         </div>
         <h2 className="text-2xl font-bold text-black">Create Your Account</h2>
       </div>

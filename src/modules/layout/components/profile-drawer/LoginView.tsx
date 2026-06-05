@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image"; // 🌟 DITAMBAH UNTUK OPTIMASI LOGO
 import { X, Loader2, ChevronLeft } from "lucide-react";
 // 🌟 IMPORT SERVER ACTION LOGIN DARI CUSTOMER.TS
 import { login } from "@lib/data/customer";
@@ -94,21 +95,21 @@ export default function LoginView({ onClose, setView, onSuccess }: Props) {
   // 🌟 FUNGSI GOOGLE AUTH
   const handleGoogleAuth = async (e: React.MouseEvent) => {
     e.preventDefault();
-    
     const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://api.niconicoresort.com";
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://dev.niconicoresort.com";
     
-    // 🌟 Ini "tiket pulang"-nya. Pastikan mengarah ke halaman web kamu!
-    const storefrontUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://dev.niconicoresort.com";
+    // 🌟 PERBAIKAN: Arahkan ke rute file google-callback Bos!
+    // Asumsi rute callback Bos ada di "/google-callback" atau "/api/auth/callback"
+    const callbackUrl = `${baseUrl}/google-callback`; 
     
     try {
-      const response = await fetch(`${backendUrl}/auth/customer/google?redirect_to=${encodeURIComponent(storefrontUrl)}`, {
+      const response = await fetch(`${backendUrl}/auth/customer/google?redirect_to=${encodeURIComponent(callbackUrl)}`, {
         method: "GET"
       });
       
       const data = await response.json();
 
       if (data.location) {
-        // Pergi ke halaman Google
         window.location.href = data.location;
       } else {
         console.error("Gagal mendapatkan link Google:", data);
@@ -133,9 +134,15 @@ export default function LoginView({ onClose, setView, onSuccess }: Props) {
       </div>
 
       <div className="text-center mb-10 flex flex-col items-center">
-        <div className="text-black text-center flex flex-col items-center mb-6">
-          <h1 className="text-2xl font-serif tracking-widest mb-0.5">niconico</h1>
-          <p className="text-[10px] tracking-[0.3em] font-light uppercase">resort</p>
+        {/* 🌟 LOGO MENGGANTIKAN TEKS */}
+        <div className="relative w-36 h-10 mb-6">
+          <Image 
+            src="/logo-niconico-black.png" 
+            alt="Niconico Resort Logo" 
+            fill 
+            className="object-contain" 
+            priority
+          />
         </div>
         <h2 className="text-2xl font-bold text-black uppercase tracking-widest">Log In</h2>
       </div>

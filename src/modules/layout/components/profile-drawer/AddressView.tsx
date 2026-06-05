@@ -436,7 +436,7 @@ const [isSettingDefault, setIsSettingDefault] = useState(false);
               value={formData.address_1}
               onChange={(e) => setFormData({...formData, address_1: e.target.value})}
               className="w-full border border-gray-200 rounded-xl px-4 py-3 text-xs text-gray-800 font-medium focus:border-[#ef7044] outline-none transition-colors"
-              placeholder="Masukkan nomor rumah, gang, atau blok..."
+              placeholder="Input Your Address..."
             />
           </div>
 

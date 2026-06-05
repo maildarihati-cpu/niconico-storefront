@@ -841,17 +841,18 @@ export default function StoreTemplate() {
       
       {/* =========================================
           🌟 DESKTOP SIDEBAR FILTER (STICKY KIRI)
+          🌟 PERBAIKAN: top-[120px] agar pas di bawah navbar, spasi antar menu diperkecil (space-y-4 & mb-2)
           ========================================= */}
-      <aside className="hidden lg:flex flex-col w-[260px] xl:w-[300px] shrink-0 sticky top-[40px] max-h-[calc(100vh-80px)] overflow-y-auto scrollbar-hide border-r border-gray-100 pr-6 z-20">
-        <h2 className="text-xl font-black text-gray-900 mb-8 uppercase tracking-widest pt-2">Filter</h2>
+      <aside className="hidden lg:flex flex-col w-[260px] xl:w-[300px] shrink-0 sticky top-[120px] max-h-[calc(100vh-140px)] overflow-y-auto scrollbar-hide border-r border-gray-100 pr-6 z-20">
+        <h2 className="text-xl font-black text-gray-900 mb-6 uppercase tracking-widest pt-2">Filter</h2>
         
-        <div className="flex-1 space-y-8">
+        <div className="flex-1 space-y-4">
           {/* Price */}
           <div>
-            <p className="text-[15px] font-medium text-gray-900 mb-4">Price</p>
+            <p className="text-[14px] font-bold text-gray-900 mb-2">Price</p>
             <div className="px-2">
               <input type="range" min="0" max="5000000" step="50000" value={maxPrice} onChange={(e) => setMaxPrice(Number(e.target.value))} className="w-full accent-[#EF7044]" />
-              <div className="flex justify-between mt-2 text-xs font-medium text-gray-600">
+              <div className="flex justify-between mt-1 text-[11px] font-medium text-gray-600">
                 <span>Rp 0</span>
                 <span>{formatPrice(maxPrice)}</span>
               </div>
@@ -860,22 +861,22 @@ export default function StoreTemplate() {
 
           {/* Size */}
           <div>
-            <p className="text-[15px] font-medium text-gray-900 mb-4">Size</p>
-            <div className="flex flex-wrap gap-2.5">
+            <p className="text-[14px] font-bold text-gray-900 mb-2">Size</p>
+            <div className="flex flex-wrap gap-2">
               {["S", "M", "L", "XL"].map(size => (
-                <button key={size} onClick={() => setSelectedSize(selectedSize === size ? "" : size)} className={`px-6 py-2 rounded-full border transition-colors text-sm font-medium ${selectedSize === size ? "border-[#EF7044] bg-orange-50/50 text-[#EF7044]" : "border-gray-200 text-gray-700 bg-white hover:border-[#EF7044]"}`}>{size}</button>
+                <button key={size} onClick={() => setSelectedSize(selectedSize === size ? "" : size)} className={`px-5 py-1.5 rounded-full border transition-colors text-xs font-medium ${selectedSize === size ? "border-[#EF7044] bg-orange-50/50 text-[#EF7044]" : "border-gray-200 text-gray-700 bg-white hover:border-[#EF7044]"}`}>{size}</button>
               ))}
             </div>
           </div>
 
           {/* Color */}
           <div>
-            <p className="text-[15px] font-medium text-gray-900 mb-5">Color</p>
-            <div className="flex flex-wrap gap-5">
+            <p className="text-[14px] font-bold text-gray-900 mb-2.5">Color</p>
+            <div className="flex flex-wrap gap-4">
               {Object.entries(COLOR_IDENTITY).map(([colorName, colorHex]) => (
-                <button key={colorName} onClick={() => setSelectedColor(selectedColor === colorName ? "" : colorName)} className="flex flex-col items-center gap-2 group">
-                  <div className={`w-8 h-8 rounded-full transition-all ${selectedColor === colorName ? "ring-2 ring-offset-2 ring-gray-900 scale-110" : "border border-gray-200 group-hover:scale-110"}`} style={{ backgroundColor: colorHex }} />
-                  <span className={`text-[10px] uppercase tracking-wider transition-all ${selectedColor === colorName ? "font-bold text-gray-900" : "font-medium text-gray-400"}`}>{colorName}</span>
+                <button key={colorName} onClick={() => setSelectedColor(selectedColor === colorName ? "" : colorName)} className="flex flex-col items-center gap-1.5 group">
+                  <div className={`w-7 h-7 rounded-full transition-all ${selectedColor === colorName ? "ring-2 ring-offset-2 ring-gray-900 scale-110" : "border border-gray-200 group-hover:scale-110"}`} style={{ backgroundColor: colorHex }} />
+                  <span className={`text-[9px] uppercase tracking-wider transition-all ${selectedColor === colorName ? "font-bold text-gray-900" : "font-medium text-gray-400"}`}>{colorName}</span>
                 </button>
               ))}
             </div>
@@ -883,28 +884,28 @@ export default function StoreTemplate() {
 
           {/* Category */}
           <div>
-            <p className="text-[15px] font-medium text-gray-900 mb-4">Category</p>
-            <div className="flex flex-wrap gap-2.5">
+            <p className="text-[14px] font-bold text-gray-900 mb-2">Category</p>
+            <div className="flex flex-wrap gap-2">
               {topCategories.map(cat => (
-                <button key={cat.handle} onClick={() => setActiveCategory(activeCategory === cat.handle ? "all" : cat.handle)} className={`px-5 py-2 rounded-full border transition-colors text-sm font-medium ${activeCategory === cat.handle ? "border-[#EF7044] bg-orange-50/50 text-[#EF7044]" : "border-gray-200 text-gray-700 bg-white hover:border-[#EF7044]"}`}>{cat.name}</button>
+                <button key={cat.handle} onClick={() => setActiveCategory(activeCategory === cat.handle ? "all" : cat.handle)} className={`px-4 py-1.5 rounded-full border transition-colors text-xs font-medium ${activeCategory === cat.handle ? "border-[#EF7044] bg-orange-50/50 text-[#EF7044]" : "border-gray-200 text-gray-700 bg-white hover:border-[#EF7044]"}`}>{cat.name}</button>
               ))}
             </div>
           </div>
 
           {/* Collections */}
           <div>
-            <p className="text-[15px] font-medium text-gray-900 mb-4">Collections</p>
-            <div className="flex flex-wrap gap-2.5">
+            <p className="text-[14px] font-bold text-gray-900 mb-2">Collections</p>
+            <div className="flex flex-wrap gap-2">
               {["Carvico", "New Arrivals", "Signature", "Island Escape", "Discount"].map(col => (
-                <button key={col} onClick={() => setSelectedCollection(selectedCollection === col ? "" : col)} className={`px-5 py-2 rounded-full border transition-colors text-sm font-medium ${selectedCollection === col ? "border-[#EF7044] bg-orange-50/50 text-[#EF7044]" : "border-gray-200 text-gray-700 bg-white hover:border-[#EF7044]"}`}>{col}</button>
+                <button key={col} onClick={() => setSelectedCollection(selectedCollection === col ? "" : col)} className={`px-4 py-1.5 rounded-full border transition-colors text-xs font-medium ${selectedCollection === col ? "border-[#EF7044] bg-orange-50/50 text-[#EF7044]" : "border-gray-200 text-gray-700 bg-white hover:border-[#EF7044]"}`}>{col}</button>
               ))}
             </div>
           </div>
         </div>
 
-        <div className="border-t border-gray-100 pt-6 mt-8 pb-4 bg-white flex gap-3 flex-shrink-0 sticky bottom-0">
-          <button onClick={handleResetFilter} className="flex-1 py-3.5 rounded-full border-2 border-orange-200 text-orange-400 font-bold text-sm hover:bg-orange-50 transition-colors">Reset</button>
-          <button onClick={handleApplyFilter} className="flex-1 py-3.5 rounded-full bg-[#EF7044] text-white font-bold text-sm hover:bg-[#d65f36] shadow-md transition-colors">Apply</button>
+        <div className="border-t border-gray-100 pt-5 mt-6 pb-4 bg-white flex gap-3 flex-shrink-0 sticky bottom-0 z-30">
+          <button onClick={handleResetFilter} className="flex-1 py-3 rounded-full border-2 border-orange-200 text-orange-400 font-bold text-[13px] hover:bg-orange-50 transition-colors">Reset</button>
+          <button onClick={handleApplyFilter} className="flex-1 py-3 rounded-full bg-[#EF7044] text-white font-bold text-[13px] hover:bg-[#d65f36] shadow-md transition-colors">Apply</button>
         </div>
       </aside>
 
@@ -912,8 +913,10 @@ export default function StoreTemplate() {
           🌟 MAIN CONTENT (KANAN DI DESKTOP)
           ========================================= */}
       <div className="flex-1 w-full min-w-0">
+        
         {/* HEADER STICKY */}
-        <div className="sticky top-0 z-30 bg-white/85 backdrop-blur-lg pt-[100px] lg:pt-8 pb-4 px-4 lg:px-0 shadow-[0_10px_30px_rgba(0,0,0,0.03)] lg:shadow-none border-b lg:border-b-0 border-gray-50">
+        {/* 🌟 PERBAIKAN: lg:pt-[120px] agar tidak menabrak navbar di Desktop */}
+        <div className="sticky top-0 lg:top-0 z-30 bg-white/85 backdrop-blur-lg pt-[100px] lg:pt-[120px] pb-4 px-4 lg:px-0 shadow-[0_10px_30px_rgba(0,0,0,0.03)] lg:shadow-none border-b lg:border-b-0 border-gray-50">
           
           {/* 🌟 HILANGKAN SEARCH BAR DI DESKTOP */}
           <div className="relative mb-6 lg:hidden">
@@ -933,8 +936,14 @@ export default function StoreTemplate() {
           </div>
 
           <div className="flex justify-between items-center mb-6 relative">
-            {/* 🌟 CENTER TITLE DI DESKTOP */}
-            <h1 className="text-2xl font-black text-gray-900 tracking-tight lg:absolute lg:left-1/2 lg:-translate-x-1/2 w-max">Product Category</h1>
+            
+            {/* 🌟 CENTER TITLE DI DESKTOP RELATIF TERHADAP LAYAR PENUH */}
+            <div className="hidden lg:flex absolute lg:-left-[292px] xl:-left-[332px] right-0 justify-center pointer-events-none">
+              <h1 className="text-2xl font-black text-gray-900 tracking-tight pointer-events-auto">Product Category</h1>
+            </div>
+
+            {/* Mobile Title */}
+            <h1 className="text-2xl font-black text-gray-900 tracking-tight lg:hidden w-max">Product Category</h1>
             
             {/* 🌟 HILANGKAN TOMBOL FILTER DRAWER DI DESKTOP */}
             <button 
