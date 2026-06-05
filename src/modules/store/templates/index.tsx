@@ -179,7 +179,6 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
     const rawSizes = variants.map((v: any) => {
       let sizeVal = v.options?.find((o: any) => !["top", "bottom"].includes(o.value?.toLowerCase().trim()))?.value || "All Size"
       
-      // 🌟 FIX: Cegah bocornya teks 'Default Option' atau 'Option'
       if (sizeVal.toLowerCase().includes("default") || sizeVal.toLowerCase().includes("option")) {
         sizeVal = "All Size"
       }
@@ -237,7 +236,6 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
     }
   }, [product.id])
 
-  // 🌟 PERBAIKAN 1: SINKRONISASI DATABASE DI TOMBOL MODAL
   const toggleWishlist = async () => {
     const localWishlist = JSON.parse(localStorage.getItem("wishlist") || "[]")
     let updatedWishlist = []
@@ -250,7 +248,6 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
     localStorage.setItem("wishlist", JSON.stringify(updatedWishlist))
     setIsWishlisted(!isWishlisted)
 
-    // JURUS UPDATE DATABASE MEDUSA
     const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://api.niconicoresort.com"
     try {
       const customerRes = await fetch(`${backendUrl}/store/customers/me`, {
@@ -805,7 +802,6 @@ export default function StoreTemplate() {
     setWishlist(updatedWishlist);
     localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
 
-    // JURUS UPDATE DATABASE MEDUSA
     const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://api.niconicoresort.com"
     try {
       const customerRes = await fetch(`${backendUrl}/store/customers/me`, {
@@ -840,124 +836,204 @@ export default function StoreTemplate() {
   };
 
   return (
-    <div className="bg-white min-h-screen pb-20 mx-auto max-w-[1200px] md:max-w-md relative">
+    // 🌟 PERUBAHAN DESKTOP: flex-col ke flex-row saat Desktop (lg:flex-row)
+    <div className="bg-white min-h-screen pb-20 mx-auto w-full md:max-w-md lg:max-w-[1400px] relative flex flex-col lg:flex-row lg:items-start lg:gap-8 lg:px-8">
       
-      {/* HEADER STICKY */}
-      <div className="sticky top-0 z-30 bg-white/85 backdrop-blur-lg pt-[100px] pb-4 px-4 shadow-[0_10px_30px_rgba(0,0,0,0.03)] border-b border-gray-50">
-        <div className="relative mb-6">
-          <input 
-            type="text" 
-            placeholder="Search products..." 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-gray-50/80 border border-gray-100 rounded-full py-3 pl-12 pr-4 text-sm font-medium focus:outline-none focus:border-[#EF7044] transition-colors shadow-inner"
-          />
-          <Search className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
-          {searchQuery && (
-            <button onClick={() => setSearchQuery("")} className="absolute right-4 top-3.5 text-gray-400 hover:text-gray-900">
-               <X className="w-4 h-4" />
+      {/* =========================================
+          🌟 DESKTOP SIDEBAR FILTER (STICKY KIRI)
+          ========================================= */}
+      <aside className="hidden lg:flex flex-col w-[260px] xl:w-[300px] shrink-0 sticky top-[40px] max-h-[calc(100vh-80px)] overflow-y-auto scrollbar-hide border-r border-gray-100 pr-6 z-20">
+        <h2 className="text-xl font-black text-gray-900 mb-8 uppercase tracking-widest pt-2">Filter</h2>
+        
+        <div className="flex-1 space-y-8">
+          {/* Price */}
+          <div>
+            <p className="text-[15px] font-medium text-gray-900 mb-4">Price</p>
+            <div className="px-2">
+              <input type="range" min="0" max="5000000" step="50000" value={maxPrice} onChange={(e) => setMaxPrice(Number(e.target.value))} className="w-full accent-[#EF7044]" />
+              <div className="flex justify-between mt-2 text-xs font-medium text-gray-600">
+                <span>Rp 0</span>
+                <span>{formatPrice(maxPrice)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Size */}
+          <div>
+            <p className="text-[15px] font-medium text-gray-900 mb-4">Size</p>
+            <div className="flex flex-wrap gap-2.5">
+              {["S", "M", "L", "XL"].map(size => (
+                <button key={size} onClick={() => setSelectedSize(selectedSize === size ? "" : size)} className={`px-6 py-2 rounded-full border transition-colors text-sm font-medium ${selectedSize === size ? "border-[#EF7044] bg-orange-50/50 text-[#EF7044]" : "border-gray-200 text-gray-700 bg-white hover:border-[#EF7044]"}`}>{size}</button>
+              ))}
+            </div>
+          </div>
+
+          {/* Color */}
+          <div>
+            <p className="text-[15px] font-medium text-gray-900 mb-5">Color</p>
+            <div className="flex flex-wrap gap-5">
+              {Object.entries(COLOR_IDENTITY).map(([colorName, colorHex]) => (
+                <button key={colorName} onClick={() => setSelectedColor(selectedColor === colorName ? "" : colorName)} className="flex flex-col items-center gap-2 group">
+                  <div className={`w-8 h-8 rounded-full transition-all ${selectedColor === colorName ? "ring-2 ring-offset-2 ring-gray-900 scale-110" : "border border-gray-200 group-hover:scale-110"}`} style={{ backgroundColor: colorHex }} />
+                  <span className={`text-[10px] uppercase tracking-wider transition-all ${selectedColor === colorName ? "font-bold text-gray-900" : "font-medium text-gray-400"}`}>{colorName}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Category */}
+          <div>
+            <p className="text-[15px] font-medium text-gray-900 mb-4">Category</p>
+            <div className="flex flex-wrap gap-2.5">
+              {topCategories.map(cat => (
+                <button key={cat.handle} onClick={() => setActiveCategory(activeCategory === cat.handle ? "all" : cat.handle)} className={`px-5 py-2 rounded-full border transition-colors text-sm font-medium ${activeCategory === cat.handle ? "border-[#EF7044] bg-orange-50/50 text-[#EF7044]" : "border-gray-200 text-gray-700 bg-white hover:border-[#EF7044]"}`}>{cat.name}</button>
+              ))}
+            </div>
+          </div>
+
+          {/* Collections */}
+          <div>
+            <p className="text-[15px] font-medium text-gray-900 mb-4">Collections</p>
+            <div className="flex flex-wrap gap-2.5">
+              {["Carvico", "New Arrivals", "Signature", "Island Escape", "Discount"].map(col => (
+                <button key={col} onClick={() => setSelectedCollection(selectedCollection === col ? "" : col)} className={`px-5 py-2 rounded-full border transition-colors text-sm font-medium ${selectedCollection === col ? "border-[#EF7044] bg-orange-50/50 text-[#EF7044]" : "border-gray-200 text-gray-700 bg-white hover:border-[#EF7044]"}`}>{col}</button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-gray-100 pt-6 mt-8 pb-4 bg-white flex gap-3 flex-shrink-0 sticky bottom-0">
+          <button onClick={handleResetFilter} className="flex-1 py-3.5 rounded-full border-2 border-orange-200 text-orange-400 font-bold text-sm hover:bg-orange-50 transition-colors">Reset</button>
+          <button onClick={handleApplyFilter} className="flex-1 py-3.5 rounded-full bg-[#EF7044] text-white font-bold text-sm hover:bg-[#d65f36] shadow-md transition-colors">Apply</button>
+        </div>
+      </aside>
+
+      {/* =========================================
+          🌟 MAIN CONTENT (KANAN DI DESKTOP)
+          ========================================= */}
+      <div className="flex-1 w-full min-w-0">
+        {/* HEADER STICKY */}
+        <div className="sticky top-0 z-30 bg-white/85 backdrop-blur-lg pt-[100px] lg:pt-8 pb-4 px-4 lg:px-0 shadow-[0_10px_30px_rgba(0,0,0,0.03)] lg:shadow-none border-b lg:border-b-0 border-gray-50">
+          
+          {/* 🌟 HILANGKAN SEARCH BAR DI DESKTOP */}
+          <div className="relative mb-6 lg:hidden">
+            <input 
+              type="text" 
+              placeholder="Search products..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-gray-50/80 border border-gray-100 rounded-full py-3 pl-12 pr-4 text-sm font-medium focus:outline-none focus:border-[#EF7044] transition-colors shadow-inner"
+            />
+            <Search className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery("")} className="absolute right-4 top-3.5 text-gray-400 hover:text-gray-900">
+                 <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
+          <div className="flex justify-between items-center mb-6 relative">
+            {/* 🌟 CENTER TITLE DI DESKTOP */}
+            <h1 className="text-2xl font-black text-gray-900 tracking-tight lg:absolute lg:left-1/2 lg:-translate-x-1/2 w-max">Product Category</h1>
+            
+            {/* 🌟 HILANGKAN TOMBOL FILTER DRAWER DI DESKTOP */}
+            <button 
+              onClick={() => setIsFilterOpen(true)}
+              className="flex items-center gap-2 border border-orange-200 text-[#EF7044] bg-orange-50/70 px-5 py-2 rounded-full text-sm font-bold hover:bg-orange-100 transition-colors lg:hidden ml-auto"
+            >
+              Filter <ChevronDown className="w-4 h-4" />
             </button>
+          </div>
+
+          {/* 🌟 KATEGORI ATAS (Center di Desktop) */}
+          <div className="flex overflow-x-auto lg:flex-wrap lg:justify-center gap-5 lg:gap-8 scrollbar-hide pb-2">
+            {topCategories.map((cat) => (
+              <button key={cat.handle} onClick={() => setActiveCategory(cat.handle)} className="flex flex-col items-center min-w-[70px] gap-2 group">
+                <div className={`w-[72px] h-[72px] rounded-full overflow-hidden border-2 transition-all p-0.5 ${activeCategory === cat.handle ? "border-[#EF7044]" : "border-transparent"}`}>
+                  <div className="w-full h-full rounded-full overflow-hidden bg-gray-100">
+                     <img src={cat.img} alt={cat.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+                  </div>
+                </div>
+                <span className={`text-[10px] font-black uppercase tracking-wider text-center leading-tight ${activeCategory === cat.handle ? "text-gray-900" : "text-gray-400"}`}>
+                  {cat.name}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 🌟 GRID PRODUK (5 Kolom di Desktop) */}
+        <div className="px-4 lg:px-0 pt-6 grid grid-cols-2 lg:grid-cols-5 gap-x-3 lg:gap-x-5 gap-y-6 lg:gap-y-8 mb-10">
+          {products.length > 0 ? (
+            products.map((product) => (
+              <LocalizedClientLink key={product.id} href={`/products/${product.handle}`} className="flex flex-col group block animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="relative aspect-[3/4] bg-gray-50 rounded-[20px] overflow-hidden mb-3 border border-gray-100 shadow-sm">
+                  <img src={product.thumbnail || "/placeholder.png"} alt={product.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  
+                  {/* WISHLIST BUTTON */}
+                  <button onClick={(e) => toggleWishlist(e, product.id)} className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-all ${wishlist.includes(product.id) ? "bg-[#EF7044] text-white" : "bg-white/80 backdrop-blur-sm text-gray-300 hover:text-[#EF7044]"}`}>
+                    <Heart className={`w-4 h-4 ${wishlist.includes(product.id) ? "fill-current" : ""}`} />
+                  </button>
+
+                  {/* ADD TO CART BUTTON (+) MEMBUKA QUICK SHOP MODAL */}
+                  <button 
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedProduct(product); }} 
+                    className="absolute bottom-3 right-3 w-9 h-9 bg-[#EF7044] text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white active:scale-90 transition-transform z-10"
+                  >
+                    +
+                  </button>
+                </div>
+                
+                <div className="border border-[#EF7044] rounded-full text-center py-1.5 px-2 mx-1 mb-1.5 flex items-center justify-center h-8">
+                  <h3 className="text-[11px] font-bold text-[#EF7044] truncate w-full px-1">{product.title}</h3>
+                </div>
+                <p className="text-[#EF7044] text-xs font-black text-center">
+                  {formatPrice(getProductPrice(product))}
+                </p>
+              </LocalizedClientLink>
+            ))
+          ) : (
+            <div className="col-span-2 lg:col-span-5 text-center py-20 bg-gray-50 rounded-[40px] border border-dashed border-gray-200">
+              <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">No products match your filter</p>
+            </div>
           )}
         </div>
 
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-black text-gray-900 tracking-tight">Product Category</h1>
-          <button 
-            onClick={() => setIsFilterOpen(true)}
-            className="flex items-center gap-2 border border-orange-200 text-[#EF7044] bg-orange-50/70 px-5 py-2 rounded-full text-sm font-bold hover:bg-orange-100 transition-colors"
-          >
-            Filter <ChevronDown className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* 🌟 KATEGORI LUAR (LOGIKA AND: TIDAK MERESET COLLECTION) */}
-        <div className="flex overflow-x-auto gap-5 scrollbar-hide pb-2">
-          {topCategories.map((cat) => (
-            <button key={cat.handle} onClick={() => setActiveCategory(cat.handle)} className="flex flex-col items-center min-w-[70px] gap-2 group">
-              <div className={`w-[72px] h-[72px] rounded-full overflow-hidden border-2 transition-all p-0.5 ${activeCategory === cat.handle ? "border-[#EF7044]" : "border-transparent"}`}>
-                <div className="w-full h-full rounded-full overflow-hidden bg-gray-100">
-                   <img src={cat.img} alt={cat.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
-                </div>
-              </div>
-              <span className={`text-[10px] font-black uppercase tracking-wider text-center leading-tight ${activeCategory === cat.handle ? "text-gray-900" : "text-gray-400"}`}>
-                {cat.name}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* GRID PRODUK */}
-      <div className="px-4 pt-6 grid grid-cols-2 gap-x-3 gap-y-6 mb-10">
-        {products.length > 0 ? (
-          products.map((product) => (
-            <LocalizedClientLink key={product.id} href={`/products/${product.handle}`} className="flex flex-col group block animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="relative aspect-[3/4] bg-gray-50 rounded-[20px] overflow-hidden mb-3 border border-gray-100 shadow-sm">
-                <img src={product.thumbnail || "/placeholder.png"} alt={product.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                
-                {/* WISHLIST BUTTON */}
-                <button onClick={(e) => toggleWishlist(e, product.id)} className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-all ${wishlist.includes(product.id) ? "bg-[#EF7044] text-white" : "bg-white/80 backdrop-blur-sm text-gray-300 hover:text-[#EF7044]"}`}>
-                  <Heart className={`w-4 h-4 ${wishlist.includes(product.id) ? "fill-current" : ""}`} />
-                </button>
-
-                {/* ADD TO CART BUTTON (+) MEMBUKA QUICK SHOP MODAL */}
-                <button 
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedProduct(product); }} 
-                  className="absolute bottom-3 right-3 w-9 h-9 bg-[#EF7044] text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white active:scale-90 transition-transform z-10"
-                >
-                  +
-                </button>
-              </div>
-              
-              <div className="border border-[#EF7044] rounded-full text-center py-1.5 px-2 mx-1 mb-1.5 flex items-center justify-center h-8">
-                <h3 className="text-[11px] font-bold text-[#EF7044] truncate w-full px-1">{product.title}</h3>
-              </div>
-              <p className="text-[#EF7044] text-xs font-black text-center">
-                {formatPrice(getProductPrice(product))}
-              </p>
-            </LocalizedClientLink>
-          ))
-        ) : (
-          <div className="col-span-2 text-center py-20 bg-gray-50 rounded-[40px] border border-dashed border-gray-200">
-            <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">No products match your filter</p>
-          </div>
-        )}
-      </div>
-
-      {/* =========================================
-          🌟 TRIGGER INFINITE SCROLL & LOADING
-          ========================================= */}
-      <div className="px-4 pb-12 flex flex-col items-center justify-center">
-        {/* Sensor Gaib untuk memuat data */}
-        <div ref={observerTarget} className="h-4 w-full" />
-        
-        {/* Animasi Loading */}
-        {isLoading && hasMore && (
-          <div className="flex gap-2 items-center justify-center py-6 animate-pulse">
-             <div className="w-2 h-2 bg-[#EF7044] rounded-full"></div>
-             <div className="w-2 h-2 bg-[#EF7044] rounded-full animation-delay-200"></div>
-             <div className="w-2 h-2 bg-[#EF7044] rounded-full animation-delay-400"></div>
-          </div>
-        )}
-        
-        {/* Pesan Mentok */}
-        {!hasMore && products.length > 0 && (
-          <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px] mt-6">
-            You have reached the end
-          </p>
-        )}
-      </div>
-
-      {products.length > 0 && (
-        <div className="flex justify-center mb-8">
-          <button onClick={scrollToTop} className="flex flex-col items-center gap-2 text-gray-300 hover:text-[#EF7044] transition-colors">
-            <div className="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center shadow-sm bg-white">
-              <ArrowUp className="w-5 h-5" />
+        {/* =========================================
+            🌟 TRIGGER INFINITE SCROLL & LOADING
+            ========================================= */}
+        <div className="px-4 pb-12 flex flex-col items-center justify-center">
+          {/* Sensor Gaib untuk memuat data */}
+          <div ref={observerTarget} className="h-4 w-full" />
+          
+          {/* Animasi Loading */}
+          {isLoading && hasMore && (
+            <div className="flex gap-2 items-center justify-center py-6 animate-pulse">
+               <div className="w-2 h-2 bg-[#EF7044] rounded-full"></div>
+               <div className="w-2 h-2 bg-[#EF7044] rounded-full animation-delay-200"></div>
+               <div className="w-2 h-2 bg-[#EF7044] rounded-full animation-delay-400"></div>
             </div>
-            <span className="text-[10px] font-black uppercase tracking-widest">Back to Top</span>
-          </button>
+          )}
+          
+          {/* Pesan Mentok */}
+          {!hasMore && products.length > 0 && (
+            <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px] mt-6">
+              You have reached the end
+            </p>
+          )}
         </div>
-      )}
+
+        {products.length > 0 && (
+          <div className="flex justify-center mb-8">
+            <button onClick={scrollToTop} className="flex flex-col items-center gap-2 text-gray-300 hover:text-[#EF7044] transition-colors">
+              <div className="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center shadow-sm bg-white">
+                <ArrowUp className="w-5 h-5" />
+              </div>
+              <span className="text-[10px] font-black uppercase tracking-widest">Back to Top</span>
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* =========================================
           🌟 POPUP PILIH VARIAN (QUICK SHOP)
@@ -971,9 +1047,9 @@ export default function StoreTemplate() {
 
 
       {/* =========================================
-          DRAWER FILTER
+          DRAWER FILTER (TETAP AMAN UNTUK MOBILE)
           ========================================= */}
-      <div className={`fixed inset-0 z-[1000] transition-opacity duration-300 ${isFilterOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
+      <div className={`fixed inset-0 z-[1000] transition-opacity duration-300 lg:hidden ${isFilterOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsFilterOpen(false)} />
         <div className={`absolute top-0 right-0 h-full w-[85%] max-w-[400px] bg-white shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col ${isFilterOpen ? "translate-x-0" : "translate-x-full"}`}>
           
@@ -987,7 +1063,6 @@ export default function StoreTemplate() {
             <div>
               <p className="text-[15px] font-medium text-gray-900 mb-4">Price</p>
               <div className="px-2">
-                {/* 🌟 min="0" DIPASANG DI SINI */}
                 <input type="range" min="0" max="5000000" step="50000" value={maxPrice} onChange={(e) => setMaxPrice(Number(e.target.value))} className="w-full accent-[#EF7044]" />
                 <div className="flex justify-between mt-1 text-xs text-gray-600">
                   <span>Rp 0</span>
@@ -1005,7 +1080,6 @@ export default function StoreTemplate() {
               </div>
             </div>
 
-            {/* 🌟 LOGIKA WARNA YANG DINAMIS DARI COLOR_IDENTITY */}
             <div>
               <p className="text-[15px] font-medium text-gray-900 mb-4">Color</p>
               <div className="flex flex-wrap gap-4">
@@ -1027,7 +1101,6 @@ export default function StoreTemplate() {
               </div>
             </div>
 
-            {/* 🌟 KATEGORI DALAM DRAWER SINKRON DENGAN LUAR (LOGIKA AND) */}
             <div>
               <p className="text-[15px] font-medium text-gray-900 mb-3">Category</p>
               <div className="flex flex-wrap gap-2.5">
@@ -1043,7 +1116,6 @@ export default function StoreTemplate() {
               </div>
             </div>
 
-            {/* 🌟 COLLECTIONS: "Best Seller" UDAH JADI "Carvico" (LOGIKA AND) */}
             <div>
               <p className="text-[15px] font-medium text-gray-900 mb-3">Collections</p>
               <div className="flex flex-wrap gap-2.5">
