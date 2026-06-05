@@ -602,6 +602,7 @@ const ProductActions = ({ product, region, customer }: { product: any, region: a
               </div>
             </div>
 
+
             <div className="absolute bottom-0 left-0 w-full bg-white p-4 border-t border-gray-100 flex gap-3">
               <button 
                 onClick={() => handleBuyNow(true, false)} 
