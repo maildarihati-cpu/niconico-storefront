@@ -955,7 +955,7 @@ export default function StoreTemplate() {
           </div>
 
           {/* 🌟 KATEGORI ATAS (Center di Desktop) */}
-          <div className="flex overflow-x-auto lg:flex-wrap lg:justify-center gap-5 lg:gap-8 scrollbar-hide pb-2">
+          <div className="flex overflow-x-auto lg:flex-wrap lg:justify-left gap-5 lg:gap-8 scrollbar-hide pb-2">
             {topCategories.map((cat) => (
               <button key={cat.handle} onClick={() => setActiveCategory(cat.handle)} className="flex flex-col items-center min-w-[70px] gap-2 group">
                 <div className={`w-[72px] h-[72px] rounded-full overflow-hidden border-2 transition-all p-0.5 ${activeCategory === cat.handle ? "border-[#EF7044]" : "border-transparent"}`}>
