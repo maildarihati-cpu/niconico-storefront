@@ -103,7 +103,16 @@ const Navbar = () => {
         setIsSearchingLive(true);
         try {
           const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://api.niconicoresort.com";
-          const res = await fetch(`${backendUrl}/store/products?q=${encodeURIComponent(searchQuery)}&limit=5`);
+          // 🌟 Ganti bagian fetch di dalam useEffect Live Search dengan ini:
+          const res = await fetch(
+            `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/products?q=${encodeURIComponent(searchQuery)}&limit=5`,
+            {
+              headers: {
+                "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "",
+                "Content-Type": "application/json",
+              },
+            }
+          );
           if (res.ok) {
             const data = await res.json();
             setSearchResults(data.products || []);
