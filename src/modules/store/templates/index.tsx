@@ -19,7 +19,6 @@ const topCategories = [
   { name: "ACCESSORIES", handle: "accessories", img: "/category/accessories.png" },
 ];
 
-// 🌟 KAMUS WARNA UNTUK DRAWER FILTER
 const COLOR_IDENTITY: Record<string, string> = {
   black: "#222222",
   white: "#FFFFFF",
@@ -32,9 +31,6 @@ const COLOR_IDENTITY: Record<string, string> = {
   green: "#008000"
 };
 
-// ==========================================
-// 🌟 FUNGSI PEMBANTU UNTUK URUTAN SIZE (S, M, L, XL)
-// ==========================================
 const sortSizes = (sizes: SizeData[]) => {
   const priority: Record<string, number> = {
     "all size": 0,
@@ -62,7 +58,7 @@ interface SizeData {
 }
 
 // ==========================================
-// 🌟 1. KOMPONEN QUICK SHOP MODAL (DENGAN PORTAL)
+// 🌟 1. KOMPONEN QUICK SHOP MODAL
 // ==========================================
 const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => void }) => {
   const countryCode = useParams().countryCode as string
@@ -574,17 +570,15 @@ export default function StoreTemplate() {
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   
-  // 🌟 SENSOR UNTUK INFINITE SCROLL
+  // SENSOR UNTUK INFINITE SCROLL
   const observerTarget = useRef<HTMLDivElement | null>(null);
 
   // STATE UI
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [wishlist, setWishlist] = useState<string[]>([]);
-  
-  // STATE POPUP VARIAN
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   
-  // 🌟 STATE FILTER (minPrice sekarang dijamin 0)
+  // 🌟 STATE FILTER
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all"); 
   const [minPrice, setMinPrice] = useState(0);
@@ -592,13 +586,17 @@ export default function StoreTemplate() {
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedCollection, setSelectedCollection] = useState("");
-  
-  // State untuk menangani New Release
   const [forceSortNewest, setForceSortNewest] = useState(false);
 
+  // 🌟 LOGIC PENANGKAP KEYWORD DARI NAVBAR
   useEffect(() => {
     const urlQuery = searchParams.get("q");
-    if (urlQuery) setSearchQuery(urlQuery);
+    if (urlQuery) {
+      setSearchQuery(urlQuery);
+      // Kalau nangkep keyword dari luar, filter lain dikosongkan biar fokus ke search
+      setActiveCategory("all");
+      setSelectedCollection("");
+    }
 
     const urlCategory = searchParams.get("category");
     if (urlCategory) {
@@ -614,6 +612,8 @@ export default function StoreTemplate() {
       else {
          setActiveCategory(urlCategory);
       }
+      // Kalau nangkep kategori dari Navbar dropdown, reset search query
+      setSearchQuery("");
     }
   }, [searchParams]);
 
@@ -646,6 +646,32 @@ export default function StoreTemplate() {
   const getProductPrice = (product: any) => {
     const price = product.variants?.[0]?.prices?.[0]?.amount || 0;
     return countryCode === "id" ? price : price / 100;
+  };
+
+  // 🌟 LOGIC PENGGUGUR (Mutually Exclusive)
+  const handleCategoryClick = (handle: string) => {
+    setSearchQuery(""); // Hapus query pencarian
+    setActiveCategory(handle); // Pasang kategori baru
+  };
+
+  const handleCollectionClick = (colName: string) => {
+    setSearchQuery(""); // Hapus query pencarian
+    setSelectedCollection(selectedCollection === colName ? "" : colName);
+  };
+
+  const handleColorClick = (colorName: string) => {
+    setSearchQuery(""); // Hapus query pencarian
+    setSelectedColor(selectedColor === colorName ? "" : colorName);
+  };
+
+  const handleSizeClick = (size: string) => {
+    setSearchQuery(""); // Hapus query pencarian
+    setSelectedSize(selectedSize === size ? "" : size);
+  };
+
+  const handlePriceChange = (val: number) => {
+    setSearchQuery(""); // Hapus query pencarian
+    setMaxPrice(val);
   };
 
   // FUNGSI FETCH PRODUK
@@ -731,15 +757,15 @@ export default function StoreTemplate() {
     }
   }, [countryCode, searchQuery, activeCategory, minPrice, maxPrice, selectedSize, selectedCollection, selectedColor]);
 
+  // 🌟 PERBAIKAN: Waktu Debounce dipercepat jadi 300ms agar kesan loading lebih instan!
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchStoreProducts(1, true);
       setPage(1);
-    }, 500);
+    }, 300);
     return () => clearTimeout(timer);
-  }, [searchQuery, activeCategory, selectedCollection]);
+  }, [searchQuery, activeCategory, selectedCollection, selectedSize, selectedColor, maxPrice]);
 
-  // 🌟 EFEK SENSOR INFINITE SCROLL
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -776,7 +802,7 @@ export default function StoreTemplate() {
     setSelectedColor("");
     setActiveCategory("all"); 
     setSelectedCollection("");
-    setSearchQuery("");
+    setSearchQuery(""); // Clear search box
     
     router.push(`/${countryCode}/store`);
   };
@@ -841,12 +867,29 @@ export default function StoreTemplate() {
       <aside className="hidden lg:flex flex-col w-[260px] xl:w-[280px] shrink-0 sticky top-[120px] max-h-[calc(100vh-140px)] overflow-y-auto scrollbar-hide border-r border-gray-100 pr-6 z-20">
         <h2 className="text-[16px] font-black text-gray-900 mb-6 uppercase tracking-widest pt-2">Filter</h2>
         
+        {/* 🌟 KOLOM SEARCH BARU DI DESKTOP FILTER */}
+        <div className="mb-6 relative">
+          <input 
+            type="text" 
+            placeholder="Search keyword..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-gray-50 border border-gray-200 rounded-full py-2.5 pl-10 pr-8 text-[12px] font-medium focus:outline-none focus:border-[#EF7044] transition-colors"
+          />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery("")} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#EF7044]">
+               <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
         <div className="flex-1 space-y-5">
           {/* Price */}
           <div>
             <p className="text-[13px] font-bold text-gray-900 mb-1.5">Price</p>
             <div className="px-1">
-              <input type="range" min="0" max="5000000" step="50000" value={maxPrice} onChange={(e) => setMaxPrice(Number(e.target.value))} className="w-full accent-[#EF7044]" />
+              <input type="range" min="0" max="5000000" step="50000" value={maxPrice} onChange={(e) => handlePriceChange(Number(e.target.value))} className="w-full accent-[#EF7044]" />
               <div className="flex justify-between mt-1 text-[11px] font-medium text-gray-600">
                 <span>Rp 0</span>
                 <span>{formatPrice(maxPrice)}</span>
@@ -859,7 +902,7 @@ export default function StoreTemplate() {
             <p className="text-[13px] font-bold text-gray-900 mb-1.5">Size</p>
             <div className="flex flex-wrap gap-2">
               {["S", "M", "L", "XL"].map(size => (
-                <button key={size} onClick={() => setSelectedSize(selectedSize === size ? "" : size)} className={`px-5 py-1.5 rounded-full border transition-colors text-xs font-medium ${selectedSize === size ? "border-[#EF7044] bg-orange-50/50 text-[#EF7044]" : "border-gray-200 text-gray-700 bg-white hover:border-[#EF7044]"}`}>{size}</button>
+                <button key={size} onClick={() => handleSizeClick(size)} className={`px-5 py-1.5 rounded-full border transition-colors text-xs font-medium ${selectedSize === size ? "border-[#EF7044] bg-orange-50/50 text-[#EF7044]" : "border-gray-200 text-gray-700 bg-white hover:border-[#EF7044]"}`}>{size}</button>
               ))}
             </div>
           </div>
@@ -869,7 +912,7 @@ export default function StoreTemplate() {
             <p className="text-[13px] font-bold text-gray-900 mb-2">Color</p>
             <div className="flex flex-wrap gap-3">
               {Object.entries(COLOR_IDENTITY).map(([colorName, colorHex]) => (
-                <button key={colorName} onClick={() => setSelectedColor(selectedColor === colorName ? "" : colorName)} className="flex flex-col items-center gap-1 group">
+                <button key={colorName} onClick={() => handleColorClick(colorName)} className="flex flex-col items-center gap-1 group">
                   <div className={`w-6 h-6 rounded-full transition-all ${selectedColor === colorName ? "ring-2 ring-offset-2 ring-gray-900 scale-110" : "border border-gray-200 group-hover:scale-110"}`} style={{ backgroundColor: colorHex }} />
                   <span className={`text-[8px] uppercase tracking-wider transition-all ${selectedColor === colorName ? "font-bold text-gray-900" : "font-medium text-gray-400"}`}>{colorName}</span>
                 </button>
@@ -882,7 +925,7 @@ export default function StoreTemplate() {
             <p className="text-[13px] font-bold text-gray-900 mb-1.5">Category</p>
             <div className="flex flex-wrap gap-2">
               {topCategories.map(cat => (
-                <button key={cat.handle} onClick={() => setActiveCategory(activeCategory === cat.handle ? "all" : cat.handle)} className={`px-4 py-1.5 rounded-full border transition-colors text-xs font-medium ${activeCategory === cat.handle ? "border-[#EF7044] bg-orange-50/50 text-[#EF7044]" : "border-gray-200 text-gray-700 bg-white hover:border-[#EF7044]"}`}>{cat.name}</button>
+                <button key={cat.handle} onClick={() => handleCategoryClick(cat.handle === activeCategory ? "all" : cat.handle)} className={`px-4 py-1.5 rounded-full border transition-colors text-xs font-medium ${activeCategory === cat.handle ? "border-[#EF7044] bg-orange-50/50 text-[#EF7044]" : "border-gray-200 text-gray-700 bg-white hover:border-[#EF7044]"}`}>{cat.name}</button>
               ))}
             </div>
           </div>
@@ -892,7 +935,7 @@ export default function StoreTemplate() {
             <p className="text-[13px] font-bold text-gray-900 mb-1.5">Collections</p>
             <div className="flex flex-wrap gap-2">
               {["Carvico", "New Arrivals", "Signature", "Island Escape", "Discount"].map(col => (
-                <button key={col} onClick={() => setSelectedCollection(selectedCollection === col ? "" : col)} className={`px-4 py-1.5 rounded-full border transition-colors text-xs font-medium ${selectedCollection === col ? "border-[#EF7044] bg-orange-50/50 text-[#EF7044]" : "border-gray-200 text-gray-700 bg-white hover:border-[#EF7044]"}`}>{col}</button>
+                <button key={col} onClick={() => handleCollectionClick(col)} className={`px-4 py-1.5 rounded-full border transition-colors text-xs font-medium ${selectedCollection === col ? "border-[#EF7044] bg-orange-50/50 text-[#EF7044]" : "border-gray-200 text-gray-700 bg-white hover:border-[#EF7044]"}`}>{col}</button>
               ))}
             </div>
           </div>
@@ -909,7 +952,6 @@ export default function StoreTemplate() {
           ========================================= */}
       <div className="flex-1 w-full min-w-0">
         
-        {/* 🌟 PERBAIKAN: sticky top-0 agar blur menyentuh atap layar, dan pt-[110px] untuk kompensasi jarak navbar utama */}
         <div className="sticky top-0 z-30 bg-white/85 backdrop-blur-lg pt-[100px] lg:pt-[110px] pb-4 lg:pb-6 px-4 lg:px-0 shadow-[0_10px_30px_rgba(0,0,0,0.03)] lg:shadow-none border-b lg:border-b-0 border-gray-50">
           
           <div className="relative mb-6 lg:hidden">
@@ -938,10 +980,10 @@ export default function StoreTemplate() {
             </button>
           </div>
 
-          {/* KATEGORI ATAS */}
+          {/* KATEGORI ATAS (MOBILE & DESKTOP) */}
           <div className="flex overflow-x-auto lg:flex-wrap lg:justify-center gap-5 lg:gap-8 scrollbar-hide pb-2 lg:mb-0">
             {topCategories.map((cat) => (
-              <button key={cat.handle} onClick={() => setActiveCategory(cat.handle)} className="flex flex-col items-center min-w-[70px] gap-2 group">
+              <button key={cat.handle} onClick={() => handleCategoryClick(cat.handle)} className="flex flex-col items-center min-w-[70px] gap-2 group">
                 <div className={`w-[72px] h-[72px] lg:w-[80px] lg:h-[80px] rounded-full overflow-hidden border-2 transition-all p-0.5 ${activeCategory === cat.handle ? "border-[#EF7044]" : "border-transparent"}`}>
                   <div className="w-full h-full rounded-full overflow-hidden bg-gray-100">
                      <img src={cat.img} alt={cat.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
@@ -955,8 +997,8 @@ export default function StoreTemplate() {
           </div>
         </div>
 
-        {/* 🌟 PERBAIKAN: Padding atas grid diperbesar (pt-8 lg:pt-10) supaya produk baris pertama tidak nabrak kategori */}
-        <div className="px-4 lg:px-0 pt-8 lg:pt-10 grid grid-cols-2 lg:grid-cols-5 gap-x-3 lg:gap-x-5 gap-y-6 lg:gap-y-8 mb-10">
+        {/* 🌟 EFEK BLUR HALUS SAAT LOADING (OPTIMISTIC UI) */}
+        <div className={`px-4 lg:px-0 pt-8 lg:pt-10 grid grid-cols-2 lg:grid-cols-5 gap-x-3 lg:gap-x-5 gap-y-6 lg:gap-y-8 mb-10 transition-all duration-300 ${isLoading && page === 1 ? "opacity-50 blur-[2px] grayscale-[20%]" : "opacity-100 blur-0 grayscale-0"}`}>
           {products.length > 0 ? (
             products.map((product) => (
               <LocalizedClientLink key={product.id} href={`/products/${product.handle}`} className="flex flex-col group block animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -985,7 +1027,9 @@ export default function StoreTemplate() {
             ))
           ) : (
             <div className="col-span-2 lg:col-span-5 text-center py-20 bg-gray-50 rounded-[40px] border border-dashed border-gray-200">
-              <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">No products match your filter</p>
+              <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">
+                {isLoading ? "Searching..." : "No products match your filter"}
+              </p>
             </div>
           )}
         </div>
@@ -1042,7 +1086,7 @@ export default function StoreTemplate() {
             <div>
               <p className="text-[15px] font-medium text-gray-900 mb-4">Price</p>
               <div className="px-2">
-                <input type="range" min="0" max="5000000" step="50000" value={maxPrice} onChange={(e) => setMaxPrice(Number(e.target.value))} className="w-full accent-[#EF7044]" />
+                <input type="range" min="0" max="5000000" step="50000" value={maxPrice} onChange={(e) => handlePriceChange(Number(e.target.value))} className="w-full accent-[#EF7044]" />
                 <div className="flex justify-between mt-1 text-xs text-gray-600">
                   <span>Rp 0</span>
                   <span>{formatPrice(maxPrice)}</span>
@@ -1054,7 +1098,7 @@ export default function StoreTemplate() {
               <p className="text-[15px] font-medium text-gray-900 mb-3">Size</p>
               <div className="flex flex-wrap gap-2.5">
                 {["S", "M", "L", "XL"].map(size => (
-                  <button key={size} onClick={() => setSelectedSize(selectedSize === size ? "" : size)} className={`px-6 py-1.5 rounded-full border transition-colors text-sm ${selectedSize === size ? "border-[#EF7044] text-[#EF7044]" : "border-gray-300 text-gray-700 bg-white"}`}>{size}</button>
+                  <button key={size} onClick={() => handleSizeClick(size)} className={`px-6 py-1.5 rounded-full border transition-colors text-sm ${selectedSize === size ? "border-[#EF7044] text-[#EF7044]" : "border-gray-300 text-gray-700 bg-white"}`}>{size}</button>
                 ))}
               </div>
             </div>
@@ -1065,7 +1109,7 @@ export default function StoreTemplate() {
                 {Object.entries(COLOR_IDENTITY).map(([colorName, colorHex]) => (
                   <button 
                     key={colorName} 
-                    onClick={() => setSelectedColor(selectedColor === colorName ? "" : colorName)} 
+                    onClick={() => handleColorClick(colorName)} 
                     className="flex flex-col items-center gap-1 group"
                   >
                     <div 
@@ -1086,7 +1130,7 @@ export default function StoreTemplate() {
                 {topCategories.map(cat => (
                   <button 
                     key={cat.handle} 
-                    onClick={() => setActiveCategory(activeCategory === cat.handle ? "all" : cat.handle)} 
+                    onClick={() => handleCategoryClick(cat.handle === activeCategory ? "all" : cat.handle)} 
                     className={`px-5 py-1.5 rounded-full border transition-colors text-sm ${activeCategory === cat.handle ? "border-[#EF7044] text-[#EF7044]" : "border-gray-300 text-gray-700 bg-white"}`}
                   >
                     {cat.name}
@@ -1101,7 +1145,7 @@ export default function StoreTemplate() {
                 {["Carvico", "New Arrivals", "Signature", "Island Escape", "Discount"].map(col => (
                   <button 
                     key={col} 
-                    onClick={() => setSelectedCollection(selectedCollection === col ? "" : col)}
+                    onClick={() => handleCollectionClick(col)}
                     className={`px-5 py-1.5 rounded-full border transition-colors text-sm ${selectedCollection === col ? "border-[#EF7044] text-[#EF7044]" : "border-gray-300 text-gray-700 bg-white hover:border-[#EF7044] hover:text-[#EF7044]"}`}
                   >
                     {col}

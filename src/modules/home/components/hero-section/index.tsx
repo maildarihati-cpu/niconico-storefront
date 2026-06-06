@@ -3,8 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-// 🌟 DITAMBAHKAN ArrowRight untuk ikon button
-import { ArrowRight } from "lucide-react"; 
+// 🌟 PERBAIKAN 1: Ganti ikon jadi serong kanan atas
+import { ArrowUpRight } from "lucide-react"; 
 
 export default function HeroSection() {
   const [slides, setSlides] = useState<any[]>([]);
@@ -100,7 +100,6 @@ export default function HeroSection() {
         
         <div className="w-full max-w-[1200px] mx-auto flex flex-col items-center lg:items-start text-center lg:text-left mb-4 lg:mb-12">
           
-          {/* 🌟 PERUBAHAN FONT: font-semibold (600) lebih tipis dari bold (700) tapi lebih tebal dari regular (400) */}
           <h1 className="text-[32px] md:text-[42px] lg:text-[56px] font-semibold leading-[1.1] text-white mb-3 tracking-tight whitespace-pre-line drop-shadow-md">
             {globalTitle}
           </h1>
@@ -110,18 +109,17 @@ export default function HeroSection() {
           </p>
           
           <Link href="/store" className="w-full max-w-[280px]">
-            {/* 🌟 PERUBAHAN BUTTON: Tambah ikon lingkaran panah dengan efek hover revert */}
-            <button className="group w-full bg-[#EF7044] text-white py-2.5 pr-6 pl-2.5 rounded-full font-bold text-xs tracking-widest uppercase transition-all shadow-lg hover:bg-white hover:text-[#EF7044] flex items-center justify-center gap-4">
-              <div className="w-8 h-8 rounded-full bg-white text-[#EF7044] flex items-center justify-center group-hover:bg-[#EF7044] group-hover:text-white transition-colors shrink-0 shadow-sm">
-                <ArrowRight className="w-4 h-4" strokeWidth={3} />
-              </div>
+            {/* 🌟 PERUBAHAN 2: Button diubah strukturnya. Pakai justify-between, ikon dipindah ke kanan, padding disesuaikan */}
+            <button className="group w-full bg-[#EF7044] text-white py-2 pl-8 pr-2 rounded-full font-bold text-xs tracking-widest uppercase transition-all shadow-lg hover:bg-white hover:text-[#EF7044] flex items-center justify-between">
               <span>SHOP NOW</span>
+              <div className="w-8 h-8 rounded-full bg-white text-[#EF7044] flex items-center justify-center group-hover:bg-[#EF7044] group-hover:text-white transition-colors shrink-0 shadow-sm">
+                <ArrowUpRight className="w-4 h-4" strokeWidth={2.5} />
+              </div>
             </button>
           </Link>
 
         </div>
 
-        {/* 🌟 PERUBAHAN DOTS: Dikunci mati di tengah bawah layar pakai absolute */}
         <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-2">
           {Array.from({ length: totalDots }).map((_, i) => (
             <div 

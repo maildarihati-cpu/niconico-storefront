@@ -31,12 +31,14 @@ const ImageGallery = ({ images }: { images: any[] }) => {
   if (!images?.length) return null
 
   return (
-    <div className="flex flex-col gap-3 lg:gap-4 w-full lg:h-[calc(100vh-180px)] lg:max-h-[780px]">
+    // 🌟 PERBAIKAN 1: Buang batasan tinggi (max-h/100vh). Biarkan tinggi menyesuaikan proporsi gambar!
+    <div className="flex flex-col gap-3 lg:gap-4 w-full">
       
       {/* ======================================================= */}
       {/* WADAH GAMBAR UTAMA */}
       {/* ======================================================= */}
-      <div className="relative w-full aspect-[4/5] lg:aspect-auto lg:flex-1 lg:min-h-0 bg-gray-100 overflow-hidden rounded-[10pt] lg:rounded-[20px] shadow-sm">
+      {/* 🌟 PERBAIKAN 2: Paksa wadah jadi Portrait (aspect-[3/4]) agar pas dengan bentuk foto studio */}
+      <div className="relative w-full aspect-[4/5] lg:aspect-[3/4] bg-[#F8F8F8] overflow-hidden rounded-[10pt] lg:rounded-[20px] border border-gray-100 shadow-sm">
         
         {/* PANAH NAVIGASI DESKTOP (Kiri & Kanan) */}
         <div className="hidden lg:flex absolute inset-y-0 left-4 items-center z-10">
@@ -72,7 +74,7 @@ const ImageGallery = ({ images }: { images: any[] }) => {
         >
           {images.map((image, index) => (
             <div key={index} className="w-full h-full flex-shrink-0 snap-center relative">
-              {/* 🌟 PERBAIKAN SAKTI: object-contain memastikan baju tidak kepotong */}
+              {/* 🌟 PERBAIKAN 3: object-contain menggaransi 100% foto masuk tanpa dipotong! */}
               <Image 
                 src={image.url} 
                 alt={`Product image ${index + 1}`}
@@ -108,7 +110,7 @@ const ImageGallery = ({ images }: { images: any[] }) => {
               index === activeIndex ? "border-[#EF7044] shadow-md scale-[0.98]" : "border-transparent hover:border-gray-300"
             }`}
           >
-            {/* 🌟 Note: Thumbnail sengaja dibiarkan object-cover object-top agar kotaknya rapi penuh */}
+            {/* Thumbnail sengaja dibiarkan object-cover agar kotaknya penuh rapi */}
             <Image 
               src={image.url} 
               alt={`Thumbnail ${index + 1}`}
