@@ -110,12 +110,19 @@ export default function HeroSection() {
           
           <Link href="/store" className="w-full max-w-[280px]">
             {/* 🌟 PERUBAHAN 2: Button diubah strukturnya. Pakai justify-between, ikon dipindah ke kanan, padding disesuaikan */}
-            <button className="group w-full bg-[#EF7044] text-white py-2 pl-8 pr-2 rounded-full font-bold text-xs tracking-widest uppercase transition-all shadow-lg hover:bg-white hover:text-[#EF7044] flex items-center justify-between">
-              <div className="w-8 h-8 rounded-full bg-white text-[#EF7044] flex items-center justify-center group-hover:bg-[#EF7044] group-hover:text-white transition-colors shrink-0 shadow-sm">
+            <button className="group w-full bg-[#EF7044] text-white py-2 px-2 rounded-full font-bold text-xs tracking-widest uppercase transition-all shadow-lg hover:bg-white hover:text-[#EF7044] grid grid-cols-[32px_1fr_32px] items-center">
+  
+              {/* Panah di kolom kiri (kolom ke-1) */}
+              <div className="w-8 h-8 rounded-full bg-white text-[#EF7044] flex items-center justify-center group-hover:bg-[#EF7044] group-hover:text-white transition-colors shadow-sm">
                 <ArrowUpRight className="w-4 h-4" strokeWidth={2.5} />
               </div>
-              <span>SHOP NOW</span>
-        
+
+              {/* Teks di tengah (kolom ke-2) */}
+              <span className="justify-self-center -ml-8">SHOP NOW</span>
+              
+              {/* Kosongkan kolom ke-3 agar seimbang */}
+              <div className="w-8" />
+              
             </button>
           </Link>
 
