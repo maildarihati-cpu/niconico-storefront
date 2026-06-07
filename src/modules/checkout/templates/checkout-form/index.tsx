@@ -2,9 +2,11 @@
 
 import React, { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { ChevronLeft, MapPin, Loader2, Tag, CheckCircle2, Mail, Plus, AlertCircle, Search, Crosshair } from "lucide-react"
+import { ChevronLeft, MapPin, Loader2, Tag, CheckCircle2, Mail, Plus, AlertCircle, Search, Crosshair, Trash2 } from "lucide-react"
+import Image from "next/image"
 
-import { saveAddressServerAction } from "@/lib/address-actions";
+// 🌟 PASTIKAN FUNGSI DELETE ADDRESS SUDAH DI-IMPORT DARI SERVER ACTION KAMU
+import { saveAddressServerAction, deleteAddressServerAction } from "@/lib/address-actions";
 import { 
   updateCartAddressAction, 
   getShippingOptionsAction, 
@@ -32,6 +34,10 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   const [showAddressList, setShowAddressList] = useState(false)
   
   const [isAddingAddress, setIsAddingAddress] = useState(false)
+  
+  // 🌟 STATE UNTUK LOADING DELETE ADDRESS
+  const [deletingAddressId, setDeletingAddressId] = useState<string | null>(null);
+
   const [newAddress, setNewAddress] = useState({
     first_name: customer?.first_name || "",
     last_name: customer?.last_name || "",
@@ -248,6 +254,26 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
     }
   }
 
+  // 🌟 FUNGSI DELETE ADDRESS DARI DATABASE
+  const handleDeleteAddress = async (e: React.MouseEvent, addressId: string) => {
+    e.stopPropagation(); // Mencegah klik ter-trigger ke fungsi handleUpdateAddress
+    
+    const isConfirmed = window.confirm("Are you sure you want to delete this address permanently?");
+    if (!isConfirmed) return;
+
+    setDeletingAddressId(addressId);
+    try {
+      await deleteAddressServerAction(addressId);
+      // Refresh halaman agar data customer yang baru (tanpa alamat tersebut) ter-load
+      router.refresh();
+    } catch (error) {
+      console.error("Error deleting address:", error);
+      alert("Failed to delete address. Please try again.");
+    } finally {
+      setDeletingAddressId(null);
+    }
+  };
+
   const handleApplyPromo = async () => {
     if (!promoCode) return
     setIsApplyingPromo(true)
@@ -311,10 +337,20 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
       
       {/* 🌟 HEADER KHUSUS MOBILE (DIHILANGKAN DI TABLET & DESKTOP) */}
       <div className="md:hidden flex items-center px-6 pt-12 pb-4 border-b border-gray-100 sticky top-0 bg-white/80 backdrop-blur-md z-20">
+        
         <button onClick={() => router.back()} className="p-2 -ml-2">
           <ChevronLeft className="w-6 h-6 text-gray-800" />
         </button>
-        <h1 className="flex-1 text-center text-lg font-bold text-gray-900 pr-6 uppercase tracking-widest">
+        <div className="relative w-36 h-10 mb-6">
+                  <Image 
+                    src="/logo-niconico-black.png" 
+                    alt="Niconico Resort Logo" 
+                    fill 
+                    className="object-contain" 
+                    priority
+                  />
+                </div>
+        <h1 className="flex-1 text-center text-lg font-bold text-gray-900 pr-6 tracking-widest">
           Check Out
         </h1>
       </div>
@@ -509,7 +545,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                           <div 
                             key={addr.id}
                             onClick={() => handleUpdateAddress(addr)}
-                            className={`p-4 rounded-3xl border-2 transition-all cursor-pointer ${
+                            className={`p-4 rounded-3xl border-2 transition-all cursor-pointer relative ${
                               cart.shipping_address?.address_1 === addr.address_1 
                               ? "border-[#EF7044] bg-[#EF7044]/5 shadow-sm" 
                               : "border-gray-50 hover:border-gray-200"
@@ -519,11 +555,30 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                               <p className="text-[11px] font-black text-gray-800 uppercase italic">
                                 {addr.first_name} {addr.last_name}
                               </p>
-                              {cart.shipping_address?.address_1 === addr.address_1 && (
-                                <CheckCircle2 className="w-4 h-4 text-[#EF7044]" />
-                              )}
+                              
+                              {/* 🌟 CONTAINER IKON KANAN (Check atau Trash) */}
+                              <div className="flex items-center gap-2">
+                                {cart.shipping_address?.address_1 === addr.address_1 && (
+                                  <CheckCircle2 className="w-4 h-4 text-[#EF7044]" />
+                                )}
+                                
+                                {/* 🌟 TOMBOL DELETE ADDRESS */}
+                                <button 
+                                  type="button"
+                                  onClick={(e) => handleDeleteAddress(e, addr.id)}
+                                  disabled={deletingAddressId === addr.id}
+                                  className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors disabled:opacity-50"
+                                  title="Delete Address"
+                                >
+                                  {deletingAddressId === addr.id ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                  ) : (
+                                    <Trash2 className="w-4 h-4" />
+                                  )}
+                                </button>
+                              </div>
                             </div>
-                            <p className="text-[10px] text-gray-400 uppercase leading-relaxed font-medium">
+                            <p className="text-[10px] text-gray-400 uppercase leading-relaxed font-medium pr-8">
                               {addr.address_1}, {addr.city}, {addr.province}
                             </p>
                           </div>

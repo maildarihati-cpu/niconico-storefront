@@ -92,3 +92,34 @@ export async function logoutServerAction() {
   revalidatePath("/", "layout");
   return true;
 }
+
+// 🌟 SENJATA 4: Hapus Alamat dari Database (MENGHILANGKAN ERROR CHECKOUT)
+export async function deleteAddressServerAction(addressId: string) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("_medusa_jwt")?.value;
+
+  if (!token) {
+    throw new Error("Sesi login tidak valid (Token kosong)");
+  }
+
+  const BACKEND_URL = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://api.niconicoresort.com";
+  const API_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "";
+
+  // Endpoint Medusa untuk delete address: DELETE /store/customers/me/addresses/{address_id}
+  const response = await fetch(`${BACKEND_URL}/store/customers/me/addresses/${addressId}`, {
+    method: "DELETE",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "x-publishable-api-key": API_KEY,
+    },
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => null);
+    throw new Error(err?.message || "Gagal menghapus alamat dari database Medusa.");
+  }
+
+  // Refresh cache agar daftar alamat langsung update di layar
+  revalidatePath("/", "layout"); 
+  return true;
+}

@@ -34,7 +34,7 @@ const StoryTeller = () => {
       {/* JUDUL */}
       <div className="container mx-auto text-center mb-10 px-4">
         {/* 🌟 PERUBAHAN: text-3xl md:text-[25px] diubah menjadi text-[25px] agar fix di mobile dan desktop */}
-        <h2 className="text-[25px] font-heavy text-black tracking-tight">
+        <h2 className="text-[25px] text-justify-center font-heavy text-black tracking-tight">
           Our Story Teller
         </h2>
       </div>
