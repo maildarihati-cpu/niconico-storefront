@@ -78,7 +78,7 @@ export default function FloatingButtons() {
       {/* 🌟 TOMBOL WHATSAPP (Selalu Bagaikan Batu Karang) */}
       {/* ======================================================= */}
       <a
-        href="https://wa.me/6281234567890" 
+        href="https://wa.me/6282140663494" 
         target="_blank"
         rel="noopener noreferrer"
         className="flex items-center justify-center w-14 h-14 bg-[#25D366] text-white rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:scale-110 hover:shadow-[0_8px_30px_rgb(37,211,102,0.4)] transition-all duration-300 relative group"

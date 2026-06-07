@@ -621,7 +621,7 @@ export default function TopCollections() {
       
       {/* 🌟 HEADER JUDUL & TAB */}
       <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-0 md:mb-10 px-0 md:px-4 z-10 relative">
-        <h2 className="text-3xl font-heavy text-center md:text-left text-gray-900 mb-8 md:mb-0 tracking-tight">
+        <h2 className="text-3xl font-heavy text-[25px] text-center md:text-left text-gray-900 mb-8 md:mb-0 tracking-tight">
           Top Collections
         </h2>
 

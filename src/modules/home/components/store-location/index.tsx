@@ -88,7 +88,7 @@ export default function StoreSection({ layout = "slider" }: StoreSectionProps) {
         
         {/* 🌟 KOMENTAR RUSAK SUDAH DICABUT, COMPILER AMAN */}
         {layout === "slider" && (
-          <h2 className="text-3xl font-heavy text-[#000000] mb-8 px-4 md:px-0">
+          <h2 className="text-3xl text- [25px] font-heavy text-[#000000] mb-8 px-4 md:px-0">
             Visit Our Store
           </h2>
         )}
@@ -111,7 +111,7 @@ export default function StoreSection({ layout = "slider" }: StoreSectionProps) {
               
               <div className="flex flex-col items-start gap-1 mb-4 min-h-[4rem]">
                 {/* 🌟 BERSIH: Tanpa uppercase dan ukuran font proporsional */}
-                <h3 className="text-base md:text-lg font-black text-[#EF7044] tracking-wide w-full">
+                <h3 className="text-base md:text-lg font-heavy text-[#EF7044] tracking-wide w-full">
                   {store.name}
                 </h3>
                 <p className="text-[11px] md:text-xs text-gray-600 text-left leading-relaxed font-medium w-full break-words pr-2">
