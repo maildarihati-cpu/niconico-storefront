@@ -343,10 +343,10 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                 </div>
                 <input 
                   type="email" 
-                  placeholder="YOUR EMAIL ADDRESS" 
+                  placeholder="your email address" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-transparent text-[11px] lg:text-[13px] font-black text-gray-900 outline-none uppercase tracking-widest placeholder:text-gray-300"
+                  className="w-full bg-transparent text-[11px] lg:text-[13px] font-black text-gray-900 outline-none tracking-widest placeholder:text-gray-300"
                 />
               </div>
             </div>

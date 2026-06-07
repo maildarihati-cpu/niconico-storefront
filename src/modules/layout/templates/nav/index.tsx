@@ -70,6 +70,12 @@ const Navbar = () => {
     setIsNavOpen(true);
   };
 
+  const openMobileSearch = () => {
+    closeAllDrawers();
+    setNavView("search");
+    setIsNavOpen(true);
+  };
+
   // Mencegah scroll body saat laci manapun terbuka
   useEffect(() => {
     if (isProfileOpen || isCartDrawerOpen || isSearchDrawerOpen || isNavOpen) {
@@ -103,9 +109,8 @@ const Navbar = () => {
         setIsSearchingLive(true);
         try {
           const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://api.niconicoresort.com";
-          // 🌟 Ganti bagian fetch di dalam useEffect Live Search dengan ini:
           const res = await fetch(
-            `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/products?q=${encodeURIComponent(searchQuery)}&limit=5`,
+            `${backendUrl}/store/products?q=${encodeURIComponent(searchQuery)}&limit=5`,
             {
               headers: {
                 "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "",
@@ -179,17 +184,22 @@ const Navbar = () => {
       <nav className={`fixed top-5 left-5 right-5 z-40 flex items-center justify-between px-6 py-3.5 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 ${navBgClass}`}>
         
         {/* MOBILE MENU KIRI */}
-        <div className="flex lg:hidden items-center gap-4 -ml-1">
+        <div className="flex lg:hidden items-center gap-3 -ml-1 relative z-10">
           <button onClick={openNavDrawer} className="p-1 hover:opacity-70 transition-opacity">
             <Menu className={`w-5 h-5 transition-colors duration-300 ${iconColorClass}`} />
           </button>
+          {/* Ikon Search Mobile Kiri */}
+          <button onClick={openMobileSearch} className="p-1 hover:opacity-70 transition-opacity">
+            <Search className={`w-5 h-5 transition-colors duration-300 ${iconColorClass}`} />
+          </button>
         </div>
         
-        {/* LOGO */}
+        {/* LOGO DESKTOP */}
         <Link href="/" className="hidden lg:flex relative items-center justify-center w-32 h-8 xl:w-36 xl:h-10 hover:scale-105 transition-transform shrink-0">
           <Image src={logoSrc} alt="Niconico Logo" fill className="object-contain" priority sizes="150px" />
         </Link>
-        <Link href="/" className="lg:hidden relative flex items-center justify-center w-28 h-8 hover:scale-105 transition-transform">
+        {/* LOGO MOBILE (Absolute Centered) */}
+        <Link href="/" className="lg:hidden absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center w-28 h-8 hover:scale-105 transition-transform z-10">
           <Image src={logoSrc} alt="Niconico Logo" fill className="object-contain" priority sizes="150px" />
         </Link>
 
@@ -227,9 +237,10 @@ const Navbar = () => {
         </div>
 
         {/* KANAN: Search, Cart, Profile */}
-        <div className="flex gap-3 md:gap-4 items-center -mr-1 shrink-0">
+        <div className="flex gap-3 md:gap-4 items-center -mr-1 shrink-0 relative z-10">
           
-          <button onClick={openSearchDrawer} className="flex p-1 hover:opacity-70 transition-opacity">
+          {/* Ikon Search Desktop (Sembunyi di Mobile) */}
+          <button onClick={openSearchDrawer} className="hidden lg:flex p-1 hover:opacity-70 transition-opacity">
             <Search className={`w-5 h-5 transition-colors duration-300 ${iconColorClass}`} />
           </button>
 
@@ -260,7 +271,7 @@ const Navbar = () => {
       </nav>
 
       {/* ======================================================= */}
-      {/* 🌟 LACI SEARCH */}
+      {/* 🌟 LACI SEARCH DESKTOP */}
       {/* ======================================================= */}
       {isSearchDrawerOpen && (
         <div className="fixed inset-0 bg-black/60 z-[80] transition-opacity" onClick={closeAllDrawers} />
@@ -363,6 +374,7 @@ const Navbar = () => {
          <CartTemplate cart={cart} />
       </div>
 
+      {/* DRAWER UNTUK MENU DAN PENCARIAN MOBILE */}
       <NavDrawer isOpen={isNavOpen} onClose={closeAllDrawers} view={navView} setView={setNavView} />
     </>
   );
