@@ -3,8 +3,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { useRouter, useParams } from "next/navigation";
-// 🌟 DITAMBAHKAN ICON 'X' UNTUK TOMBOL CLOSE DI DESKTOP
-import { ChevronLeft, Check, Trash2, Loader2, X } from "lucide-react"; 
+import { ChevronLeft, Check, Trash2, Loader2 } from "lucide-react"; 
 import { useCart } from "@/context/cart-context/cart-context";
 import { updateLineItem, deleteLineItem } from "@lib/data/cart";
 import { StoreCart, StoreCustomer } from "@medusajs/types";
@@ -173,26 +172,23 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
   return (
     <>
       {/* ==================================================== */}
-      {/* 🌟 BACKGROUND OVERLAY BLUR (KHUSUS DESKTOP) */}
-      {/* Muncul jika layar Desktop, dan jika diklik akan kembali ke halaman sebelumnya */}
+      {/* 🌟 BACKGROUND OVERLAY BLUR */}
       {/* ==================================================== */}
       <div 
-        className="hidden lg:block fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm animate-in fade-in duration-300 cursor-pointer"
+        className="hidden md:block fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm animate-in fade-in duration-300 cursor-pointer"
         onClick={() => router.back()}
         title="Klik di luar laci untuk menutup"
       />
 
       {/* ==================================================== */}
       {/* 🌟 KONTENER UTAMA CART */}
-      {/* Mobile: Tampil full page normal. Desktop: Jadi Laci (Drawer) melayang di kanan */}
       {/* ==================================================== */}
-      <div className="bg-white min-h-screen relative max-w-full md:max-w-md mx-auto lg:fixed lg:top-0 lg:right-0 lg:h-full lg:w-[480px] lg:z-[101] lg:shadow-[0_0_50px_rgba(0,0,0,0.3)] lg:animate-in lg:slide-in-from-right-full lg:duration-500 lg:overflow-y-auto scrollbar-hide font-sans flex flex-col">
+      <div className="bg-white min-h-screen relative max-w-full md:fixed md:top-0 md:right-0 md:h-full md:w-[480px] md:z-[101] md:shadow-[0_0_50px_rgba(0,0,0,0.3)] md:animate-in md:slide-in-from-right-full md:duration-500 overflow-y-auto scrollbar-hide font-sans flex flex-col">
         
         <div className="pt-12 pb-6 px-6 relative flex flex-col items-center flex-shrink-0">
-          <button onClick={() => router.back()} className="absolute left-6 top-14 p-2 bg-white rounded-full shadow-sm border border-gray-100 hover:bg-gray-50 transition-colors">
-            {/* Di Mobile pakai panah Back, di Desktop otomatis ganti ikon X */}
-            <ChevronLeft className="w-5 h-5 text-gray-800 lg:hidden" />
-            <X className="hidden lg:block w-5 h-5 text-gray-800" />
+          {/* 🌟 TOMBOL BACK HANYA MUNCUL DI MOBILE (md:hidden) */}
+          <button type="button" onClick={() => router.back()} className="md:hidden absolute left-6 top-14 p-2 bg-white rounded-full shadow-sm border border-gray-100 hover:bg-gray-50 transition-colors">
+            <ChevronLeft className="w-5 h-5 text-gray-800" />
           </button>
           
           <div className="w-32 h-10 relative mb-6">

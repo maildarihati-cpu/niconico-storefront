@@ -630,7 +630,7 @@ export default function TopCollections() {
             <button 
               key={tab} 
               onClick={() => setActiveTab(tab)} 
-              disabled={globalLoading} 
+              disabled={globalLoading}
               className={`flex flex-col items-center md:items-start whitespace-nowrap min-w-max pb-3 relative group transition-opacity ${globalLoading ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               <div className={`md:hidden w-1.5 h-1.5 rounded-full mb-1 transition-all duration-300 ${activeTab === tab ? "bg-[#EF7044]" : "bg-transparent"}`}></div>

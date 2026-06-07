@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import Image from "next/image"; // 🌟 DITAMBAH UNTUK OPTIMASI LOGO
+import Image from "next/image"; 
 import { X, Loader2, ChevronLeft } from "lucide-react";
-// 🌟 IMPORT SERVER ACTION LOGIN DARI CUSTOMER.TS
 import { login } from "@lib/data/customer";
 
 interface Props {
@@ -24,12 +23,10 @@ export default function LoginView({ onClose, setView, onSuccess }: Props) {
     setError(null);
 
     try {
-      // KITA GUNAKAN FORMDATA UNTUK SERVER ACTION NEXT.JS
       const formData = new FormData();
       formData.append("email", email);
       formData.append("password", password);
 
-      // Panggil server action. Jika gagal, dia akan mengembalikan pesan error (string)
       const resultError = await login(null, formData);
 
       if (resultError) {
@@ -37,39 +34,34 @@ export default function LoginView({ onClose, setView, onSuccess }: Props) {
       }
 
       // 🌟 [MULAI] SINKRONISASI WISHLIST (GUEST KE USER) 🌟
-      // Kita bungkus try-catch tersendiri supaya kalau gagal (misal koneksi lambat), loginnya tetap berhasil.
       try {
         const localWishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
         const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://api.niconicoresort.com";
 
-        // 1. Tarik data akun kustomer dari Medusa
         const customerRes = await fetch(`${backendUrl}/store/customers/me`, {
           method: "GET",
           headers: { "Content-Type": "application/json" },
-          credentials: "include" // Wajib agar server tahu siapa yang baru login
+          credentials: "include" 
         });
 
         if (customerRes.ok) {
           const { customer } = await customerRes.json();
           const backendWishlist = customer?.metadata?.wishlist || [];
 
-          // 2. Gabungkan data Local Storage dengan Database, buang yang dobel
           const mergedWishlist = Array.from(new Set([...localWishlist, ...backendWishlist]));
 
-          // 3. Update metadata akun kustomer di Database
           await fetch(`${backendUrl}/store/customers/me`, {
-            method: "POST", // Medusa menggunakan POST untuk update customer
+            method: "POST", 
             headers: { "Content-Type": "application/json" },
             credentials: "include",
             body: JSON.stringify({
               metadata: {
-                ...customer.metadata, // Amankan metadata lain kalau ada
+                ...customer.metadata, 
                 wishlist: mergedWishlist
               }
             })
           });
 
-          // 4. Timpa ulang Local Storage dengan data gabungan yang paling lengkap
           localStorage.setItem("wishlist", JSON.stringify(mergedWishlist));
         }
       } catch (syncErr) {
@@ -77,8 +69,6 @@ export default function LoginView({ onClose, setView, onSuccess }: Props) {
       }
       // 🌟 [AKHIR] SINKRONISASI WISHLIST 🌟
 
-
-      // Jika berhasil, cookie dan cache otomatis sudah diatur oleh server action!
       if (onSuccess) {
         await onSuccess(); 
       }
@@ -92,14 +82,21 @@ export default function LoginView({ onClose, setView, onSuccess }: Props) {
     }
   };
 
-  // 🌟 FUNGSI GOOGLE AUTH
+  // 🌟 FUNGSI GOOGLE AUTH DENGAN MEMORI POSISI
   const handleGoogleAuth = async (e: React.MouseEvent) => {
     e.preventDefault();
+    
+    // 💡 REKAM POSISI KUSTOMER SEBELUM LOMPAT KE GOOGLE
+    if (typeof window !== "undefined") {
+      // Menyimpan path dan query parameters (misal: /products/coral-bikini?size=M)
+      const currentUrl = window.location.pathname + window.location.search;
+      localStorage.setItem("redirect_after_login", currentUrl);
+      console.log("Posisi direkam sebelum Google Auth:", currentUrl);
+    }
+
     const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://api.niconicoresort.com";
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://dev.niconicoresort.com";
     
-    // 🌟 PERBAIKAN: Arahkan ke rute file google-callback Bos!
-    // Asumsi rute callback Bos ada di "/google-callback" atau "/api/auth/callback"
     const callbackUrl = `${baseUrl}/google-callback`; 
     
     try {
@@ -110,6 +107,7 @@ export default function LoginView({ onClose, setView, onSuccess }: Props) {
       const data = await response.json();
 
       if (data.location) {
+        // Lompat ke Google Consent Screen
         window.location.href = data.location;
       } else {
         console.error("Gagal mendapatkan link Google:", data);
@@ -134,7 +132,6 @@ export default function LoginView({ onClose, setView, onSuccess }: Props) {
       </div>
 
       <div className="text-center mb-10 flex flex-col items-center">
-        {/* 🌟 LOGO MENGGANTIKAN TEKS */}
         <div className="relative w-36 h-10 mb-6">
           <Image 
             src="/logo-niconico-black.png" 
@@ -193,7 +190,7 @@ export default function LoginView({ onClose, setView, onSuccess }: Props) {
         </button>
       </form>
 
-      {/* 🌟 TOMBOL GOOGLE LOGIN DI SINI */}
+      {/* 🌟 TOMBOL GOOGLE LOGIN */}
       <div className="w-full mt-6">
         <div className="flex items-center gap-3 mb-5">
           <div className="h-[1px] bg-gray-200 flex-1"></div>

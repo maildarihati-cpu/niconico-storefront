@@ -1,10 +1,9 @@
 "use server"
 
 import { cookies } from "next/headers"
-import { revalidateTag, revalidatePath } from "next/cache" // 🌟 TAMBAH INI
-import { redirect } from "next/navigation"
+import { revalidateTag, revalidatePath } from "next/cache"
 
-export async function finalizeGoogleLogin(token: string, fallbackRedirect: string = "/") {
+export async function finalizeGoogleLogin(token: string) {
   const cookieStore = await cookies()
   
   // 1. PASANG TOKEN LOGIN
@@ -16,22 +15,16 @@ export async function finalizeGoogleLogin(token: string, fallbackRedirect: strin
     secure: process.env.NODE_ENV === "production"
   })
 
-  // 2. CEK JEJAK TERAKHIR (Baca cookie return_to jika ada)
-  const returnToCookie = cookieStore.get("return_to")?.value
-  // Kalau ada jejaknya, lempar ke situ (misal: /checkout). Kalau tidak, pakai default (/)
-  const finalRedirect = returnToCookie || fallbackRedirect
-
-  // Hapus jejaknya biar rapi setelah dipakai
-  if (returnToCookie) {
+  // Bersihkan jejak cookie return_to jika ada biar bersih
+  if (cookieStore.get("return_to")) {
     cookieStore.delete("return_to")
   }
 
-  // 3. SAPU BERSIH CACHE (Ini pengganti "Hard Refresh" manual)
+  // 2. SAPU BERSIH CACHE (Server Side)
   revalidateTag("customer")
   revalidateTag("customers")
-  // 🌟 INI KUNCI UTAMANYA: Memaksa Next.js menghapus SEMUA cache UI dari ujung ke ujung!
   revalidatePath('/', 'layout') 
 
-  // 4. LEMPAR USER
-  redirect(finalRedirect)
+  // 3. KEMBALIKAN STATUS SUKSES (Jangan pakai redirect di sini!)
+  return { success: true }
 }

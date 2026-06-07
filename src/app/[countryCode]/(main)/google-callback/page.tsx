@@ -2,7 +2,7 @@
 
 import React, { useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { finalizeGoogleLogin } from "./action"
+import { finalizeGoogleLogin } from "./action" 
 
 function AuthCallbackHandler() {
   const router = useRouter()
@@ -44,7 +44,6 @@ function AuthCallbackHandler() {
               let lastName = "User";
 
               try {
-                // JURUS BEDAH TOKEN TINGKAT DEWA
                 const base64Url = data.token.split('.')[1];
                 const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
                 const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
@@ -53,7 +52,6 @@ function AuthCallbackHandler() {
                 
                 const payload = JSON.parse(jsonPayload);
                 
-                // Tarik data asli dari "user_metadata"
                 userEmail = payload?.user_metadata?.email || "";
                 firstName = payload?.user_metadata?.given_name || payload?.user_metadata?.name || "Member";
                 lastName = payload?.user_metadata?.family_name || ""; 
@@ -61,8 +59,6 @@ function AuthCallbackHandler() {
               } catch (e) {
                 console.error("Gagal membedah token:", e);
               }
-
-              console.log("Mendaftarkan KTP Asli:", userEmail, firstName, lastName);
 
               if (userEmail) {
                 const createRes = await fetch(`${backendUrl}/store/customers`, {
@@ -80,35 +76,39 @@ function AuthCallbackHandler() {
                 })
 
                 if (!createRes.ok) {
-                  const errorData = await createRes.json()
-                  console.error("MASIH GAGAL BIKIN KTP:", errorData)
+                  console.error("MASIH GAGAL BIKIN KTP")
                   alert("Gagal daftar di database. Cek Console!")
                   return 
                 }
-              } else {
-                console.error("Email asli tidak ditemukan sama sekali!");
-                alert("Gagal memproses email aslimu. Cek Console!")
-                return;
               }
             }
           } catch (err) {
             console.error("Gagal sinkronisasi data customer:", err)
           }
 
-          // 🌟 4. LOGIKA BACA MEMO (URL ASAL)
+          // 🌟 4. LOGIKA BACA MEMO (URL ASAL SEBELUM LOGIN)
           let returnUrl = "/";
           if (typeof window !== "undefined") {
             const savedUrl = localStorage.getItem("redirect_after_login");
             if (savedUrl) {
               returnUrl = savedUrl;
-              // Hapus memo setelah dibaca agar tidak redirect terus-terusan di masa depan
+              // Hapus setelah dibaca
               localStorage.removeItem("redirect_after_login"); 
             }
           }
 
-          // 🌟 5. FINISH: Bangunkan Server Next.js & Redirect ke URL asal
-          console.log("Data siap, memproses sesi login di Server. Redirect ke:", returnUrl);
-          await finalizeGoogleLogin(data.token, returnUrl);
+          // 🌟 5. FINISH: Bangunkan Server Next.js untuk pasang Cookie
+          console.log("Memproses sesi login di Server...");
+          await finalizeGoogleLogin(data.token);
+
+          // 🌟 6. NATIVE NEXT.JS REDIRECT & REFRESH
+          // Gunakan router.push agar sesi Dev tidak terputus
+          router.push(returnUrl);
+          
+          // Beri jeda sangat singkat agar perpindahan URL selesai, lalu paksa Next.js me-refresh data (Cart, Profil, Navbar)
+          setTimeout(() => {
+            router.refresh();
+          }, 100);
 
         } else {
           router.push("/")
@@ -127,9 +127,9 @@ function AuthCallbackHandler() {
 
 export default function GoogleCallbackPage() {
   return (
-    <div className="h-screen w-full flex flex-col items-center justify-center bg-gray-50">
+    <div className="h-screen w-full flex flex-col items-center justify-center bg-white">
        <div className="w-12 h-12 border-4 border-[#EF7044] border-t-transparent rounded-full animate-spin"></div>
-       <p className="mt-4 text-gray-500 font-medium text-sm animate-pulse">Menyiapkan akun kamu, tunggu sebentar...</p>
+       <p className="mt-4 text-gray-500 font-light tracking-widest text-sm animate-pulse uppercase">Authenticating...</p>
        
        <Suspense fallback={null}>
          <AuthCallbackHandler />
