@@ -101,14 +101,15 @@ function AuthCallbackHandler() {
           console.log("Memproses sesi login di Server...");
           await finalizeGoogleLogin(data.token);
 
-          // 🌟 6. NATIVE NEXT.JS REDIRECT & REFRESH
-          // Gunakan router.push agar sesi Dev tidak terputus
+          // 🌟 6. REDIRECT LALU HARD REFRESH SETELAH LOADING SELESAI
+          // Langkah 1: Lempar user secara soft-navigation agar tidak hilang sesi Dev-nya
           router.push(returnUrl);
           
-          // Beri jeda sangat singkat agar perpindahan URL selesai, lalu paksa Next.js me-refresh data (Cart, Profil, Navbar)
+          // Langkah 2: Beri jeda 800ms (0.8 detik) sampai animasi/transisi halaman selesai, 
+          // lalu paksa browser melakukan Hard Refresh agar UI (Navbar, Profil, dll) langsung terupdate.
           setTimeout(() => {
-            router.refresh();
-          }, 100);
+            window.location.reload();
+          }, 800);
 
         } else {
           router.push("/")

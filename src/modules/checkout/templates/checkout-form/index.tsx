@@ -336,7 +336,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
             
             {/* CONTACT INFO */}
             <div className="space-y-3">
-              <h3 className="text-[10px] lg:text-[12px] font-black text-[#EF7044] uppercase tracking-[0.2em] px-1">Contact Info</h3>
+              <h3 className="text-[10px] lg:text-[12px] font-black text-[#EF7044] tracking-[0.2em] px-1">Contact Info</h3>
               <div className="bg-gray-50 rounded-3xl p-5 border border-gray-100 flex items-center gap-4 transition-all focus-within:border-[#EF7044] focus-within:bg-white">
                 <div className="bg-white p-2.5 rounded-2xl shadow-sm">
                   <Mail className="w-5 h-5 text-[#EF7044]" />
@@ -533,7 +533,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                         ))
                       ) : (
                         <div className="p-5 text-center text-[10px] text-gray-400 font-bold uppercase italic border-2 border-dashed border-gray-100 rounded-3xl">
-                          No addresses found.
+                          Add New Address...
                         </div>
                       )}
 
