@@ -55,7 +55,8 @@ export default function HeroSection() {
     return (
       <section className="relative w-full h-[100vh] bg-gray-900 flex flex-col items-center justify-center">
          <div className="w-8 h-8 border-2 border-white/20 border-t-[#EF7044] rounded-full animate-spin mb-4"></div>
-         <p className="text-[10px] font-bold tracking-[0.2em] text-white/40 uppercase animate-pulse">
+         {/* 🌟 Font kecil diganti dari font-bold ke font-normal (regular) */}
+         <p className="text-[10px] font-normal tracking-[0.2em] text-white/40 uppercase animate-pulse">
            Loading Niconico...
          </p>
       </section>
@@ -100,19 +101,21 @@ export default function HeroSection() {
         
         <div className="w-full max-w-[1200px] mx-auto flex flex-col items-center lg:items-start text-center lg:text-left mb-4 lg:mb-12">
           
-          <h1 className="text-[32px] md:text-[42px] lg:text-[56px] font-semibold leading-[1.1] text-white mb-3 tracking-tight whitespace-pre-line drop-shadow-md">
+          {/* 🌟 Font judul besar diganti ke font-heavy */}
+          <h1 className="text-[32px] md:text-[42px] lg:text-[56px] font-heavy leading-[1.1] text-white mb-3 tracking-tight whitespace-pre-line drop-shadow-md">
             {globalTitle}
           </h1>
           
-          <p className="text-[10px] lg:text-xs font-bold tracking-[0.2em] text-white/90 uppercase mb-8 drop-shadow-md">
+          {/* 🌟 Font kecil diganti dari font-bold ke font-normal (regular) */}
+          <p className="text-[10px] lg:text-xs font-normal tracking-[0.2em] text-white/90 uppercase mb-8 drop-shadow-md">
             Resort & Swimwear Est. 2004
           </p>
           
           <Link href="/store" className="w-full max-w-[280px]">
-            {/* 🌟 PERUBAHAN 2: Button diubah strukturnya. Pakai justify-between, ikon dipindah ke kanan, padding disesuaikan */}
-            <button className="group w-full bg-[#EF7044] text-white py-2 pl-8 pr-2 rounded-full font-bold text-xs tracking-widest uppercase transition-all shadow-lg hover:bg-white hover:text-[#EF7044] flex items-center justify-between">
+            {/* 🌟 PERUBAHAN UTAMA BUTTON: Menggunakan relative & justify-center supaya teks 'SHOP NOW' presisi di tengah layar mobile/desktop. Panah dipisah pakai absolute khusus desktop (lg:flex) */}
+            <button className="group w-full bg-[#EF7044] text-white h-12 rounded-full font-bold text-xs tracking-widest uppercase transition-all shadow-lg hover:bg-white hover:text-[#EF7044] relative flex items-center justify-center px-6">
               <span>SHOP NOW</span>
-              <div className="w-8 h-8 rounded-full bg-white text-[#EF7044] flex items-center justify-center group-hover:bg-[#EF7044] group-hover:text-white transition-colors shrink-0 shadow-sm">
+              <div className="hidden lg:flex w-8 h-8 rounded-full bg-white text-[#EF7044] items-center justify-center group-hover:bg-[#EF7044] group-hover:text-white transition-colors shrink-0 shadow-sm absolute right-2 top-1/2 -translate-y-1/2">
                 <ArrowUpRight className="w-4 h-4" strokeWidth={2.5} />
               </div>
             </button>

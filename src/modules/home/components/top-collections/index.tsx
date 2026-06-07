@@ -270,7 +270,7 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
         <div className="flex gap-4 mb-6 pb-6 border-b border-gray-100">
           <img src={mainImage} alt={product.title} className="w-20 h-24 object-cover rounded-xl shadow-sm flex-shrink-0" />
           <div className="flex flex-col justify-center pr-6">
-            <h3 className="font-bold text-gray-900 text-lg leading-tight mb-1">{product.title}</h3>
+            <h3 className="font-heavy text-gray-900 text-lg leading-tight mb-1">{product.title}</h3>
             <h2 className="text-xl font-black text-[#EF7044]">{mainDisplayPrice}</h2>
           </div>
         </div>
@@ -294,7 +294,7 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
             {selectedType === "SET" ? (
               <div className="flex flex-col h-full justify-center">
                 <p className="text-[12px] text-gray-500 italic mb-2">Choose your sizes!</p>
-                <button onClick={() => setIsSetModalOpen(true)} className="w-max bg-gray-900 text-white text-[11px] font-bold px-4 py-2 rounded-full hover:bg-[#EF7044] transition-colors">
+                <button onClick={() => setIsSetModalOpen(true)} className="w-max bg-gray-900 text-white text-[11px] font-heavy px-4 py-2 rounded-full hover:bg-[#EF7044] transition-colors">
                   Select Sizes
                 </button>
               </div>
@@ -305,7 +305,7 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
                   {(() => {
                     const currentSize = sizesForType.find((s: SizeData) => s.label === selectedSize);
                     if (currentSize?.variant?.manage_inventory) {
-                      return <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${currentSize.qty <= 3 ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-600'}`}>Stock: {currentSize.qty}</span>
+                      return <span className={`text-[10px] font-regular px-2 py-0.5 rounded-full ${currentSize.qty <= 3 ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-600'}`}>Stock: {currentSize.qty}</span>
                     }
                     return null;
                   })()}
@@ -314,7 +314,7 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
                 <div className="flex flex-row flex-wrap gap-1.5 mb-4">
                   {sizesForType.map((size: SizeData) => (
                     <button key={size.label} disabled={!size.inStock} onClick={() => setSelectedSize(size.label)}
-                      className={`relative h-8 shrink-0 rounded-full border flex items-center justify-center text-[10px] font-bold transition-all
+                      className={`relative h-8 shrink-0 rounded-full border flex items-center justify-center text-[10px] font-heavy transition-all
                         ${size.label.length > 3 ? "w-max px-3" : "w-8"}
                         ${!size.inStock ? 'border-gray-200 text-gray-300 cursor-not-allowed' : selectedSize === size.label ? 'bg-[#EF7044] border-[#EF7044] text-white shadow-md' : 'border-gray-300 text-gray-700 hover:border-[#EF7044]'}`}>
                       {size.label}
@@ -325,7 +325,7 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
               </>
             )}
 
-            <button onClick={() => setIsSizeGuideOpen(true)} className="flex items-center gap-1.5 text-[11px] font-bold text-black hover:text-[#EF7044] transition-colors w-max mt-auto">
+            <button onClick={() => setIsSizeGuideOpen(true)} className="flex items-center gap-1.5 text-[11px] font-heavy text-black hover:text-[#EF7044] transition-colors w-max mt-auto">
               <Ruler className="w-3 h-3" /> Size Guide <span className="ml-1">›</span>
             </button>
           </div>
@@ -336,7 +336,7 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
                 <button onClick={() => { setSelectedType("SET"); setIsSetModalOpen(true); }} className="flex-1 flex flex-col gap-1.5 group">
                   <div className={`relative aspect-[3/4] w-full rounded-[5pt] overflow-hidden border-2 transition-all ${selectedType === "SET" ? "border-[#EF7044]" : "border-transparent"}`}>
                     <img src={mainImage} className="w-full h-full object-cover object-center" alt="Set" />
-                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40"><span className="text-white text-[8px] font-bold tracking-widest">Set</span></div>
+                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40"><span className="text-white text-[8px] font-heavy tracking-widest">Set</span></div>
                   </div>
                   <p className="text-[8px] text-center font-medium text-gray-500 truncate">{formatPrice(setPrice)}</p>
                 </button>
@@ -345,7 +345,7 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
                 <button onClick={() => setSelectedType("TOP")} className="flex-1 flex flex-col gap-1.5 group">
                   <div className={`relative aspect-[3/4] w-full rounded-[5pt] overflow-hidden border-2 transition-all ${selectedType === "TOP" ? "border-[#EF7044]" : "border-transparent"}`}>
                     <img src={mainImage} className="w-full h-full object-cover object-top scale-[1.3] origin-top" alt="Top" />
-                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40"><span className="text-white text-[8px] font-bold tracking-widest">Top</span></div>
+                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40"><span className="text-white text-[8px] font-heavy tracking-widest">Top</span></div>
                   </div>
                   <p className="text-[8px] text-center font-medium text-gray-500 truncate">{formatPrice(getVariantPrice(topVariants[0]) || 0)}</p>
                 </button>
@@ -354,7 +354,7 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
                 <button onClick={() => setSelectedType("BOTTOM")} className="flex-1 flex flex-col gap-1.5 group">
                   <div className={`relative aspect-[3/4] w-full rounded-[5pt] overflow-hidden border-2 transition-all ${selectedType === "BOTTOM" ? "border-[#EF7044]" : "border-transparent"}`}>
                     <img src={mainImage} className="w-full h-full object-cover object-bottom scale-[1.3] origin-bottom" alt="Bottom" />
-                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40"><span className="text-white text-[8px] font-bold tracking-widest">Bottom</span></div>
+                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40"><span className="text-white text-[8px] font-heavy tracking-widest">Bottom</span></div>
                   </div>
                   <p className="text-[8px] text-center font-medium text-gray-500 truncate">{formatPrice(getVariantPrice(bottomVariants[0]) || 0)}</p>
                 </button>
@@ -367,7 +367,7 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
           <button 
             onClick={() => selectedType === "SET" ? setIsSetModalOpen(true) : handleAddToCart(false)} 
             disabled={isAdding || (selectedType !== "SET" && !selectedRegulerVariant)} 
-            className="w-full flex items-center justify-center gap-2 bg-[#EF7044] text-white py-4 rounded-full font-bold text-lg tracking-wide hover:bg-[#d65f36] active:scale-95 transition-all shadow-lg disabled:bg-gray-300"
+            className="w-full flex items-center justify-center gap-2 bg-[#EF7044] text-white py-4 rounded-full font-heavy text-lg tracking-wide hover:bg-[#d65f36] active:scale-95 transition-all shadow-lg disabled:bg-gray-300"
           >
             <ShoppingCart className="w-5 h-5" />
             {isAdding ? "ADDING..." : "ADD TO CART"}
@@ -382,7 +382,7 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
                 <button onClick={() => setIsSetModalOpen(false)} className="absolute left-4 p-1 text-gray-500 hover:text-black">
                   <X className="w-6 h-6" />
                 </button>
-                <h3 className="font-bold text-lg">Choose Your Sizes</h3>
+                <h3 className="font-heavy text-lg">Choose Your Sizes</h3>
               </div>
               <div className="p-5 flex-1 overflow-y-auto pb-32">
                 <div className="flex gap-4 mb-6">
@@ -390,17 +390,17 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
                     <img src={mainImage} className="w-full h-full object-cover" alt="Product" />
                   </div>
                   <div className="flex flex-col pt-1">
-                    <h4 className="text-[#EF7044] font-black text-sm leading-tight mb-1">{product.title}</h4>
-                    <p className="text-[#EF7044] font-bold text-base mb-3">{formatPrice(setPrice * setQuantity)}</p>
+                    <h4 className="text-[#EF7044] font-heavy text-sm leading-tight mb-1">{product.title}</h4>
+                    <p className="text-[#EF7044] font-regular text-base mb-3">{formatPrice(setPrice * setQuantity)}</p>
                     <div className="flex flex-col gap-1.5">
-                      <span className="bg-gray-200 text-gray-700 text-[10px] font-bold px-3 py-1 rounded w-max">Set</span>
-                      <span className="bg-gray-200 text-gray-700 text-[10px] font-bold px-3 py-1 rounded w-max">{colorName}</span>
+                      <span className="bg-gray-200 text-gray-700 text-[10px] font-heavy px-3 py-1 rounded w-max">Set</span>
+                      <span className="bg-gray-200 text-gray-700 text-[10px] font-heavy px-3 py-1 rounded w-max">{colorName}</span>
                       {(topSize || bottomSize) && (
-                        <span className="bg-gray-200 text-gray-700 text-[10px] font-bold px-3 py-1 rounded w-max">
+                        <span className="bg-gray-200 text-gray-700 text-[10px] font-heavy px-3 py-1 rounded w-max">
                           {topSize && bottomSize ? `${topSize} / ${bottomSize}` : (topSize || bottomSize)}
                         </span>
                       )}
-                      <span className="text-[11px] font-bold text-gray-800 mt-1">Qty : {setQuantity}</span>
+                      <span className="text-[11px] font-heavy text-gray-800 mt-1">Qty : {setQuantity}</span>
                     </div>
                   </div>
                 </div>
@@ -417,14 +417,14 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
                     <p className="text-[13px] text-gray-500 font-medium">Top Size <span className="ml-2">: {topSize || "Select"}</span></p>
                     {(() => {
                         const cTop = modalTopSizes.find((s: SizeData) => s.label === topSize);
-                        if (cTop?.variant?.manage_inventory) return <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${cTop.qty <= 3 ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-600'}`}>Stock: {cTop.qty}</span>
+                        if (cTop?.variant?.manage_inventory) return <span className={`text-[10px] font-heavy px-1.5 py-0.5 rounded-full ${cTop.qty <= 3 ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-600'}`}>Stock: {cTop.qty}</span>
                         return null;
                       })()}
                   </div>
                   <div className="flex gap-2">
                     {modalTopSizes.map((size: SizeData) => (
                       <button key={size.label} disabled={!size.inStock} onClick={() => setTopSize(size.label)}
-                        className={`relative h-10 shrink-0 rounded-full border flex items-center justify-center text-xs font-bold transition-all 
+                        className={`relative h-10 shrink-0 rounded-full border flex items-center justify-center text-xs font-heavy transition-all 
                           ${size.label.length > 3 ? "w-max px-4" : "w-10"}
                           ${!size.inStock ? 'border-gray-200 text-gray-300 cursor-not-allowed' : topSize === size.label ? 'bg-[#EF7044] border-[#EF7044] text-white shadow-md' : 'border-gray-300 text-gray-700'}`}>
                         {size.label} {!size.inStock && <div className="absolute w-full h-[1px] bg-gray-300 rotate-45"></div>}
@@ -438,14 +438,14 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
                     <p className="text-[13px] text-gray-500 font-medium">Bottom Size <span className="ml-2">: {bottomSize || "Select"}</span></p>
                     {(() => {
                       const cBot = modalBottomSizes.find((s: SizeData) => s.label === bottomSize);
-                      if (cBot?.variant?.manage_inventory) return <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${cBot.qty <= 3 ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-600'}`}>Stock: {cBot.qty}</span>
+                      if (cBot?.variant?.manage_inventory) return <span className={`text-[10px] font-heavy px-1.5 py-0.5 rounded-full ${cBot.qty <= 3 ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-600'}`}>Stock: {cBot.qty}</span>
                       return null;
                     })()}
                   </div>
                   <div className="flex gap-2">
                     {modalBottomSizes.map((size: SizeData) => (
                       <button key={size.label} disabled={!size.inStock} onClick={() => setBottomSize(size.label)}
-                        className={`relative h-10 shrink-0 rounded-full border flex items-center justify-center text-xs font-bold transition-all 
+                        className={`relative h-10 shrink-0 rounded-full border flex items-center justify-center text-xs font-heavy transition-all 
                           ${size.label.length > 3 ? "w-max px-4" : "w-10"}
                           ${!size.inStock ? 'border-gray-200 text-gray-300 cursor-not-allowed' : bottomSize === size.label ? 'bg-[#EF7044] border-[#EF7044] text-white shadow-md' : 'border-gray-300 text-gray-700'}`}>
                         {size.label} {!size.inStock && <div className="absolute w-full h-[1px] bg-gray-300 rotate-45"></div>}
@@ -458,13 +458,13 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
                   <div className="flex items-center gap-2">
                     <span className="text-[13px] text-gray-500 font-medium">Quantity :</span>
                     {topSize && bottomSize && (
-                      <span className={`text-xs font-medium ${maxAvailableSet <= 3 ? 'text-red-500' : 'text-[#EF7044]'}`}>Sisa: {maxAvailableSet}</span>
+                      <span className={`text-xs font-heavy ${maxAvailableSet <= 3 ? 'text-red-500' : 'text-[#EF7044]'}`}>Sisa: {maxAvailableSet}</span>
                     )}
                   </div>
                   <div className="flex items-center border border-gray-300 rounded-full px-3 py-1.5 gap-4">
-                    <button onClick={() => setSetQuantity(Math.max(1, setQuantity - 1))} className="text-gray-500 font-bold text-lg disabled:opacity-30" disabled={setQuantity <= 1}>−</button>
-                    <span className="text-sm font-bold w-4 text-center">{setQuantity}</span>
-                    <button onClick={() => setSetQuantity(Math.min(maxAvailableSet, setQuantity + 1))} className="text-gray-500 font-bold text-lg disabled:opacity-30" disabled={setQuantity >= maxAvailableSet || !topSize || !bottomSize}>+</button>
+                    <button onClick={() => setSetQuantity(Math.max(1, setQuantity - 1))} className="text-gray-500 font-heavy text-lg disabled:opacity-30" disabled={setQuantity <= 1}>−</button>
+                    <span className="text-sm font-heavy w-4 text-center">{setQuantity}</span>
+                    <button onClick={() => setSetQuantity(Math.min(maxAvailableSet, setQuantity + 1))} className="text-gray-500 font-heavy text-lg disabled:opacity-30" disabled={setQuantity >= maxAvailableSet || !topSize || !bottomSize}>+</button>
                   </div>
                 </div>
               </div>
@@ -473,7 +473,7 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
                 <button 
                   onClick={() => handleAddToCart(true)} 
                   disabled={isAdding || !topSize || !bottomSize} 
-                  className="w-full flex items-center justify-center gap-2 bg-[#EF7044] text-white py-3.5 rounded-full font-bold text-sm tracking-wide shadow-lg hover:bg-[#d65f36] transition-colors disabled:opacity-50 disabled:bg-gray-300"
+                  className="w-full flex items-center justify-center gap-2 bg-[#EF7044] text-white py-3.5 rounded-full font-heavy text-sm tracking-wide shadow-lg hover:bg-[#d65f36] transition-colors disabled:opacity-50 disabled:bg-gray-300"
                 >
                   <ShoppingCart className="w-5 h-5" />
                   {isAdding ? "ADDING..." : "ADD TO CART"}
@@ -492,14 +492,14 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
                 <button onClick={() => setIsSizeGuideOpen(false)} className="text-gray-900 hover:text-gray-500 transition-colors"><X className="w-6 h-6"/></button>
               </div>
               <div className="mb-8 px-2">
-                <h3 className="font-bold text-[14px] text-center mb-3">How to measure</h3>
+                <h3 className="font-Regular text-[14px] text-center mb-3">How to measure</h3>
                 <p className="text-[12px] text-gray-800 text-center leading-relaxed">Every body is different, and we at Niconico celebrate that fact with swimsuits and bikinis catered to all shapes and sizes. When measuring your body, the measuring tape should be as close to your skin as possible.</p>
               </div>
               <div className="mb-8">
-                <h3 className="font-bold text-[14px] text-center mb-3">Swimwear</h3>
+                <h3 className="font-heavy text-[14px] text-center mb-3">Swimwear</h3>
                 <div className="w-full border border-gray-200 rounded-lg overflow-hidden">
                   <table className="w-full text-[11px] text-center">
-                    <thead className="font-bold text-gray-900">
+                    <thead className="font-heavy text-gray-900">
                       <tr><th className="py-3 border-b border-r border-gray-200 w-1/4">Size</th><th className="py-3 border-b border-r border-gray-200 w-1/4">Bust</th><th className="py-3 border-b border-r border-gray-200 w-1/4">Waist</th><th className="py-3 border-b border-gray-200 w-1/4">Hip</th></tr>
                     </thead>
                     <tbody className="text-gray-600 font-medium">
@@ -621,7 +621,7 @@ export default function TopCollections() {
       
       {/* 🌟 HEADER JUDUL & TAB */}
       <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-0 md:mb-10 px-0 md:px-4 z-10 relative">
-        <h2 className="text-3xl font-bold text-center md:text-left text-gray-900 mb-8 md:mb-0 tracking-tight">
+        <h2 className="text-3xl font-heavy text-center md:text-left text-gray-900 mb-8 md:mb-0 tracking-tight">
           Top Collections
         </h2>
 
@@ -634,7 +634,7 @@ export default function TopCollections() {
               className={`flex flex-col items-center md:items-start whitespace-nowrap min-w-max pb-3 relative group transition-opacity ${globalLoading ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               <div className={`md:hidden w-1.5 h-1.5 rounded-full mb-1 transition-all duration-300 ${activeTab === tab ? "bg-[#EF7044]" : "bg-transparent"}`}></div>
-              <span className={`text-sm md:text-base transition-all duration-300 ${activeTab === tab ? "text-[#EF7044] font-bold" : "text-gray-400 hover:text-[#EF7044]"}`}>
+              <span className={`text-sm md:text-base transition-all duration-300 ${activeTab === tab ? "text-[#EF7044] font-heavy" : "text-gray-400 hover:text-[#EF7044]"}`}>
                 {tab}
               </span>
               <div className={`absolute bottom-0 left-0 h-[2px] bg-[#EF7044] transition-all duration-300 ${activeTab === tab ? "w-full" : "w-0"}`}></div>
@@ -653,7 +653,7 @@ export default function TopCollections() {
               <>
                 <img src={dynamicHeroImage} alt={activeTab} className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-1000" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent flex items-end justify-center p-8">
-                    <span className="text-white font-bold text-sm md:text-lg px-8 py-4 bg-[#EF7044] rounded-full shadow-lg hover:scale-105 transition-transform uppercase tracking-widest">
+                    <span className="text-white font-heavy text-sm md:text-lg px-8 py-4 bg-[#EF7044] rounded-full shadow-lg hover:scale-105 transition-transform uppercase tracking-widest">
                       Explore {activeTab}
                     </span>
                 </div>
@@ -700,10 +700,10 @@ export default function TopCollections() {
                 
                 {/* 🌟 WADAH TEKS (pointer-events-none agar klik tetap jatuh ke Link, tapi hover CSS tetap jalan dari parent) */}
                 <div className="flex flex-col items-center text-center px-2 md:px-0 relative pointer-events-none">
-                  <h3 className="text-xs text-gray-800 font-bold line-clamp-2 h-10 mb-1 md:text-sm md:text-[#EF7044] md:border md:border-[#EF7044] md:rounded-full md:px-4 md:py-1.5 md:h-auto md:w-full md:max-w-[200px] md:mx-auto md:block md:truncate md:bg-white md:mb-3 transition-colors duration-300 md:group-hover:bg-[#EF7044] md:group-hover:text-white">
+                  <h3 className="text-xs text-gray-800 font-heavy line-clamp-2 h-10 mb-1 md:text-sm md:text-[#EF7044] md:border md:border-[#EF7044] md:rounded-full md:px-4 md:py-1.5 md:h-auto md:w-full md:max-w-[200px] md:mx-auto md:block md:truncate md:bg-white md:mb-3 transition-colors duration-300 md:group-hover:bg-[#EF7044] md:group-hover:text-white">
                     {product.title}
                   </h3>
-                  <p className="text-[#EF7044] text-sm md:text-base font-black">
+                  <p className="text-[#EF7044] text-sm md:text-base font-heavy">
                     {formatMedusaPrice(product)}
                   </p>
                 </div>
@@ -715,7 +715,7 @@ export default function TopCollections() {
                 <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center mb-3 group-hover:bg-[#EF7044] group-hover:text-white text-gray-400 transition-all shadow-sm">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
                 </div>
-                <span className="text-gray-600 group-hover:text-[#EF7044] font-bold text-sm">View All</span>
+                <span className="text-gray-600 group-hover:text-[#EF7044] font-heavy text-sm">View All</span>
             </LocalizedClientLink>
           </div>
         ) : (

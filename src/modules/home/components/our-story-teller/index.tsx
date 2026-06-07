@@ -33,7 +33,7 @@ const StoryTeller = () => {
       
       {/* JUDUL */}
       <div className="container mx-auto text-center mb-10 px-4">
-        <h2 className="text-3xl md:text-[42px] font-bold text-black tracking-tight">
+        <h2 className="text-3xl md:text-[42px] font-heavy text-black tracking-tight">
           Our Story Teller
         </h2>
       </div>
@@ -78,7 +78,7 @@ const StoryTeller = () => {
                 </div>
 
                 {/* TEXT REVIEW */}
-                <p className="text-black text-[13px] md:text-[16px] leading-relaxed text-left mb-6 font-medium">
+                <p className="text-black text-[13px] md:text-[16px] leading-relaxed text-left mb-6 font-regular">
                   {item.review_text}
                 </p>
 
@@ -93,7 +93,7 @@ const StoryTeller = () => {
                   </div>
                   
                   <div className="flex flex-col text-left">
-                    <h4 className="text-[13px] md:text-[17px] font-semibold text-black leading-tight">
+                    <h4 className="text-[13px] md:text-[17px] font-heavy text-black leading-tight">
                         {item.customer_name}
                     </h4>
                     <div className="mt-1">

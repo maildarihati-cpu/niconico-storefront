@@ -81,12 +81,12 @@ export default function MakeYourOwnBrandSection() {
       <div className="contents lg:flex lg:flex-col lg:w-1/2 lg:order-2 lg:items-center lg:justify-center">
         
         {/* HEADING (Perbaikan: Ukuran desktop dikecilkan ke lg:text-[32px] & teks dipaksa rata tengah) */}
-        <h2 className="order-1 lg:order-none text-3xl md:text-4xl lg:text-[32px] font-bold text-center text-black tracking-tight mb-8 lg:mb-6 uppercase w-full">
+        <h2 className="order-1 lg:order-none text-3xl md:text-4xl lg:text-[32px] font-heavy text-center text-black tracking-tight mb-8 lg:mb-6 uppercase w-full">
           {content.heading}
         </h2>
 
         {/* QUOTE TEXT (Perbaikan: Teks dipaksa rata tengah di semua device) */}
-        <p className="order-3 lg:order-none text-black text-sm md:text-base font-medium max-w-3xl leading-relaxed text-center mb-10 lg:mb-8 w-full px-4 lg:px-0">
+        <p className="order-3 lg:order-none text-black text-sm md:text-base font-regular max-w-3xl leading-relaxed text-center mb-10 lg:mb-8 w-full px-4 lg:px-0">
           {content.quoteVerbatim}
         </p>
 
@@ -94,7 +94,7 @@ export default function MakeYourOwnBrandSection() {
         <div className="order-4 lg:order-none flex justify-center w-full">
           <Link 
             href={content.buttonLink || "#"}
-            className="px-8 py-3.5 bg-[#EF7044] text-white font-bold tracking-wide rounded-full uppercase italic flex items-center justify-center gap-3 shadow-md hover:shadow-lg border-2 border-transparent hover:bg-white hover:text-[#EF7044] hover:border-[#EF7044] transition-all duration-300 group active:scale-[0.98] w-fit"
+            className="px-8 py-3.5 bg-[#EF7044] text-white font-heavy tracking-wide rounded-full uppercase italic flex items-center justify-center gap-3 shadow-md hover:shadow-lg border-2 border-transparent hover:bg-white hover:text-[#EF7044] hover:border-[#EF7044] transition-all duration-300 group active:scale-[0.98] w-fit"
           >
             <div className="w-6 h-6 rounded-full bg-white text-[#EF7044] flex items-center justify-center group-hover:bg-[#EF7044] group-hover:text-white transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
