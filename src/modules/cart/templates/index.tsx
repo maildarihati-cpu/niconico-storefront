@@ -25,6 +25,9 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
   const [isLoadingItem, setIsLoadingItem] = useState<string | null>(null);
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false); 
   
+  // 🌟 JURUS UTAMA: STATE UNTUK KONTROL BUKA-TUTUP DRAWER SECARA LOKAL
+  const [isOpen, setIsOpen] = useState(true);
+
   const groupedItems = useMemo(() => {
     const groups: any[] = [];
     const bundles: Record<string, any[]> = {};
@@ -169,28 +172,13 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
     }
   };
 
-  // 🌟 FUNGSI PENUTUP LACI YANG PALING BENAR & NATURAL
-  // 🌟 FUNGSI PENUTUP LACI PINTAR (ANTI GOOGLE CALLBACK)
+  // 🌟 FUNGSI CLOSE: HANYA MENGUBAH STATE JADI FALSE (TANPA ROUTING)
   const handleClose = () => {
-    // Ambil URL histori sebelumnya
-    const referrer = document.referrer || "";
-
-    // Deteksi jika kustomer baru saja kembali dari proses Login/Google Callback
-    const isFromAuth = 
-      referrer.includes('google.com') || 
-      referrer.includes('callback') || 
-      referrer.includes('login') ||
-      referrer.includes('auth');
-
-    if (isFromAuth || window.history.length <= 2) {
-      // 🛡️ REM DARURAT: Jangan pakai back(), arahkan aman ke halaman Store
-      // Biar dia bisa lanjut belanja
-      router.push(`/${countryCode}/store`);
-    } else {
-      // ✅ NORMAL: Kalau habis dari halaman baju renang, ya balik ke baju renang
-      router.back();
-    }
+    setIsOpen(false);
   };
+
+  // 🌟 JIKA STATE IS_OPEN FALSE, MAKA DRAWER HILANG TOTAL DARI LAYAR
+  if (!isOpen) return null;
 
   return (
     <>
