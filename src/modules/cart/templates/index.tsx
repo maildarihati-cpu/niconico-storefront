@@ -170,8 +170,26 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
   };
 
   // 🌟 FUNGSI PENUTUP LACI YANG PALING BENAR & NATURAL
+  // 🌟 FUNGSI PENUTUP LACI PINTAR (ANTI GOOGLE CALLBACK)
   const handleClose = () => {
-    router.back();
+    // Ambil URL histori sebelumnya
+    const referrer = document.referrer || "";
+
+    // Deteksi jika kustomer baru saja kembali dari proses Login/Google Callback
+    const isFromAuth = 
+      referrer.includes('google.com') || 
+      referrer.includes('callback') || 
+      referrer.includes('login') ||
+      referrer.includes('auth');
+
+    if (isFromAuth || window.history.length <= 2) {
+      // 🛡️ REM DARURAT: Jangan pakai back(), arahkan aman ke halaman Store
+      // Biar dia bisa lanjut belanja
+      router.push(`/${countryCode}/store`);
+    } else {
+      // ✅ NORMAL: Kalau habis dari halaman baju renang, ya balik ke baju renang
+      router.back();
+    }
   };
 
   return (
