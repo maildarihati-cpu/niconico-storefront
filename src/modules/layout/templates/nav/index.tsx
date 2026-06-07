@@ -378,6 +378,6 @@ const Navbar = () => {
       <NavDrawer isOpen={isNavOpen} onClose={closeAllDrawers} view={navView} setView={setNavView} />
     </>
   );
-};
+}; 
 
 export default Navbar;
