@@ -2,7 +2,8 @@
 
 import React, { useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { finalizeGoogleLogin } from "./action"
+// Pastikan path import action-nya benar sesuai lokasi file Bos
+import { finalizeGoogleLogin } from "./action" 
 
 function AuthCallbackHandler() {
   const router = useRouter()
@@ -53,7 +54,6 @@ function AuthCallbackHandler() {
                 
                 const payload = JSON.parse(jsonPayload);
                 
-                // Tarik data asli dari "user_metadata"
                 userEmail = payload?.user_metadata?.email || "";
                 firstName = payload?.user_metadata?.given_name || payload?.user_metadata?.name || "Member";
                 lastName = payload?.user_metadata?.family_name || ""; 
@@ -61,8 +61,6 @@ function AuthCallbackHandler() {
               } catch (e) {
                 console.error("Gagal membedah token:", e);
               }
-
-              console.log("Mendaftarkan KTP Asli:", userEmail, firstName, lastName);
 
               if (userEmail) {
                 const createRes = await fetch(`${backendUrl}/store/customers`, {
@@ -80,15 +78,10 @@ function AuthCallbackHandler() {
                 })
 
                 if (!createRes.ok) {
-                  const errorData = await createRes.json()
-                  console.error("MASIH GAGAL BIKIN KTP:", errorData)
+                  console.error("MASIH GAGAL BIKIN KTP")
                   alert("Gagal daftar di database. Cek Console!")
                   return 
                 }
-              } else {
-                console.error("Email asli tidak ditemukan sama sekali!");
-                alert("Gagal memproses email aslimu. Cek Console!")
-                return;
               }
             }
           } catch (err) {
@@ -101,14 +94,20 @@ function AuthCallbackHandler() {
             const savedUrl = localStorage.getItem("redirect_after_login");
             if (savedUrl) {
               returnUrl = savedUrl;
-              // Hapus memo setelah dibaca agar tidak redirect terus-terusan di masa depan
+              // Hapus memo setelah dibaca agar tidak redirect terus-terusan
               localStorage.removeItem("redirect_after_login"); 
             }
           }
 
-          // 🌟 5. FINISH: Bangunkan Server Next.js & Redirect ke URL asal
-          console.log("Data siap, memproses sesi login di Server. Redirect ke:", returnUrl);
-          await finalizeGoogleLogin(data.token, returnUrl);
+          // 🌟 5. FINISH: Bangunkan Server Next.js untuk pasang Cookie
+          console.log("Memproses sesi login di Server...");
+          await finalizeGoogleLogin(data.token);
+
+          // 🌟 6. HARD REFRESH REDIRECT (JURUS PAMUNGKAS)
+          // Menggunakan window.location.replace akan melakukan FULL RELOAD.
+          // Ini menjamin Navbar, Cart, dan semua State baca token baru tanpa perlu refresh manual.
+          // Fungsi 'replace' juga mencegah halaman loading ini masuk ke history 'Back' browser.
+          window.location.replace(returnUrl);
 
         } else {
           router.push("/")
