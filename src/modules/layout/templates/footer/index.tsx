@@ -41,10 +41,10 @@ const Footer = () => {
         {/* SECTION: NEWSLETTER (Urutan 1 di Mobile, Urutan 2 di Desktop) */}
         {/* ========================================== */}
         <div className="w-full lg:w-[400px] xl:w-[450px] text-center lg:text-center order-1 lg:order-2 mb-16 lg:mb-0 mx-auto lg:mx-0 shrink-0">
-          <h3 className="text-[16px] lg:text-[16px] mb-8 font-medium leading-relaxed px-4 lg:px-0">
-            <span className="font-bold">Subscribe</span> to our newsletter and get upto <span className="font-bold whitespace-nowrap">20% off</span><br className="hidden md:block" />
+          <h3 className="text-[16px] lg:text-[16px] mb-8 font-regular leading-relaxed px-4 lg:px-0">
+            <span className="font-heavy">Subscribe</span> to our newsletter and get upto <span className="font-heavy whitespace-nowrap">20% off</span><br className="hidden md:block" />
             <span className="md:hidden"> </span>
-            on our exclusive <span className="font-bold">products.</span>
+            on our exclusive <span className="font-heavy">products.</span>
           </h3>
 
           <form 
@@ -61,7 +61,7 @@ const Footer = () => {
             />
             <button 
               type="submit" 
-              className="shrink-0 bg-[#EF7044] text-white px-5 md:px-7 lg:px-8 py-2.5 md:py-3 rounded-full font-bold tracking-wide text-[11px] md:text-xs hover:bg-[#d65f36] transition-all active:scale-95"
+              className="shrink-0 bg-[#EF7044] text-white px-5 md:px-7 lg:px-8 py-2.5 md:py-3 rounded-full font-heavy tracking-wide text-[11px] md:text-xs hover:bg-[#d65f36] transition-all active:scale-95"
             >
               SUBSCRIBE
             </button>
@@ -106,14 +106,14 @@ const Footer = () => {
           </div>
 
           <div className="w-2/3 lg:w-auto flex justify-end lg:justify-start gap-x-8 md:gap-x-12 xl:gap-x-24">
-            <div className="flex flex-col gap-y-5 lg:gap-y-6 text-[13px] md:text-[14px] lg:text-[16px] text-gray-200 font-medium tracking-wide">
+            <div className="flex flex-col gap-y-5 lg:gap-y-6 text-[13px] md:text-[14px] lg:text-[16px] text-gray-200 font-regular tracking-wide">
               <Link href="/store" className="hover:text-[#EF7044] transition-colors">Shop</Link>
               <Link href="/journal" className="hover:text-[#EF7044] transition-colors">Journal</Link>
               <Link href="/make-your-own-brand" className="hover:text-[#EF7044] transition-colors">Make Your Own Brand</Link>
               <Link href="/our-store" className="hover:text-[#EF7044] transition-colors">Stores</Link>
             </div>
 
-            <div className="flex flex-col gap-y-5 lg:gap-y-6 text-[13px] md:text-[14px] lg:text-[16px] text-gray-200 font-medium tracking-wide">
+            <div className="flex flex-col gap-y-5 lg:gap-y-6 text-[13px] md:text-[14px] lg:text-[16px] text-gray-200 font-regular tracking-wide">
               <Link href="/about" className="hover:text-[#EF7044] transition-colors">About Us</Link>
               <Link href="/faq" className="hover:text-[#EF7044] transition-colors">FAQ</Link>
               <Link href="/shipping-returns" className="hover:text-[#EF7044] transition-colors">Shipping & Returns</Link>
@@ -141,8 +141,8 @@ const Footer = () => {
 
       {/* FOOTER BAR BAWAH */}
       <div className="w-full bg-white text-black text-center py-3.5 border-t border-gray-100">
-        <p className="text-[11px] md:text-[13px] tracking-[0.2em] uppercase font-bold text-gray-900">
-          niconicoresort <span className="font-black text-[#EF7044]">@2026</span>
+        <p className="text-[11px] md:text-[13px] tracking-[0.2em] uppercase font-heavy text-gray-900">
+          niconicoresort <span className="font-Black text-[#EF7044]">@2026</span>
         </p>
       </div>
     </footer>

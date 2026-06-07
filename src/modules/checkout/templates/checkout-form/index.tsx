@@ -684,7 +684,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
             <button 
               onClick={handlePayNow}
               disabled={isPaying || isLoadingShipping}
-              className="w-full bg-gray-900 text-[#ef7044] py-5 lg:py-6 rounded-2xl font-heavy text-[15px] lg:text-[16px] shadow-xl hover:bg-[white] text-[#ef7044] hover:-translate-y-1 transition-all flex items-center justify-center gap-3 uppercase tracking-[0.2em] disabled:opacity-50 disabled:hover:translate-y-0"
+              className="w-full bg-[#ef7044] text-white py-5 lg:py-6 rounded-2xl font-heavy text-[15px] lg:text-[16px] shadow-xl hover:bg-[white] text-[#ef7044] hover:-translate-y-1 transition-all flex items-center justify-center gap-3 uppercase tracking-[0.2em] disabled:opacity-50 disabled:hover:translate-y-0"
             >
               {isPaying ? <Loader2 className="w-5 h-5 animate-spin" /> : "Proceed to Pay"}
             </button>
