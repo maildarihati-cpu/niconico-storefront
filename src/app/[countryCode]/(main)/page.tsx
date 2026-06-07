@@ -104,7 +104,7 @@ useEffect(() => {
 
       
       <section className="w-full bg-white">
-      <h2 className="text-center text-2xl font-heavy tracking-tight text-gray-900 py-6">
+      <h2 className="text-center text-3xl font-heavy tracking-tight text-gray-900 py-6">
         Feature Products
       </h2>
       
