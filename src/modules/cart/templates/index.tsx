@@ -24,9 +24,6 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [isLoadingItem, setIsLoadingItem] = useState<string | null>(null);
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false); 
-  
-  // 🌟 JURUS UTAMA: STATE UNTUK KONTROL BUKA-TUTUP DRAWER SECARA LOKAL
-  const [isOpen, setIsOpen] = useState(true);
 
   const groupedItems = useMemo(() => {
     const groups: any[] = [];
@@ -172,18 +169,15 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
     }
   };
 
-  // 🌟 FUNGSI CLOSE: HANYA MENGUBAH STATE JADI FALSE (TANPA ROUTING)
+  // 🌟 FUNGSI CLOSE NORMAL: Menutup rute Drawer di Desktop dengan bersih tanpa sisa layer putih
   const handleClose = () => {
-    setIsOpen(false);
+    router.back();
   };
-
-  // 🌟 JIKA STATE IS_OPEN FALSE, MAKA DRAWER HILANG TOTAL DARI LAYAR
-  if (!isOpen) return null;
 
   return (
     <>
       {/* ==================================================== */}
-      {/* 🌟 BACKGROUND OVERLAY BLUR (TAB & DESKTOP) */}
+      {/* 🌟 BACKGROUND OVERLAY BLUR (KHUSUS TAB & DESKTOP) */}
       {/* ==================================================== */}
       <div 
         className="hidden md:block fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm animate-in fade-in duration-300 cursor-pointer"
@@ -193,11 +187,13 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
 
       {/* ==================================================== */}
       {/* 🌟 KONTENER UTAMA CART */}
+      {/* Mobile: Tampil full page normal. Tablet & Desktop (md): Jadi Laci 480px di kanan */}
       {/* ==================================================== */}
       <div className="bg-white min-h-screen relative max-w-full md:fixed md:top-0 md:right-0 md:h-full md:w-[480px] md:z-[101] md:shadow-[0_0_50px_rgba(0,0,0,0.3)] md:animate-in md:slide-in-from-right-full md:duration-500 overflow-y-auto scrollbar-hide font-sans flex flex-col">
         
         <div className="pt-12 pb-6 px-6 relative flex flex-col items-center flex-shrink-0">
           <button type="button" onClick={handleClose} className="absolute left-6 top-14 p-2 bg-white rounded-full shadow-sm border border-gray-100 hover:bg-gray-50 transition-colors">
+            {/* 🌟 ICON: Panah Back untuk Mobile, X untuk Tab/Desktop */}
             <ChevronLeft className="w-5 h-5 text-gray-800 md:hidden" />
             <X className="hidden md:block w-5 h-5 text-gray-800" />
           </button>
