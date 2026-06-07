@@ -16,7 +16,7 @@ const STATIC_CONTENT: Record<string, any> = {
     image: "/banners/hero-collection-new-arrivals.png"
   },
   "carvico": {
-    title: "BEST SELLER",
+    title: "CARVICO",
     subtitle: "NICONICO RESORT The Top Picks\nOur Loyal Customer",
     image: "/banners/carvico.jpg"
   },

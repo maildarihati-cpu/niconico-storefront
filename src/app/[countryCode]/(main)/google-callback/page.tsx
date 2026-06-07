@@ -2,7 +2,6 @@
 
 import React, { useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-// Pastikan path import action-nya benar sesuai lokasi file Bos
 import { finalizeGoogleLogin } from "./action" 
 
 function AuthCallbackHandler() {
@@ -45,7 +44,6 @@ function AuthCallbackHandler() {
               let lastName = "User";
 
               try {
-                // JURUS BEDAH TOKEN TINGKAT DEWA
                 const base64Url = data.token.split('.')[1];
                 const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
                 const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
@@ -88,13 +86,13 @@ function AuthCallbackHandler() {
             console.error("Gagal sinkronisasi data customer:", err)
           }
 
-          // 🌟 4. LOGIKA BACA MEMO (URL ASAL)
+          // 🌟 4. LOGIKA BACA MEMO (URL ASAL SEBELUM LOGIN)
           let returnUrl = "/";
           if (typeof window !== "undefined") {
             const savedUrl = localStorage.getItem("redirect_after_login");
             if (savedUrl) {
               returnUrl = savedUrl;
-              // Hapus memo setelah dibaca agar tidak redirect terus-terusan
+              // Hapus setelah dibaca
               localStorage.removeItem("redirect_after_login"); 
             }
           }
@@ -103,11 +101,14 @@ function AuthCallbackHandler() {
           console.log("Memproses sesi login di Server...");
           await finalizeGoogleLogin(data.token);
 
-          // 🌟 6. HARD REFRESH REDIRECT (JURUS PAMUNGKAS)
-          // Menggunakan window.location.replace akan melakukan FULL RELOAD.
-          // Ini menjamin Navbar, Cart, dan semua State baca token baru tanpa perlu refresh manual.
-          // Fungsi 'replace' juga mencegah halaman loading ini masuk ke history 'Back' browser.
-          window.location.replace(returnUrl);
+          // 🌟 6. NATIVE NEXT.JS REDIRECT & REFRESH
+          // Gunakan router.push agar sesi Dev tidak terputus
+          router.push(returnUrl);
+          
+          // Beri jeda sangat singkat agar perpindahan URL selesai, lalu paksa Next.js me-refresh data (Cart, Profil, Navbar)
+          setTimeout(() => {
+            router.refresh();
+          }, 100);
 
         } else {
           router.push("/")
@@ -126,9 +127,9 @@ function AuthCallbackHandler() {
 
 export default function GoogleCallbackPage() {
   return (
-    <div className="h-screen w-full flex flex-col items-center justify-center bg-gray-50">
+    <div className="h-screen w-full flex flex-col items-center justify-center bg-white">
        <div className="w-12 h-12 border-4 border-[#EF7044] border-t-transparent rounded-full animate-spin"></div>
-       <p className="mt-4 text-gray-500 font-medium text-sm animate-pulse">Menyiapkan akun kamu, tunggu sebentar...</p>
+       <p className="mt-4 text-gray-500 font-light tracking-widest text-sm animate-pulse uppercase">Authenticating...</p>
        
        <Suspense fallback={null}>
          <AuthCallbackHandler />
