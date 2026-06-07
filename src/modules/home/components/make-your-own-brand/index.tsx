@@ -76,21 +76,20 @@ export default function MakeYourOwnBrandSection() {
         )}
       </div>
 
-      {/* 🌟 BAGIAN KANAN DI DESKTOP (Teks & Button)
-          Perbaikan: lg:items-center agar tombol dan teks rata tengah di desktop */}
+      {/* 🌟 BAGIAN KANAN DI DESKTOP (Teks & Button) */}
       <div className="contents lg:flex lg:flex-col lg:w-1/2 lg:order-2 lg:items-center lg:justify-center">
         
-        {/* HEADING (Perbaikan: Ukuran desktop dikecilkan ke lg:text-[32px] & teks dipaksa rata tengah) */}
-        <h2 className="order-1 lg:order-none text-3xl md:text-4xl lg:text-[25px] font-heavy text-center text-black tracking-tight mb-8 lg:mb-6 w-full">
+        {/* HEADING (🌟 PERUBAHAN: Diubah menjadi text-[25px] agar konsisten di semua device) */}
+        <h2 className="order-1 lg:order-none text-[25px] font-heavy text-center text-black tracking-tight mb-8 lg:mb-6 w-full">
           {content.heading}
         </h2>
 
-        {/* QUOTE TEXT (Perbaikan: Teks dipaksa rata tengah di semua device) */}
+        {/* QUOTE TEXT */}
         <p className="order-3 lg:order-none text-black text-sm md:text-base font-regular max-w-3xl leading-relaxed text-center mb-10 lg:mb-8 w-full px-4 lg:px-0">
           {content.quoteVerbatim}
         </p>
 
-        {/* CTA BUTTON (Perbaikan: justify-center di semua device) */}
+        {/* CTA BUTTON */}
         <div className="order-4 lg:order-none flex justify-center w-full">
           <Link 
             href={content.buttonLink || "#"}

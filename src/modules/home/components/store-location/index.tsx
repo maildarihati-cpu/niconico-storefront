@@ -88,7 +88,7 @@ export default function StoreSection({ layout = "slider" }: StoreSectionProps) {
         
         {/* 🌟 KOMENTAR RUSAK SUDAH DICABUT, COMPILER AMAN */}
         {layout === "slider" && (
-          <h2 className="text-3xl text- [25px] font-heavy text-[#000000] mb-8 px-4 md:px-0">
+          <h2 className="text-3xl text-[25px] font-heavy text-[#000000] mb-8 px-4 md:px-0">
             Visit Our Store
           </h2>
         )}

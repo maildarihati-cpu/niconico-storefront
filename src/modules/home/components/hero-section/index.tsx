@@ -102,12 +102,12 @@ export default function HeroSection() {
         <div className="w-full max-w-[1200px] mx-auto flex flex-col items-center lg:items-start text-center lg:text-left mb-4 lg:mb-12">
           
           {/* 🌟 Font judul besar diganti ke font-heavy */}
-          <h1 className="text-[32px] md:text-[42px] lg:text-[56px] font-heavy leading-[1.1] text-white mb-3 tracking-tight whitespace-pre-line drop-shadow-md">
+          <h1 className="text-[32px] md:text-[42px] lg:text-[56px] font-Black leading-[1.1] text-white mb-3 tracking-tight whitespace-pre-line drop-shadow-md">
             {globalTitle}
           </h1>
           
           {/* 🌟 Font kecil diganti dari font-bold ke font-normal (regular) */}
-          <p className="text-[10px] lg:text-xs font-normal tracking-[0.2em] text-white/90 uppercase mb-8 drop-shadow-md">
+          <p className="text-[10px] lg:text-xs font-book tracking-[0.2em] text-white/90 uppercase mb-8 drop-shadow-md">
             Resort & Swimwear Est. 2004
           </p>
           
