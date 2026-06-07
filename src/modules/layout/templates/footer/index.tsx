@@ -42,9 +42,9 @@ const Footer = () => {
         {/* ========================================== */}
         <div className="w-full lg:w-[400px] xl:w-[450px] text-center lg:text-center order-1 lg:order-2 mb-16 lg:mb-0 mx-auto lg:mx-0 shrink-0">
           <h3 className="text-[16px] lg:text-[16px] mb-8 font-regular leading-relaxed px-4 lg:px-0">
-            <span className="font-heavy">Subscribe</span> to our newsletter and get upto <span className="font-heavy whitespace-nowrap">20% off</span><br className="hidden md:block" />
+            <span className="font-Black">Subscribe</span> to our newsletter and get upto <span className="font-Black whitespace-nowrap">20% off</span><br className="hidden md:block" />
             <span className="md:hidden"> </span>
-            on our exclusive <span className="font-heavy">products.</span>
+            on our exclusive <span className="font-Black">products.</span>
           </h3>
 
           <form 

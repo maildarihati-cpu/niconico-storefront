@@ -166,11 +166,10 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   }, [cart.id])
 
   // ==========================================
-  // 🌟 MESIN AUTO-SYNC ALAMAT DEFAULT DARI DRAWER
+  // 🌟 MESIN AUTO-SYNC ALAMAT DEFAULT
   // ==========================================
   useEffect(() => {
     const autoSyncDefaultAddress = async () => {
-      // Kalau cart belum punya alamat_1 TAPI customer punya daftar alamat
       if ((!cart.shipping_address || !cart.shipping_address.address_1) && customer?.addresses?.length > 0) {
         setIsLoadingShipping(true);
         try {
@@ -310,9 +309,11 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   }
 
   return (
-    <div className="flex flex-col h-full bg-white relative font-sans lg:max-w-[1200px] xl:max-w-[1400px] mx-auto w-full lg:pt-[100px]">
+    <div className="bg-white min-h-screen relative font-sans w-full">
       
-      {/* HEADER KHUSUS MOBILE (DIHILANGKAN DI DESKTOP) */}
+      {/* ==================================================== */}
+      {/* 📱 HEADER KHUSUS MOBILE (DIHILANGKAN DI DESKTOP) */}
+      {/* ==================================================== */}
       <div className="lg:hidden flex items-center px-6 pt-12 pb-4 border-b border-gray-100 sticky top-0 bg-white/80 backdrop-blur-md z-20">
         <button onClick={() => router.back()} className="p-2 -ml-2">
           <ChevronLeft className="w-6 h-6 text-gray-800" />
@@ -322,17 +323,18 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
         </h1>
       </div>
 
-      <div className="px-5 py-6 pb-32 lg:pb-12 lg:px-8">
+      {/* ==================================================== */}
+      {/* 🌟 PEMBUNGKUS UTAMA DESKTOP (Lebar Maksimal Diatur Rapih) */}
+      {/* ==================================================== */}
+      <div className="max-w-[1200px] xl:max-w-[1400px] mx-auto w-full px-5 py-6 lg:py-12 lg:px-8 lg:pt-[100px]">
         
-        {/* ==================================================== */}
-        {/* 🌟 PEMBUNGKUS UTAMA: GRID 2 KOLOM DI DESKTOP */}
-        {/* ==================================================== */}
-        <div className="lg:grid lg:grid-cols-12 lg:gap-16 xl:gap-24 relative lg:items-start w-full">
+        {/* JURUS FLEXBOX ANTI-BERANTAKAN: Mobile otomatis menurun (flex-col), Desktop menyamping (lg:flex-row) */}
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-16 xl:gap-24 items-start w-full">
           
           {/* ==================================================== */}
-          {/* 💻 KOLOM KIRI (7 Kolom): Alamat -> Pengiriman -> Produk */}
+          {/* 💻 KOLOM KIRI: Alamat -> Pengiriman -> Produk */}
           {/* ==================================================== */}
-          <div className="lg:col-span-7 flex flex-col gap-6 lg:gap-10">
+          <div className="flex-1 w-full min-w-0 flex flex-col gap-6 lg:gap-10">
             
             {/* CONTACT INFO */}
             <div className="space-y-3">
@@ -565,7 +567,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
               )}
             </div>
 
-            {/* SHIPPING METHOD DI DESKTOP NAIK KE KOLOM KIRI */}
+            {/* SHIPPING METHOD */}
             <div className="space-y-3">
               <h3 className="text-[10px] lg:text-[12px] font-black text-[#EF7044] uppercase tracking-[0.2em] px-1">Delivery Method</h3>
               <div className="bg-gray-50 rounded-3xl p-5 border border-gray-100">
@@ -621,9 +623,9 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
           </div>
           
           {/* ==================================================== */}
-          {/* 💻 KOLOM KANAN (5 Kolom): Sticky Promo -> Summary -> Pay */}
+          {/* 💻 KOLOM KANAN: Lebar tetap (~450px) agar tidak overflow */}
           {/* ==================================================== */}
-          <div className="lg:col-span-5 flex flex-col gap-6 lg:sticky lg:top-[120px] lg:h-max mt-8 lg:mt-0 pt-8 lg:pt-0 border-t border-gray-100 lg:border-none">
+          <div className="w-full lg:w-[400px] xl:w-[450px] shrink-0 flex flex-col gap-6 lg:sticky lg:top-[120px] pt-8 lg:pt-0 border-t border-gray-100 lg:border-none">
             
             {/* PROMO */}
             <div className="flex gap-2">
@@ -684,7 +686,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
             <button 
               onClick={handlePayNow}
               disabled={isPaying || isLoadingShipping}
-              className="w-full bg-[#ef7044] text-white py-5 lg:py-6 rounded-2xl font-heavy text-[15px] lg:text-[16px] shadow-xl hover:bg-[white] text-[#ef7044] hover:-translate-y-1 transition-all flex items-center justify-center gap-3 uppercase tracking-[0.2em] disabled:opacity-50 disabled:hover:translate-y-0"
+              className="w-full bg-[#ef7044] text-white py-5 lg:py-6 rounded-2xl font-bold text-[15px] lg:text-[16px] shadow-xl hover:bg-black hover:text-white hover:-translate-y-1 transition-all flex items-center justify-center gap-3 uppercase tracking-[0.2em] disabled:opacity-50 disabled:hover:translate-y-0"
             >
               {isPaying ? <Loader2 className="w-5 h-5 animate-spin" /> : "Proceed to Pay"}
             </button>
