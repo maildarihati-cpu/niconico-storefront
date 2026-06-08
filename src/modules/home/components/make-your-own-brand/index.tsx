@@ -48,7 +48,8 @@ export default function MakeYourOwnBrandSection() {
   const hasVideo = isVideo(content.mediaUrl);
 
   return (
-    <section className="py-16 px-4 md:px-8 max-w-[1100px] mx-auto bg-white flex flex-col lg:flex-row lg:items-center lg:gap-16">
+    /* 🌟 PERUBAHAN: Ubah py-16 menjadi pt-12 pb-12 */
+    <section className="pt-12 pb-12 px-4 md:px-8 max-w-[1100px] mx-auto bg-white flex flex-col lg:flex-row lg:items-center lg:gap-16">
       
       {/* 🌟 BAGIAN KIRI DI DESKTOP (Media Card) */}
       <div className="order-2 lg:order-1 w-full lg:w-1/2 aspect-video rounded-3xl md:rounded-[2rem] overflow-hidden relative shadow-md mb-8 lg:mb-0 bg-black group cursor-pointer shrink-0">
@@ -79,7 +80,7 @@ export default function MakeYourOwnBrandSection() {
       {/* 🌟 BAGIAN KANAN DI DESKTOP (Teks & Button) */}
       <div className="contents lg:flex lg:flex-col lg:w-1/2 lg:order-2 lg:items-center lg:justify-center">
         
-        {/* HEADING (🌟 PERUBAHAN: Diubah menjadi text-[25px] agar konsisten di semua device) */}
+        {/* HEADING */}
         <h2 className="order-1 lg:order-none text-[25px] font-heavy text-center text-black tracking-tight mb-8 lg:mb-6 w-full">
           {content.heading}
         </h2>
