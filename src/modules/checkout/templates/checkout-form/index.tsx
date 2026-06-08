@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { ChevronLeft, MapPin, Loader2, Tag, CheckCircle2, Mail, Plus, AlertCircle, Search, Crosshair } from "lucide-react"
-
-import { saveAddressServerAction } from "@/lib/address-actions";
+import { ChevronLeft, MapPin, Loader2, Tag, CheckCircle2, Mail, Plus, AlertCircle, Search, Crosshair, Trash2 } from "lucide-react"
+import Image from "next/image"; 
+import { saveAddressServerAction, deleteAddressServerAction } from "@/lib/address-actions";
 import { 
   updateCartAddressAction, 
   getShippingOptionsAction, 
@@ -32,6 +32,11 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   const [showAddressList, setShowAddressList] = useState(false)
   
   const [isAddingAddress, setIsAddingAddress] = useState(false)
+  
+  const [deletingAddressId, setDeletingAddressId] = useState<string | null>(null);
+  
+  const [deletedAddressIds, setDeletedAddressIds] = useState<string[]>([]);
+
   const [newAddress, setNewAddress] = useState({
     first_name: customer?.first_name || "",
     last_name: customer?.last_name || "",
@@ -143,7 +148,6 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   };
   // ==========================================
 
-
   const fetchShippingMethods = async (currentCartId: string) => {
     setIsLoadingShipping(true)
     try {
@@ -165,12 +169,8 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cart.id])
 
-  // ==========================================
-  // 🌟 MESIN AUTO-SYNC ALAMAT DEFAULT DARI DRAWER
-  // ==========================================
   useEffect(() => {
     const autoSyncDefaultAddress = async () => {
-      // Kalau cart belum punya alamat_1 TAPI customer punya daftar alamat
       if ((!cart.shipping_address || !cart.shipping_address.address_1) && customer?.addresses?.length > 0) {
         setIsLoadingShipping(true);
         try {
@@ -191,8 +191,6 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
     autoSyncDefaultAddress();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); 
-  // ==========================================
-
 
   const handleSelectShipping = async (optionId: string, currentCartId: string = cart.id) => {
     try {
@@ -250,6 +248,35 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
       setIsLoadingShipping(false)
     }
   }
+
+  const handleDeleteAddress = async (e: React.MouseEvent, addr: any) => {
+    e.stopPropagation(); 
+    
+    const isConfirmed = window.confirm("Are you sure you want to delete this address permanently?");
+    if (!isConfirmed) return;
+
+    setDeletingAddressId(addr.id);
+    try {
+      await deleteAddressServerAction(addr.id);
+
+      setDeletedAddressIds(prev => [...prev, addr.id]);
+
+      if (cart.shipping_address?.address_1 === addr.address_1) {
+        setCart((prevCart: any) => ({
+          ...prevCart,
+          shipping_address: null 
+        }));
+        setShippingMethods([]); 
+      }
+
+      router.refresh();
+    } catch (error) {
+      console.error("Error deleting address:", error);
+      alert("Failed to delete address. Please try again.");
+    } finally {
+      setDeletingAddressId(null);
+    }
+  };
 
   const handleApplyPromo = async () => {
     if (!promoCode) return
@@ -309,11 +336,20 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
     }
   }
 
+  const availableAddresses = customer?.addresses?.filter((a: any) => !deletedAddressIds.includes(a.id)) || [];
+
   return (
-    <div className="flex flex-col h-full bg-white relative font-sans lg:max-w-[1200px] xl:max-w-[1400px] mx-auto w-full lg:pt-[100px]">
-      
-      {/* HEADER KHUSUS MOBILE (DIHILANGKAN DI DESKTOP) */}
-      <div className="lg:hidden flex items-center px-6 pt-12 pb-4 border-b border-gray-100 sticky top-0 bg-white/80 backdrop-blur-md z-20">
+    <div className="flex flex-col h-full bg-white relative font-sans md:max-w-[1200px] xl:max-w-[1400px] mx-auto w-full md:pt-[100px]">
+      <div className="relative w-36 h-10 mb-6">
+                <Image 
+                  src="/logo-niconico-black.png" 
+                  alt="Niconico Resort Logo" 
+                  fill 
+                  className="object-contain" 
+                  priority
+                />
+              </div>
+      <div className="md:hidden flex items-center px-6 pt-12 pb-4 border-b border-gray-100 sticky top-0 bg-white/80 backdrop-blur-md z-20">
         <button onClick={() => router.back()} className="p-2 -ml-2">
           <ChevronLeft className="w-6 h-6 text-gray-800" />
         </button>
@@ -322,21 +358,15 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
         </h1>
       </div>
 
-      <div className="px-5 py-6 pb-32 lg:pb-12 lg:px-8">
+      <div className="px-5 py-6 pb-32 md:pb-12 md:px-8">
         
-        {/* ==================================================== */}
-        {/* 🌟 PEMBUNGKUS UTAMA: GRID 2 KOLOM DI DESKTOP */}
-        {/* ==================================================== */}
-        <div className="lg:grid lg:grid-cols-12 lg:gap-16 xl:gap-24 relative lg:items-start w-full">
+        <div className="md:grid md:grid-cols-12 md:gap-8 lg:gap-16 xl:gap-24 relative md:items-start w-full">
           
-          {/* ==================================================== */}
-          {/* 💻 KOLOM KIRI (7 Kolom): Alamat -> Pengiriman -> Produk */}
-          {/* ==================================================== */}
-          <div className="lg:col-span-7 flex flex-col gap-6 lg:gap-10">
+          <div className="md:col-span-7 flex flex-col gap-6 md:gap-10">
             
             {/* CONTACT INFO */}
             <div className="space-y-3">
-              <h3 className="text-[10px] lg:text-[12px] font-black text-[#EF7044] tracking-[0.2em] px-1">Contact Info</h3>
+              <h3 className="text-[10px] lg:text-[12px] font-black text-[#EF7044] uppercase tracking-[0.2em] px-1">Contact Info</h3>
               <div className="bg-gray-50 rounded-3xl p-5 border border-gray-100 flex items-center gap-4 transition-all focus-within:border-[#EF7044] focus-within:bg-white">
                 <div className="bg-white p-2.5 rounded-2xl shadow-sm">
                   <Mail className="w-5 h-5 text-[#EF7044]" />
@@ -346,7 +376,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                   placeholder="your email address" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-transparent text-[11px] lg:text-[13px] font-black text-gray-900 outline-none tracking-widest placeholder:text-gray-300"
+                  className="w-full bg-transparent text-[11px] lg:text-[13px] font-black text-gray-900 outline-none uppercase tracking-widest placeholder:text-gray-300"
                 />
               </div>
             </div>
@@ -354,13 +384,13 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
             {/* SHIPPING ADDRESS */}
             <div className="space-y-3">
               <div className="flex justify-between items-end px-1">
-                <h3 className="text-[10px] lg:text-[12px] font-black text-[#EF7044] uppercase tracking-[0.2em]">Shipping Address</h3>
+                <h3 className="text-[10px] md:text-[12px] font-black text-[#EF7044] uppercase tracking-[0.2em]">Shipping Address</h3>
                 <button 
                   onClick={() => {
                     setShowAddressList(!showAddressList)
                     setIsAddingAddress(false) 
                   }}
-                  className="text-[10px] lg:text-[11px] font-bold text-gray-400 hover:text-[#EF7044] underline uppercase italic"
+                  className="text-[10px] md:text-[11px] font-bold text-gray-400 hover:text-[#EF7044] underline uppercase italic"
                 >
                   {showAddressList ? "Cancel" : "Change Address"}
                 </button>
@@ -507,12 +537,12 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                     </div>
                   ) : (
                     <>
-                      {customer?.addresses?.length > 0 ? (
-                        customer.addresses.map((addr: any) => (
+                      {availableAddresses.length > 0 ? (
+                        availableAddresses.map((addr: any) => (
                           <div 
                             key={addr.id}
                             onClick={() => handleUpdateAddress(addr)}
-                            className={`p-4 rounded-3xl border-2 transition-all cursor-pointer ${
+                            className={`p-4 rounded-3xl border-2 transition-all cursor-pointer relative ${
                               cart.shipping_address?.address_1 === addr.address_1 
                               ? "border-[#EF7044] bg-[#EF7044]/5 shadow-sm" 
                               : "border-gray-50 hover:border-gray-200"
@@ -522,11 +552,28 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                               <p className="text-[11px] font-black text-gray-800 uppercase italic">
                                 {addr.first_name} {addr.last_name}
                               </p>
-                              {cart.shipping_address?.address_1 === addr.address_1 && (
-                                <CheckCircle2 className="w-4 h-4 text-[#EF7044]" />
-                              )}
+                              
+                              <div className="flex items-center gap-2">
+                                {cart.shipping_address?.address_1 === addr.address_1 && (
+                                  <CheckCircle2 className="w-4 h-4 text-[#EF7044]" />
+                                )}
+                                
+                                <button 
+                                  type="button"
+                                  onClick={(e) => handleDeleteAddress(e, addr)}
+                                  disabled={deletingAddressId === addr.id}
+                                  className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors disabled:opacity-50"
+                                  title="Delete Address"
+                                >
+                                  {deletingAddressId === addr.id ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                  ) : (
+                                    <Trash2 className="w-4 h-4" />
+                                  )}
+                                </button>
+                              </div>
                             </div>
-                            <p className="text-[10px] text-gray-400 uppercase leading-relaxed font-medium">
+                            <p className="text-[10px] text-gray-400 uppercase leading-relaxed font-medium pr-8">
                               {addr.address_1}, {addr.city}, {addr.province}
                             </p>
                           </div>
@@ -547,18 +594,25 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                   )}
                 </div>
               ) : (
-                <div className="bg-gray-50 rounded-3xl p-5 border border-gray-100 flex items-center gap-4">
+                <div 
+                  className="bg-gray-50 rounded-3xl p-5 border border-gray-100 flex items-center gap-4 cursor-pointer hover:bg-gray-100 transition-colors"
+                  onClick={() => {
+                    setShowAddressList(true);
+                    if (availableAddresses.length === 0) setIsAddingAddress(true);
+                  }}
+                >
                   <div className="bg-white p-2.5 rounded-2xl shadow-sm">
                     <MapPin className="w-5 h-5 text-[#EF7044]" />
                   </div>
                   <div className="flex-1">
+                    {/* 🌟 TULISAN "NO ADDRESS FOUND" DIGANTI JADI "ADD NEW ADDRESS..." */}
                     {cart.shipping_address && cart.shipping_address.address_1 ? (
                       <p className="text-[11px] text-gray-600 leading-relaxed uppercase font-medium">
                         <span className="font-black text-gray-900 italic">{cart.shipping_address.first_name} {cart.shipping_address.last_name}</span><br/>
                         {cart.shipping_address.address_1}, {cart.shipping_address.city}
                       </p>
                     ) : (
-                      <p className="text-[11px] italic text-gray-400 font-bold">No Address Found</p>
+                      <p className="text-[11px] italic text-[#EF7044] font-bold">Add New Address...</p>
                     )}
                   </div>
                 </div>
@@ -567,7 +621,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
 
             {/* SHIPPING METHOD DI DESKTOP NAIK KE KOLOM KIRI */}
             <div className="space-y-3">
-              <h3 className="text-[10px] lg:text-[12px] font-black text-[#EF7044] uppercase tracking-[0.2em] px-1">Delivery Method</h3>
+              <h3 className="text-[10px] md:text-[12px] font-black text-[#EF7044] uppercase tracking-[0.2em] px-1">Delivery Method</h3>
               <div className="bg-gray-50 rounded-3xl p-5 border border-gray-100">
                 {isLoadingShipping ? (
                   <div className="flex justify-center py-4">
@@ -585,8 +639,8 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                           : "border-gray-200 hover:border-gray-300"
                         }`}
                       >
-                        <span className="text-[10px] lg:text-[11px] uppercase font-black tracking-wider">{method.name}</span>
-                        <span className="text-[12px] lg:text-[13px] font-black text-gray-900">Rp {method.amount?.toLocaleString("id-ID") || 0}</span>
+                        <span className="text-[10px] md:text-[11px] uppercase font-black tracking-wider">{method.name}</span>
+                        <span className="text-[12px] md:text-[13px] font-black text-gray-900">Rp {method.amount?.toLocaleString("id-ID") || 0}</span>
                       </div>
                     )) : (
                       <div className="text-[10px] uppercase font-bold text-gray-400 italic text-center py-2">
@@ -599,20 +653,20 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
             </div>
 
             {/* DETAIL PRODUK */}
-            <div className="space-y-4 pt-4 lg:pt-6 border-t border-gray-100">
-              <h3 className="text-[10px] lg:text-[12px] font-black text-[#EF7044] uppercase tracking-[0.2em] px-1 mb-2">Order Items</h3>
+            <div className="space-y-4 pt-4 md:pt-6 border-t border-gray-100">
+              <h3 className="text-[10px] md:text-[12px] font-black text-[#EF7044] uppercase tracking-[0.2em] px-1 mb-2">Order Items</h3>
               {cart.items?.map((item: any) => (
                 <div key={item.id} className="flex gap-4 items-center">
-                  <div className="w-20 h-24 lg:w-24 lg:h-32 rounded-2xl overflow-hidden bg-gray-50 flex-shrink-0 border border-gray-100 shadow-sm">
+                  <div className="w-20 h-24 md:w-24 md:h-32 rounded-2xl overflow-hidden bg-gray-50 flex-shrink-0 border border-gray-100 shadow-sm">
                     <img src={item.thumbnail} className="w-full h-full object-cover" alt="" />
                   </div>
                   <div className="flex-1">
                     <div className="flex justify-between items-start">
-                      <h4 className="text-[12px] lg:text-[14px] font-black text-gray-900 uppercase italic leading-tight">{item.title}</h4>
+                      <h4 className="text-[12px] md:text-[14px] font-black text-gray-900 uppercase italic leading-tight">{item.title}</h4>
                       <span className="text-[10px] font-black text-[#EF7044] bg-[#EF7044]/10 px-2 py-1 rounded-lg">x{item.quantity}</span>
                     </div>
-                    <p className="text-[14px] lg:text-[15px] font-black mt-2 tracking-tight">Rp {item.unit_price.toLocaleString("id-ID")}</p>
-                    <p className="text-[9px] lg:text-[10px] text-gray-400 mt-1 uppercase font-black tracking-widest">{item.variant?.title}</p>
+                    <p className="text-[14px] md:text-[15px] font-black mt-2 tracking-tight">Rp {item.unit_price.toLocaleString("id-ID")}</p>
+                    <p className="text-[9px] md:text-[10px] text-gray-400 mt-1 uppercase font-black tracking-widest">{item.variant?.title}</p>
                   </div>
                 </div>
               ))}
@@ -620,10 +674,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
             
           </div>
           
-          {/* ==================================================== */}
-          {/* 💻 KOLOM KANAN (5 Kolom): Sticky Promo -> Summary -> Pay */}
-          {/* ==================================================== */}
-          <div className="lg:col-span-5 flex flex-col gap-6 lg:sticky lg:top-[120px] lg:h-max mt-8 lg:mt-0 pt-8 lg:pt-0 border-t border-gray-100 lg:border-none">
+          <div className="md:col-span-5 flex flex-col gap-6 md:sticky md:top-[120px] md:h-max mt-8 md:mt-0 pt-8 md:pt-0 border-t border-gray-100 md:border-none">
             
             {/* PROMO */}
             <div className="flex gap-2">
@@ -634,47 +685,47 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                   placeholder="PROMO CODE?" 
                   value={promoCode}
                   onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-2xl pl-11 pr-4 py-4 lg:py-5 text-[10px] lg:text-[11px] font-black focus:border-[#EF7044] outline-none transition-all tracking-[0.2em]"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-2xl pl-11 pr-4 py-4 md:py-5 text-[10px] md:text-[11px] font-black focus:border-[#EF7044] outline-none transition-all tracking-[0.2em]"
                 />
               </div>
               <button 
                 onClick={handleApplyPromo}
                 disabled={isApplyingPromo || !promoCode}
-                className="bg-black text-white px-8 rounded-2xl text-[10px] lg:text-[11px] font-black uppercase disabled:opacity-30 tracking-widest hover:bg-gray-800 transition-colors"
+                className="bg-black text-white px-8 rounded-2xl text-[10px] md:text-[11px] font-black uppercase disabled:opacity-30 tracking-widest hover:bg-gray-800 transition-colors"
               >
                 {isApplyingPromo ? "..." : "APPLY"}
               </button>
             </div>
 
             {/* GATEWAY & SUMMARY BOX */}
-            <div className="bg-[#EF7044] rounded-[24px] p-7 lg:p-8 text-white shadow-[0_20px_50px_rgba(239,112,68,0.3)] relative overflow-hidden">
+            <div className="bg-[#EF7044] rounded-[24px] p-7 md:p-8 text-white shadow-[0_20px_50px_rgba(239,112,68,0.3)] relative overflow-hidden">
               <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl"></div>
               
               <div className="flex justify-between items-center mb-6">
-                <h4 className="text-[10px] lg:text-[11px] font-black uppercase tracking-[0.2em] opacity-90">Gateway</h4>
+                <h4 className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.2em] opacity-90">Gateway</h4>
                 <span className="text-[9px] font-black bg-white/20 px-3 py-1 rounded-full border border-white/30 uppercase tracking-tighter">XENDIT SECURE</span>
               </div>
               
               {/* SUMMARY */}
               <div className="space-y-4 pt-2">
-                <div className="flex justify-between text-[11px] lg:text-[12px] text-white/70 font-black uppercase tracking-widest">
+                <div className="flex justify-between text-[11px] md:text-[12px] text-white/70 font-black uppercase tracking-widest">
                   <span>Subtotal</span>
                   <span className="text-white">Rp {(cart.subtotal || 0).toLocaleString("id-ID")}</span>
                 </div>
-                <div className="flex justify-between text-[11px] lg:text-[12px] text-white/70 font-black uppercase tracking-widest">
+                <div className="flex justify-between text-[11px] md:text-[12px] text-white/70 font-black uppercase tracking-widest">
                   <span>Shipping</span>
                   <span className="text-white">Rp {(cart.shipping_total || 0).toLocaleString("id-ID")}</span>
                 </div>
                 {cart.discount_total > 0 && (
-                  <div className="flex justify-between text-[11px] lg:text-[12px] text-yellow-200 font-black uppercase tracking-widest">
+                  <div className="flex justify-between text-[11px] md:text-[12px] text-yellow-200 font-black uppercase tracking-widest">
                     <span>Promo applied</span>
                     <span>-Rp {cart.discount_total.toLocaleString("id-ID")}</span>
                   </div>
                 )}
                 
                 <div className="flex justify-between items-end pt-6 mt-2 border-t border-white/20">
-                  <span className="text-[12px] lg:text-[13px] font-black uppercase italic tracking-widest text-white/80 pb-1">Total</span>
-                  <span className="text-3xl lg:text-4xl font-black tracking-tighter drop-shadow-md">
+                  <span className="text-[12px] md:text-[13px] font-black uppercase italic tracking-widest text-white/80 pb-1">Total</span>
+                  <span className="text-3xl md:text-4xl font-black tracking-tighter drop-shadow-md">
                     Rp {(cart.total || 0).toLocaleString("id-ID")}
                   </span>
                 </div>
@@ -684,7 +735,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
             <button 
               onClick={handlePayNow}
               disabled={isPaying || isLoadingShipping}
-              className="w-full bg-gray-900 text-white py-5 lg:py-6 rounded-2xl font-black text-[15px] lg:text-[16px] shadow-xl hover:bg-black hover:-translate-y-1 transition-all flex items-center justify-center gap-3 uppercase tracking-[0.2em] disabled:opacity-50 disabled:hover:translate-y-0"
+              className="w-full bg-[#ef7044] text-white py-5 md:py-6 rounded-2xl font-heavy text-[15px] md:text-[16px] shadow-xl hover:bg-[white] text-[#ef7044] hover:-translate-y-1 transition-all flex items-center justify-center gap-3 uppercase tracking-[0.2em] disabled:opacity-50 disabled:hover:translate-y-0"
             >
               {isPaying ? <Loader2 className="w-5 h-5 animate-spin" /> : "Proceed to Pay"}
             </button>

@@ -7,7 +7,8 @@ export default function InstagramFeed() {
       
       {/* HEADER TITLE (Di-center saat Desktop) */}
       <div className="mb-4 lg:mb-8 lg:text-center text-left">
-        <h2 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-[#EF7044]">
+        {/* 🌟 PERUBAHAN: text-2xl md:text-3xl lg:text-4xl diubah menjadi text-[25px] */}
+        <h2 className="text-[25px] font-heavy text-[#EF7044]">
           #niconiconfidence
         </h2>
       </div>
@@ -58,7 +59,7 @@ export default function InstagramFeed() {
 
         {/* FOOTER TEXT & SOCIAL ICONS */}
         <div className="flex flex-col items-end mt-4 pr-2 md:pr-4">
-          <p className="text-xs md:text-sm font-medium text-gray-800 text-right mb-3">
+          <p className="text-xs md:text-sm font-regular text-gray-800 text-right mb-3">
             Share your confidence moment with niconico resort
           </p>
           <div className="flex items-center justify-end gap-3 md:gap-4">
@@ -143,7 +144,7 @@ export default function InstagramFeed() {
 
           {/* SOSMED DESKTOP (Rata Tengah di bawah box kanan) */}
           <div className="flex flex-col items-center justify-center pt-2">
-            <p className="text-sm font-medium text-gray-800 mb-4">
+            <p className="text-sm font-regular text-gray-800 mb-4">
               Share your confidence moment with niconico resort
             </p>
             <div className="flex items-center gap-5">

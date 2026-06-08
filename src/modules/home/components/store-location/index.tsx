@@ -88,7 +88,7 @@ export default function StoreSection({ layout = "slider" }: StoreSectionProps) {
         
         {/* 🌟 KOMENTAR RUSAK SUDAH DICABUT, COMPILER AMAN */}
         {layout === "slider" && (
-          <h2 className="text-3xl font-bold text-[#EF7044] mb-8 px-4 md:px-0">
+          <h2 className="text-3xl text-[25px] font-heavy text-[#000000] mb-8 px-4 md:px-0">
             Visit Our Store
           </h2>
         )}
@@ -111,7 +111,7 @@ export default function StoreSection({ layout = "slider" }: StoreSectionProps) {
               
               <div className="flex flex-col items-start gap-1 mb-4 min-h-[4rem]">
                 {/* 🌟 BERSIH: Tanpa uppercase dan ukuran font proporsional */}
-                <h3 className="text-base md:text-lg font-black text-[#EF7044] tracking-wide w-full">
+                <h3 className="text-base md:text-lg font-heavy text-[#EF7044] tracking-wide w-full">
                   {store.name}
                 </h3>
                 <p className="text-[11px] md:text-xs text-gray-600 text-left leading-relaxed font-medium w-full break-words pr-2">
@@ -138,7 +138,7 @@ export default function StoreSection({ layout = "slider" }: StoreSectionProps) {
                   href={store.maps_link} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="w-full border-2 border-[#EF7044] text-[#EF7044] py-2.5 rounded-full text-center font-bold text-sm hover:bg-[#EF7044] hover:text-white transition-colors duration-300"
+                  className="w-full border-2 border-[#EF7044] text-[#EF7044] py-2.5 rounded-full text-center font-regular text-sm hover:bg-[#EF7044] hover:text-white transition-colors duration-300"
                 >
                   Direction
                 </a>
@@ -146,7 +146,7 @@ export default function StoreSection({ layout = "slider" }: StoreSectionProps) {
                   href={store.wa_link?.startsWith('http') ? store.wa_link : `https://wa.me/${store.wa_link}`} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="w-full bg-[#EF7044] border-2 border-[#EF7044] text-white py-2.5 rounded-full text-center font-bold text-sm hover:bg-[#d65f36] hover:border-[#d65f36] transition-colors duration-300 shadow-md shadow-orange-500/20"
+                  className="w-full bg-[#EF7044] border-2 border-[#EF7044] text-white py-2.5 rounded-full text-center font-regular text-sm hover:bg-[#d65f36] hover:border-[#d65f36] transition-colors duration-300 shadow-md shadow-orange-500/20"
                 >
                   Call
                 </a>
@@ -163,7 +163,7 @@ export default function StoreSection({ layout = "slider" }: StoreSectionProps) {
               <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4 group-hover:bg-[#EF7044] group-hover:scale-110 transition-all duration-300 shadow-sm">
                 <ArrowRight className="w-8 h-8 text-gray-400 group-hover:text-white transition-colors duration-300" />
               </div>
-              <span className="text-xl font-bold text-gray-800 group-hover:text-[#EF7044] transition-colors duration-300">
+              <span className="text-xl font-heavy text-gray-800 group-hover:text-[#EF7044] transition-colors duration-300">
                 View All Stores
               </span>
               <span className="text-sm text-gray-500 font-medium mt-2">
@@ -179,7 +179,7 @@ export default function StoreSection({ layout = "slider" }: StoreSectionProps) {
           <div className="hidden md:flex justify-center mt-10 w-full">
             <a 
               href="/our-store"
-              className="bg-[#EF7044] border-2 border-[#EF7044] text-white px-10 py-3.5 rounded-full font-bold text-sm hover:bg-white hover:text-[#EF7044] transition-all duration-300 flex items-center gap-3 shadow-md hover:shadow-lg uppercase tracking-wider"
+              className="bg-[#EF7044] border-2 border-[#EF7044] text-white px-10 py-3.5 rounded-full font-regular text-sm hover:bg-white hover:text-[#EF7044] transition-all duration-300 flex items-center gap-3 shadow-md hover:shadow-lg uppercase tracking-wider"
             >
               View All Stores <ArrowRight className="w-4 h-4" />
             </a>

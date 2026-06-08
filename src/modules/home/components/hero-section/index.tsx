@@ -55,7 +55,8 @@ export default function HeroSection() {
     return (
       <section className="relative w-full h-[100vh] bg-gray-900 flex flex-col items-center justify-center">
          <div className="w-8 h-8 border-2 border-white/20 border-t-[#EF7044] rounded-full animate-spin mb-4"></div>
-         <p className="text-[10px] font-bold tracking-[0.2em] text-white/40 uppercase animate-pulse">
+         {/* 🌟 Font kecil diganti dari font-bold ke font-normal (regular) */}
+         <p className="text-[10px] font-normal tracking-[0.2em] text-white/40 uppercase animate-pulse">
            Loading Niconico...
          </p>
       </section>
@@ -100,11 +101,13 @@ export default function HeroSection() {
         
         <div className="w-full max-w-[1200px] mx-auto flex flex-col items-center lg:items-start text-center lg:text-left mb-4 lg:mb-12">
           
-          <h1 className="text-[32px] md:text-[42px] lg:text-[56px] font-semibold leading-[1.1] text-white mb-3 tracking-tight whitespace-pre-line drop-shadow-md">
+          {/* 🌟 Font judul besar diganti ke font-heavy */}
+          <h1 className="text-[32px] md:text-[42px] lg:text-[56px] font-Black leading-[1.1] text-white mb-3 tracking-tight whitespace-pre-line drop-shadow-md">
             {globalTitle}
           </h1>
           
-          <p className="text-[10px] lg:text-xs font-bold tracking-[0.2em] text-white/90 uppercase mb-8 drop-shadow-md">
+          {/* 🌟 Font kecil diganti dari font-bold ke font-normal (regular) */}
+          <p className="text-[10px] lg:text-xs font-book tracking-[0.2em] text-white/90 uppercase mb-8 drop-shadow-md">
             Resort & Swimwear Est. 2004
           </p>
           
