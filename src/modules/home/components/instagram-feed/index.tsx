@@ -3,7 +3,7 @@ import Image from "next/image";
 export default function InstagramFeed() {
   return (
     /* 🌟 PERUBAHAN: Murni menggunakan mt-12 (Margin top 48px) saja, tanpa margin bottom atau padding vertikal */
-    <section className="mt-12 px-4 md:px-8 max-w-[1000px] lg:max-w-[1200px] mx-auto bg-white">
+    <section className="mt-12 px-4 md:px-5 max-w-[1000px] lg:max-w-[1200px] mx-auto bg-white">
       
       {/* HEADER TITLE (Di-center saat Desktop) */}
       <div className="mb-8 lg:mb-8 lg:text-center text-left">
