@@ -87,7 +87,7 @@ export default function StoreSection({ layout = "slider" }: StoreSectionProps) {
         
         {layout === "slider" && (
           /* 🌟 PERUBAHAN: Ditambahkan text-center & w-full agar judul tepat berada di tengah */
-          <h2 className="text-[25px] font-heavy text-[#000000] text-center mb-8 px-4 w-full">
+          <h2 className="text-[25px] font-heavy text-[#000000] text-center mb-5 px-4 w-full">
             Visit Our Store
           </h2>
         )}

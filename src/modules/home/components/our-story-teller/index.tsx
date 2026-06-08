@@ -33,7 +33,7 @@ const StoryTeller = () => {
     <section className="mt-12 bg-white overflow-hidden">
       
       {/* JUDUL */}
-      <div className="container mx-auto text-center mb-10 px-4">
+      <div className="container mx-auto text-center mb-5 px-4">
         <h2 className="text-[25px] text-justify-center font-heavy text-black tracking-tight">
           Our Story Teller
         </h2>
