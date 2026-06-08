@@ -49,7 +49,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   })
 
   // ==========================================
-  // 🌟 MESIN PETA (PIN POINT)
+  // 🌟 MAP ENGINE (PIN POINT)
   // ==========================================
   const mapRef = useRef<HTMLDivElement>(null);
   const [mapInstance, setMapInstance] = useState<any>(null);
@@ -164,22 +164,20 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
     }
   }
 
-  // 🌟 PENGGANTI: useEffect Tunggal yang Mencekik Alamat Hantu
+  // 🌟 SINGLE useEffect to avoid ghost addresses
   useEffect(() => {
     const syncAddressAndShipping = async () => {
-      // Dapatkan daftar alamat asli kustomer yang belum dihapus
       const availableAddresses = customer?.addresses?.filter((a: any) => !deletedAddressIds.includes(a.id)) || [];
 
-      // 1. JIKA BUKU ALAMAT KOSONG (User sudah hapus semua alamat)
+      // 1. IF ADDRESS BOOK IS EMPTY
       if (availableAddresses.length === 0) {
-        // Hancurkan alamat hantu secara lokal 
         setCart((prev: any) => ({ ...prev, shipping_address: null, shipping_methods: [] }));
         setShippingMethods([]);
         setIsLoadingShipping(false);
-        return; // 🛑 STOP DI SINI! Jangan panggil API Ongkir agar hantu tidak bangkit!
+        return; 
       }
 
-      // 2. JIKA KERANJANG KOSONG TAPI BUKU ALAMAT ADA ISINYA (Auto-sync ke alamat pertama)
+      // 2. IF CART IS EMPTY BUT ADDRESS BOOK HAS ITEMS (Auto-sync to first address)
       if ((!cart?.shipping_address || !cart.shipping_address.address_1) && availableAddresses.length > 0) {
         setIsLoadingShipping(true);
         try {
@@ -197,7 +195,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
         return; 
       }
 
-      // 3. JIKA KERANJANG SUDAH ADA ALAMATNYA (Normal flow)
+      // 3. IF CART HAS ADDRESS (Normal flow)
       if (cart?.shipping_address?.address_1) {
          fetchShippingMethods(cart.id);
       } else {
@@ -299,7 +297,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
       const updatedCart = await applyPromoCodeAction(cart.id, promoCode)
       setCart(updatedCart)
       setPromoCode("")
-      alert("Yeay, voucher applied!")
+      alert("Yay, promo code applied!")
     } catch (error) {
       alert("Failed to apply promo code. Please check the code and try again.")
     } finally {
@@ -355,7 +353,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   return (
     <div className="w-full min-h-screen bg-gray-50 md:bg-gray-50/50 relative font-sans">
       
-      {/* 🌟 LOGO & HEADER DESKTOP/TABLET (Sticky di atas) */}
+      {/* 🌟 LOGO & HEADER DESKTOP/TABLET (Sticky on top) */}
       <div className="hidden md:flex items-center px-8 py-5 w-full bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
         <div className="max-w-[1200px] mx-auto w-full flex items-center">
           <div className="relative w-36 h-10 cursor-pointer" onClick={() => router.push("/")}>
@@ -367,7 +365,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
         </div>
       </div>
 
-      {/* 📱 HEADER KHUSUS MOBILE */}
+      {/* 📱 MOBILE HEADER */}
       <div className="md:hidden flex items-center px-6 pt-12 pb-4 border-b border-gray-100 sticky top-0 bg-white/80 backdrop-blur-md z-50">
         <button onClick={() => router.back()} className="p-2 -ml-2">
           <ChevronLeft className="w-6 h-6 text-gray-800" />
@@ -380,25 +378,25 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
       {/* 🌟 MAIN CONTAINER */}
       <div className="px-5 py-6 md:pt-6 pb-32 md:pb-12 md:px-8 max-w-[1200px] mx-auto w-full">
         
-        {/* 🌟 LAYOUT 2 KOLOM ALA TOKOPEDIA */}
+        {/* 🌟 2-COLUMN LAYOUT */}
         <div className="flex flex-col md:flex-row gap-6 lg:gap-10 relative items-start w-full">
           
           {/* ==================================================== */}
-          {/* 💻 KOLOM KIRI (Flex-1): Form, Alamat, Kurir, Produk */}
+          {/* 💻 LEFT COLUMN (Flex-1): Form, Address, Courier, Items */}
           {/* ==================================================== */}
           <div className="w-full flex-1 flex flex-col gap-6 md:gap-8">
             
-            {/* 🌟 CARD: ALAMAT PENGIRIMAN */}
+            {/* 🌟 CARD: SHIPPING ADDRESS */}
             <div className="bg-white md:rounded-2xl md:shadow-sm md:border border-gray-200 p-5 md:p-6 lg:p-7">
               <div className="flex items-center justify-between mb-4 md:mb-6">
-                <h3 className="text-[13px] md:text-[16px] font-extrabold text-gray-900 tracking-wide">Alamat Pengiriman</h3>
+                <h3 className="text-[13px] md:text-[16px] font-extrabold text-gray-900 tracking-wide">Shipping Address</h3>
                 {showAddressList ? (
                    <button onClick={() => { setShowAddressList(false); setIsAddingAddress(false); }} className="text-[11px] md:text-[13px] font-bold text-gray-500 hover:text-[#EF7044]">
-                     Batal
+                     Cancel
                    </button>
                 ) : (
                   <button onClick={() => { setShowAddressList(true); setIsAddingAddress(false); }} className="text-[11px] md:text-[13px] font-bold text-[#EF7044] hover:text-[#EF7044]/80">
-                     Pilih Alamat Lain
+                     Change Address
                   </button>
                 )}
               </div>
@@ -406,14 +404,14 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
               <div className="space-y-4">
                 {/* 🌟 EMAIL INPUT */}
                 <div className="mb-4 pb-4 border-b border-gray-100">
-                   <label className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block">Email Kontak Pembeli</label>
+                   <label className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block">Contact Email</label>
                    <div className="flex items-center gap-3 bg-gray-50 rounded-xl p-3 border border-gray-200 focus-within:border-[#EF7044] transition-colors">
                      <Mail className="w-4 h-4 text-gray-400" />
                      <input 
                         type="email" 
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="Alamat email Anda..."
+                        placeholder="Your email address..."
                         className="bg-transparent w-full outline-none text-xs md:text-sm font-medium text-gray-800"
                      />
                    </div>
@@ -425,7 +423,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                     {isAddingAddress ? (
                       <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-inner flex flex-col gap-4">
                         <div className="flex justify-between items-center mb-2 border-b border-gray-100 pb-3">
-                          <h4 className="text-sm font-bold text-gray-900">Isi Detail Alamat</h4>
+                          <h4 className="text-sm font-bold text-gray-900">Enter Address Details</h4>
                           <button onClick={() => setIsAddingAddress(false)} className="p-1 hover:bg-gray-100 rounded-full transition-colors"><ChevronLeft className="w-4 h-4" /></button>
                         </div>
                         
@@ -433,8 +431,8 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                           <form onSubmit={handleSearchLocation} className="absolute top-3 left-3 right-3 z-[400]">
                             <div className="bg-white rounded-lg shadow-md flex items-center px-3 py-2 border border-gray-200">
                               <Search className="w-4 h-4 text-gray-400 mr-2" />
-                              <input type="text" value={searchQueryMap} onChange={(e) => setSearchQueryMap(e.target.value)} placeholder="Cari lokasi di Peta..." className="w-full text-xs outline-none text-gray-700 bg-transparent" />
-                              <button type="submit" disabled={isSearchingMap} className="text-[10px] bg-[#EF7044] text-white px-3 py-1.5 rounded-md font-bold ml-2">CARI</button>
+                              <input type="text" value={searchQueryMap} onChange={(e) => setSearchQueryMap(e.target.value)} placeholder="Search location on Map..." className="w-full text-xs outline-none text-gray-700 bg-transparent" />
+                              <button type="submit" disabled={isSearchingMap} className="text-[10px] bg-[#EF7044] text-white px-3 py-1.5 rounded-md font-bold ml-2">SEARCH</button>
                             </div>
                           </form>
                           <div ref={mapRef} className="w-full h-full z-[100]" />
@@ -445,40 +443,40 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                             </div>
                           </div>
                           <button type="button" onClick={handleUseCurrentLocation} className="absolute bottom-3 right-3 bg-white text-gray-800 text-[10px] font-bold px-3 py-2 rounded-lg shadow-md flex items-center gap-1.5 border border-gray-200 z-[400]">
-                            <Crosshair className="w-3 h-3" /> Gunakan GPS
+                            <Crosshair className="w-3 h-3" /> Use GPS
                           </button>
                         </div>
 
                         <div className="flex items-start gap-3 mb-2 px-2 bg-blue-50/50 p-3 rounded-lg border border-blue-100">
                           <MapPin className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
                           {isMapLoading ? (
-                            <p className="text-[11px] text-gray-500 animate-pulse font-medium">Membaca koordinat peta...</p>
+                            <p className="text-[11px] text-gray-500 animate-pulse font-medium">Reading map coordinates...</p>
                           ) : (
                             <p className="text-[11px] md:text-xs text-gray-800 leading-relaxed font-semibold">
-                              {newAddress.address_1 || "Geser peta untuk menentukan titik koordinat pasti pengiriman."}
+                              {newAddress.address_1 || "Drag the map to pinpoint your exact delivery location."}
                             </p>
                           )}
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                            <div className="md:col-span-2">
-                             <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Detail Alamat Lengkap</label>
-                             <textarea rows={3} required value={newAddress.address_1} onChange={(e) => setNewAddress({...newAddress, address_1: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:border-[#ef7044] outline-none" placeholder="Nama Jalan, Gedung, Patokan..." />
+                             <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Complete Address Details</label>
+                             <textarea rows={3} required value={newAddress.address_1} onChange={(e) => setNewAddress({...newAddress, address_1: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:border-[#ef7044] outline-none" placeholder="Street Name, Building, Landmark..." />
                            </div>
                            <div>
-                             <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Kota / Kabupaten</label>
+                             <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">City / District</label>
                              <input type="text" required value={newAddress.city} onChange={(e) => setNewAddress({...newAddress, city: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:border-[#ef7044] outline-none" />
                            </div>
                            <div>
-                             <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Provinsi</label>
+                             <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Province</label>
                              <input type="text" required value={newAddress.province} onChange={(e) => setNewAddress({...newAddress, province: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:border-[#ef7044] outline-none" />
                            </div>
                            <div>
-                             <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Kode Pos</label>
+                             <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Postal Code</label>
                              <input type="text" required value={newAddress.postal_code} onChange={(e) => setNewAddress({...newAddress, postal_code: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:border-[#ef7044] outline-none" />
                            </div>
                            <div>
-                             <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Negara</label>
+                             <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Country</label>
                              <select value={newAddress.country_code} onChange={e => setNewAddress({...newAddress, country_code: e.target.value})} className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:border-[#ef7044] outline-none appearance-none">
                                <option value="id">Indonesia (ID)</option>
                                <option value="sg">Singapore (SG)</option>
@@ -488,23 +486,23 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                              </select>
                            </div>
                            <div>
-                             <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Nama Depan</label>
+                             <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">First Name</label>
                              <input type="text" required value={newAddress.first_name} onChange={(e) => setNewAddress({...newAddress, first_name: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:border-[#ef7044] outline-none" />
                            </div>
                            <div>
-                             <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Nama Belakang</label>
+                             <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Last Name</label>
                              <input type="text" required value={newAddress.last_name} onChange={(e) => setNewAddress({...newAddress, last_name: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:border-[#ef7044] outline-none" />
                            </div>
                            <div className="md:col-span-2">
-                             <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Nomor HP</label>
+                             <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Phone Number</label>
                              <input type="tel" required value={newAddress.phone} onChange={(e) => setNewAddress({...newAddress, phone: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:border-[#ef7044] outline-none" placeholder="081234567890" />
                            </div>
                         </div>
 
                         <div className="flex gap-3 mt-4 pt-4 border-t border-gray-100">
-                          <button onClick={() => setIsAddingAddress(false)} className="px-6 py-2.5 rounded-lg border border-gray-300 text-gray-600 text-xs font-bold hover:bg-gray-50">Batal</button>
+                          <button onClick={() => setIsAddingAddress(false)} className="px-6 py-2.5 rounded-lg border border-gray-300 text-gray-600 text-xs font-bold hover:bg-gray-50">Cancel</button>
                           <button onClick={handleSaveNewAddress} disabled={isLoadingShipping} className="flex-1 bg-[#ef7044] text-white py-2.5 rounded-lg font-bold hover:bg-[#d65f36] text-xs flex justify-center items-center gap-2 disabled:opacity-50">
-                            {isLoadingShipping ? <Loader2 className="w-4 h-4 animate-spin" /> : "Simpan Alamat"}
+                            {isLoadingShipping ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Address"}
                           </button>
                         </div>
                       </div>
@@ -526,7 +524,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                                   <p className="text-sm font-bold text-gray-900 flex items-center gap-2">
                                     {addr.first_name} {addr.last_name}
                                     {cart.shipping_address?.address_1 === addr.address_1 && (
-                                      <span className="bg-[#EF7044] text-white text-[9px] px-1.5 py-0.5 rounded font-bold tracking-wider">UTAMA</span>
+                                      <span className="bg-[#EF7044] text-white text-[9px] px-1.5 py-0.5 rounded font-bold tracking-wider">PRIMARY</span>
                                     )}
                                   </p>
                                   <p className="text-xs text-gray-600 mt-0.5 font-medium">{addr.phone}</p>
@@ -546,17 +544,17 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                             </div>
                           ))
                         ) : (
-                          // 🌟 TEXT NO ADDRESS FOUND DI LIST
+                          // 🌟 TEXT NO ADDRESS FOUND IN LIST
                           <div className="p-8 text-center border-2 border-dashed border-gray-300 bg-gray-50 rounded-xl">
-                            <p className="text-sm font-bold text-[#EF7044] mb-1">No Address Found...</p>
-                            <p className="text-xs font-medium text-gray-400">Anda belum memiliki alamat tersimpan.</p>
+                            <p className="text-sm font-bold text-[#EF7044] mb-1">Add New Address...</p>
+                            <p className="text-xs font-medium text-gray-400">You haven't added any shipping addresses yet.</p>
                           </div>
                         )}
                         <button 
                           onClick={() => setIsAddingAddress(true)}
                           className="w-full py-3.5 rounded-xl border border-gray-300 text-gray-600 text-xs font-bold hover:bg-gray-50 flex items-center justify-center gap-2 mt-2 shadow-sm"
                         >
-                          <Plus className="w-4 h-4" /> Tambah Alamat Baru
+                          <Plus className="w-4 h-4" /> Add New Address
                         </button>
                       </>
                     )}
@@ -574,10 +572,10 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                           </p>
                         </>
                       ) : (
-                        // 🌟 TEXT NO ADDRESS FOUND DI RINGKASAN DEPAN
+                        // 🌟 TEXT NO ADDRESS FOUND IN SUMMARY
                         <div className="flex flex-col gap-1 cursor-pointer group" onClick={() => { setShowAddressList(true); setIsAddingAddress(true); }}>
                            <p className="text-sm font-bold text-[#EF7044] group-hover:text-[#d65f36] transition-colors">No Address Found...</p>
-                           <p className="text-[11px] md:text-xs text-gray-500 font-medium">Klik di sini untuk menambahkan alamat pengiriman.</p>
+                           <p className="text-[11px] md:text-xs text-gray-500 font-medium">Click here to add a shipping address.</p>
                         </div>
                       )}
                     </div>
@@ -586,12 +584,12 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
               </div>
             </div>
 
-            {/* DIVIDER MOBILE (Hanya muncul di mobile, hilang di tablet/desktop) */}
+            {/* MOBILE DIVIDER */}
             <div className="h-2 bg-gray-100 md:hidden w-[120%] -ml-6"></div>
 
-            {/* 🌟 CARD: KURIR PENGIRIMAN */}
+            {/* 🌟 CARD: SHIPPING METHOD */}
             <div className="bg-white md:rounded-2xl md:shadow-sm md:border border-gray-200 p-5 md:p-6 lg:p-7">
-              <h3 className="text-[13px] md:text-[16px] font-extrabold text-gray-900 tracking-wide mb-4 md:mb-6">Pilih Pengiriman</h3>
+              <h3 className="text-[13px] md:text-[16px] font-extrabold text-gray-900 tracking-wide mb-4 md:mb-6">Shipping Method</h3>
               
               {isLoadingShipping ? (
                  <div className="flex justify-center py-6">
@@ -613,7 +611,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                          <p className={`text-xs font-bold ${cart.shipping_methods?.some((m: any) => m.shipping_option_id === method.id) ? "text-[#EF7044]" : "text-gray-800"}`}>
                            {method.name}
                          </p>
-                         <p className="text-[10px] text-gray-500 mt-1 font-medium">Estimasi Tiba: 2-3 Hari</p>
+                         <p className="text-[10px] text-gray-500 mt-1 font-medium">Estimate time to arrival</p>
                       </div>
                       <span className="text-sm font-bold text-gray-900">
                         Rp {method.amount?.toLocaleString("id-ID") || 0}
@@ -621,19 +619,19 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                     </div>
                   )) : (
                     <div className="col-span-1 md:col-span-2 text-xs font-medium text-gray-400 bg-gray-50 p-4 rounded-lg text-center border border-gray-200">
-                      Alamat belum lengkap. Silakan isi alamat untuk melihat opsi kurir.
+                      Address not found or no shipping options available. Please add a valid shipping address to see available delivery methods.
                     </div>
                   )}
                 </div>
               )}
             </div>
 
-            {/* DIVIDER MOBILE */}
+            {/* MOBILE DIVIDER */}
             <div className="h-2 bg-gray-100 md:hidden w-[120%] -ml-6"></div>
 
-            {/* 🌟 CARD: BARANG YANG DIBELI */}
+            {/* 🌟 CARD: PURCHASED ITEMS */}
             <div className="bg-white md:rounded-2xl md:shadow-sm md:border border-gray-200 p-5 md:p-6 lg:p-7">
-               <h3 className="text-[13px] md:text-[16px] font-extrabold text-gray-900 tracking-wide mb-4 md:mb-6">Pesanan Anda</h3>
+               <h3 className="text-[13px] md:text-[16px] font-extrabold text-gray-900 tracking-wide mb-4 md:mb-6">Your Order</h3>
                <div className="flex flex-col gap-4">
                 {cart.items?.map((item: any, idx: number) => (
                   <div key={item.id} className={`flex gap-4 items-start ${idx !== cart.items.length - 1 ? 'border-b border-gray-100 pb-4' : ''}`}>
@@ -656,13 +654,13 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
           </div>
           
           {/* ==================================================== */}
-          {/* 💻 KOLOM KANAN (Fix Width Sticky): RINGKASAN BELANJA */}
+          {/* 💻 RIGHT COLUMN (Sticky fixed width): ORDER SUMMARY */}
           {/* ==================================================== */}
           <div className="w-full md:w-[320px] lg:w-[380px] shrink-0 md:sticky md:top-[100px] mt-6 md:mt-0 pb-10 md:pb-0 z-10">
             
             <div className="bg-white md:rounded-2xl md:shadow-xl md:border border-gray-200 p-5 md:p-6 shadow-[0_0_40px_rgba(0,0,0,0.05)]">
                <h3 className="text-[14px] md:text-[16px] font-extrabold text-gray-900 tracking-wide mb-4 border-b border-gray-100 pb-3">
-                 Ringkasan Belanja
+                 Order Summary
                </h3>
 
                {/* VOUCHER / PROMO */}
@@ -672,7 +670,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                       <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                       <input 
                         type="text" 
-                        placeholder="Makin hemat pakai promo" 
+                        placeholder="Apply promo code" 
                         value={promoCode}
                         onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
                         className="w-full border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-xs font-bold focus:border-[#EF7044] outline-none"
@@ -683,24 +681,24 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                       disabled={isApplyingPromo || !promoCode}
                       className="bg-gray-900 text-white px-4 rounded-lg text-[10px] font-bold hover:bg-gray-700 disabled:bg-gray-300 transition-colors"
                     >
-                      {isApplyingPromo ? "..." : "TERAPKAN"}
+                      {isApplyingPromo ? "..." : "APPLY"}
                     </button>
                  </div>
                </div>
 
-               {/* RINCIAN HARGA */}
+               {/* PRICE DETAILS */}
                <div className="space-y-2 mb-4">
                   <div className="flex justify-between text-xs md:text-[13px] text-gray-600 font-medium">
-                    <span>Total Harga ({cart.items?.length || 0} barang)</span>
+                    <span>Total Price ({cart.items?.length || 0} items)</span>
                     <span>Rp {(cart.subtotal || 0).toLocaleString("id-ID")}</span>
                   </div>
                   <div className="flex justify-between text-xs md:text-[13px] text-gray-600 font-medium">
-                    <span>Total Ongkos Kirim</span>
+                    <span>Total Shipping Cost</span>
                     <span>Rp {(cart.shipping_total || 0).toLocaleString("id-ID")}</span>
                   </div>
                   {cart.discount_total > 0 && (
                     <div className="flex justify-between text-xs md:text-[13px] text-emerald-600 font-bold">
-                      <span>Total Diskon Barang</span>
+                      <span>Total Discount</span>
                       <span>- Rp {cart.discount_total.toLocaleString("id-ID")}</span>
                     </div>
                   )}
@@ -708,7 +706,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
 
                <div className="border-t border-gray-200 pt-4 mb-6">
                   <div className="flex justify-between items-center">
-                    <span className="text-[14px] md:text-[16px] font-bold text-gray-900">Total Belanja</span>
+                    <span className="text-[14px] md:text-[16px] font-bold text-gray-900">Grand Total</span>
                     <span className="text-[16px] md:text-[20px] font-extrabold text-[#EF7044]">
                       Rp {(cart.total || 0).toLocaleString("id-ID")}
                     </span>
@@ -720,12 +718,12 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                   disabled={isPaying || isLoadingShipping}
                   className="w-full bg-[#ef7044] text-white py-3.5 rounded-xl font-bold text-sm md:text-[15px] hover:bg-[#d65f36] transition-colors flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
                >
-                  {isPaying ? <Loader2 className="w-5 h-5 animate-spin" /> : "Pilih Pembayaran"}
+                  {isPaying ? <Loader2 className="w-5 h-5 animate-spin" /> : "Continue to Payment"}
                </button>
 
                <div className="mt-4 flex items-center justify-center gap-2 text-[10px] text-gray-400 font-medium bg-gray-50 py-2 rounded-lg border border-gray-100">
                   <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                  <span>Transaksi Aman & Terenkripsi oleh Xendit</span>
+                  <span>Secure & Encrypted Transaction by Xendit</span>
                </div>
             </div>
 
