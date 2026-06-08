@@ -155,7 +155,7 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
   const [selectedSize, setSelectedSize] = useState<string | null>(null)
 
   useEffect(() => {
-    if (selectedType !== "SET" && sizesForType.length > 0) {
+    if (selectedType !== "REGULAR" && sizesForType.length > 0) {
       const firstInStock = sizesForType.find((s: SizeData) => s.inStock)
       setSelectedSize(firstInStock ? firstInStock.label : sizesForType[0].label)
     }
@@ -560,17 +560,22 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
 // ==========================================
 // 🌟 2. KOMPONEN UTAMA STORE
 // ==========================================
-export default function StoreTemplate() {
+// 🌟 1. TAMBAHKAN PROPS initialProducts
+export default function StoreTemplate({ initialProducts = [] }: { initialProducts?: any[] }) {
   const { countryCode } = useParams();
   const searchParams = useSearchParams(); 
   const router = useRouter(); 
   
-  // STATE UTAMA
-  const [products, setProducts] = useState<any[]>([]);
+  // 🌟 2. MASUKKAN DATA SERVER KE STATE AWAL
+  const [products, setProducts] = useState<any[]>(initialProducts);
   const [page, setPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
+  // Kalau ada data suntikan dari server, loading langsung false!
+  const [isLoading, setIsLoading] = useState(initialProducts.length === 0); 
   const [hasMore, setHasMore] = useState(true);
   
+  // 🌟 SENSOR ANTI-DELAY: Untuk mendeteksi render pertama
+  const isFirstMount = useRef(true);
+
   // SENSOR UNTUK INFINITE SCROLL
   const observerTarget = useRef<HTMLDivElement | null>(null);
 
@@ -676,7 +681,6 @@ export default function StoreTemplate() {
   };
 
   // FUNGSI FETCH PRODUK
-  // FUNGSI FETCH PRODUK
   const fetchStoreProducts = useCallback(async (pageNumber: number, reset = false) => {
     setIsLoading(true);
     try {
@@ -760,12 +764,20 @@ export default function StoreTemplate() {
     }
   }, [countryCode, searchQuery, activeCategory, minPrice, maxPrice, selectedSize, selectedCollection, selectedColor]);
 
-  // 🌟 PERBAIKAN: Waktu Debounce dipercepat jadi 300ms agar kesan loading lebih instan!
+  // 🌟 3. CEKIK ARTIFICIAL DELAY SAAT PERTAMA KALI BUKA!
   useEffect(() => {
+    if (isFirstMount.current) {
+      isFirstMount.current = false;
+      // Jika Server sudah memberikan data awal (Cache), batalkan tarikan data client ini!
+      // Halaman akan langsung tampil tanpa perlu loading muter-muter.
+      if (initialProducts.length > 0) return; 
+    }
+
     const timer = setTimeout(() => {
       fetchStoreProducts(1, true);
       setPage(1);
     }, 300);
+    
     return () => clearTimeout(timer);
   }, [searchQuery, activeCategory, selectedCollection, selectedSize, selectedColor, maxPrice]);
 

@@ -48,7 +48,6 @@ export default function MakeYourOwnBrandSection() {
   const hasVideo = isVideo(content.mediaUrl);
 
   return (
-    /* 🌟 PERUBAHAN: Menambahkan mt-12 (Margin Top 48px), memastikan tidak ada pb/pt/py maupun mb/my */
     <section className="mt-12 px-4 md:px-8 max-w-[1100px] mx-auto bg-white flex flex-col lg:flex-row lg:items-center lg:gap-16">
       
       {/* 🌟 BAGIAN KIRI DI DESKTOP (Media Card) */}
@@ -90,18 +89,22 @@ export default function MakeYourOwnBrandSection() {
           {content.quoteVerbatim}
         </p>
 
-        {/* CTA BUTTON */}
+        {/* 🌟 CTA BUTTON TERBARU */}
         <div className="order-4 lg:order-none flex justify-center w-full">
           <Link 
             href={content.buttonLink || "#"}
-            className="px-8 py-3.5 bg-[#EF7044] text-white font-heavy tracking-wide rounded-full uppercase italic flex items-center justify-center gap-3 shadow-md hover:shadow-lg border-2 border-transparent hover:bg-white hover:text-[#EF7044] hover:border-[#EF7044] transition-all duration-300 group active:scale-[0.98] w-fit"
+            className="pl-2 pr-2 py-2 w-full max-w-[280px] bg-[#EF7044] text-white font-heavy tracking-wide rounded-full uppercase italic flex items-center justify-between shadow-md hover:shadow-lg border-2 border-transparent hover:bg-white hover:text-[#EF7044] hover:border-[#EF7044] transition-all duration-300 group active:scale-[0.98]"
           >
-            <div className="w-6 h-6 rounded-full bg-white text-[#EF7044] flex items-center justify-center group-hover:bg-[#EF7044] group-hover:text-white transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+            {/* PANAH DI KIRI PINGGIR */}
+            <div className="w-10 h-10 rounded-full bg-white text-[#EF7044] flex items-center justify-center group-hover:bg-[#EF7044] group-hover:text-white transition-colors shrink-0 shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
                     <path fillRule="evenodd" d="M14 2.5a.5.5 0 0 0-.5-.5h-6a.5.5 0 0 0 0 1h4.793L2.146 13.146a.5.5 0 0 0 .708.708L13 3.707V8.5a.5.5 0 0 0 1 0v-6z"/>
                 </svg>
             </div>
-            <span>{content.buttonText}</span>
+            
+            {/* TEKS CENTER DI TENGAH */}
+            {/* pr-10 digunakan untuk mengimbangi ruang yang dimakan ikon w-10 di kiri agar teks tetap center */}
+            <span className="flex-1 text-center pr-10">{content.buttonText}</span>
           </Link>
         </div>
 
@@ -109,4 +112,4 @@ export default function MakeYourOwnBrandSection() {
       
     </section>
   );
-} 
+}
