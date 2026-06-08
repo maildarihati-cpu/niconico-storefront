@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { ChevronLeft, MapPin, Loader2, Tag, CheckCircle2, Mail, Plus, AlertCircle, Search, Crosshair, Trash2, CheckCircle, ShieldCheck } from "lucide-react"
+import { ChevronLeft, MapPin, Loader2, Tag, Search, Crosshair, Trash2, ShieldCheck, Plus, Mail } from "lucide-react"
 import Image from "next/image"; 
 import { saveAddressServerAction, deleteAddressServerAction } from "@/lib/address-actions";
 import { 
@@ -336,10 +336,10 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   const availableAddresses = customer?.addresses?.filter((a: any) => !deletedAddressIds.includes(a.id)) || [];
 
   return (
-    <div className="w-full min-h-screen bg-gray-50 relative font-sans md:pt-[100px]">
+    <div className="w-full min-h-screen bg-gray-50 md:bg-gray-50/50 relative font-sans md:pt-[80px]">
       
-      {/* 🌟 LOGO & HEADER DESKTOP (Full Width) */}
-      <div className="hidden lg:flex items-center px-8 pb-8 pt-4 w-full bg-white border-b border-gray-200">
+      {/* 🌟 LOGO & HEADER DESKTOP/TABLET (Sticky di atas) */}
+      <div className="hidden md:flex items-center px-8 py-5 w-full bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
         <div className="max-w-[1200px] mx-auto w-full flex items-center">
           <div className="relative w-36 h-10 cursor-pointer" onClick={() => router.push("/")}>
             <Image src="/logo-niconico-black.png" alt="Niconico Resort Logo" fill className="object-contain" priority />
@@ -351,7 +351,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
       </div>
 
       {/* 📱 HEADER KHUSUS MOBILE */}
-      <div className="lg:hidden flex items-center px-6 pt-12 pb-4 border-b border-gray-100 sticky top-0 bg-white/80 backdrop-blur-md z-20">
+      <div className="md:hidden flex items-center px-6 pt-12 pb-4 border-b border-gray-100 sticky top-0 bg-white/80 backdrop-blur-md z-50">
         <button onClick={() => router.back()} className="p-2 -ml-2">
           <ChevronLeft className="w-6 h-6 text-gray-800" />
         </button>
@@ -360,24 +360,28 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
         </h1>
       </div>
 
-      <div className="px-5 py-6 pb-32 md:pb-12 md:px-8 max-w-[1200px] mx-auto w-full">
-        <div className="md:grid md:grid-cols-12 md:gap-8 lg:gap-16 xl:gap-24 relative md:items-start w-full">
+      {/* 🌟 MAIN CONTAINER */}
+      <div className="px-5 py-6 md:py-10 pb-32 md:pb-12 md:px-8 max-w-[1200px] mx-auto w-full">
+        
+        {/* 🌟 LAYOUT 2 KOLOM ALA TOKOPEDIA (Flexbox) */}
+        {/* Mobile: flex-col (bersusun ke bawah). Tablet & Desktop (md/lg): flex-row (bersampingan proporsi 65/35) */}
+        <div className="flex flex-col md:flex-row gap-6 lg:gap-10 relative items-start w-full">
           
           {/* ==================================================== */}
-          {/* 💻 KOLOM KIRI (8 Kolom): Form, Alamat, Kurir, Produk */}
+          {/* 💻 KOLOM KIRI (Flex-1): Form, Alamat, Kurir, Produk */}
           {/* ==================================================== */}
-          <div className="md:col-span-7 flex flex-col gap-6 md:gap-10">
+          <div className="w-full flex-1 flex flex-col gap-6 md:gap-8">
             
             {/* 🌟 CARD: ALAMAT PENGIRIMAN */}
-            <div className="bg-white lg:rounded-2xl lg:shadow-sm lg:border border-gray-200 p-5 lg:p-7">
-              <div className="flex items-center justify-between mb-4 lg:mb-6">
-                <h3 className="text-[13px] lg:text-[16px] font-extrabold text-gray-900 tracking-wide">Alamat Pengiriman</h3>
+            <div className="bg-white md:rounded-2xl md:shadow-sm md:border border-gray-200 p-5 md:p-6 lg:p-7">
+              <div className="flex items-center justify-between mb-4 md:mb-6">
+                <h3 className="text-[13px] md:text-[16px] font-extrabold text-gray-900 tracking-wide">Alamat Pengiriman</h3>
                 {showAddressList ? (
-                   <button onClick={() => { setShowAddressList(false); setIsAddingAddress(false); }} className="text-[11px] lg:text-[13px] font-bold text-gray-500 hover:text-[#EF7044]">
+                   <button onClick={() => { setShowAddressList(false); setIsAddingAddress(false); }} className="text-[11px] md:text-[13px] font-bold text-gray-500 hover:text-[#EF7044]">
                      Batal
                    </button>
                 ) : (
-                  <button onClick={() => { setShowAddressList(true); setIsAddingAddress(false); }} className="text-[11px] lg:text-[13px] font-bold text-[#EF7044] hover:text-[#EF7044]/80">
+                  <button onClick={() => { setShowAddressList(true); setIsAddingAddress(false); }} className="text-[11px] md:text-[13px] font-bold text-[#EF7044] hover:text-[#EF7044]/80">
                      Pilih Alamat Lain
                   </button>
                 )}
@@ -386,15 +390,15 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
               <div className="space-y-4">
                 {/* 🌟 EMAIL INPUT */}
                 <div className="mb-4 pb-4 border-b border-gray-100">
-                   <label className="text-[10px] lg:text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block">Email Kontak Pembeli</label>
-                   <div className="flex items-center gap-3 bg-gray-50 rounded-xl p-3 border border-gray-200 focus-within:border-[#EF7044]">
+                   <label className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block">Email Kontak Pembeli</label>
+                   <div className="flex items-center gap-3 bg-gray-50 rounded-xl p-3 border border-gray-200 focus-within:border-[#EF7044] transition-colors">
                      <Mail className="w-4 h-4 text-gray-400" />
                      <input 
                         type="email" 
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="Alamat email Anda..."
-                        className="bg-transparent w-full outline-none text-xs lg:text-sm font-medium text-gray-800"
+                        className="bg-transparent w-full outline-none text-xs md:text-sm font-medium text-gray-800"
                      />
                    </div>
                 </div>
@@ -409,7 +413,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                           <button onClick={() => setIsAddingAddress(false)} className="p-1 hover:bg-gray-100 rounded-full transition-colors"><ChevronLeft className="w-4 h-4" /></button>
                         </div>
                         
-                        <div className="relative w-full h-[200px] lg:h-[300px] rounded-xl overflow-hidden mb-2 border border-gray-300">
+                        <div className="relative w-full h-[200px] md:h-[300px] rounded-xl overflow-hidden mb-2 border border-gray-300">
                           <form onSubmit={handleSearchLocation} className="absolute top-3 left-3 right-3 z-[400]">
                             <div className="bg-white rounded-lg shadow-md flex items-center px-3 py-2 border border-gray-200">
                               <Search className="w-4 h-4 text-gray-400 mr-2" />
@@ -434,14 +438,14 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                           {isMapLoading ? (
                             <p className="text-[11px] text-gray-500 animate-pulse font-medium">Membaca koordinat peta...</p>
                           ) : (
-                            <p className="text-[11px] lg:text-xs text-gray-800 leading-relaxed font-semibold">
+                            <p className="text-[11px] md:text-xs text-gray-800 leading-relaxed font-semibold">
                               {newAddress.address_1 || "Geser peta untuk menentukan titik koordinat pasti pengiriman."}
                             </p>
                           )}
                         </div>
 
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                           <div className="lg:col-span-2">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                           <div className="md:col-span-2">
                              <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Detail Alamat Lengkap</label>
                              <textarea rows={3} required value={newAddress.address_1} onChange={(e) => setNewAddress({...newAddress, address_1: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:border-[#ef7044] outline-none" placeholder="Nama Jalan, Gedung, Patokan..." />
                            </div>
@@ -475,7 +479,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                              <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Nama Belakang</label>
                              <input type="text" required value={newAddress.last_name} onChange={(e) => setNewAddress({...newAddress, last_name: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:border-[#ef7044] outline-none" />
                            </div>
-                           <div className="lg:col-span-2">
+                           <div className="md:col-span-2">
                              <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Nomor HP</label>
                              <input type="tel" required value={newAddress.phone} onChange={(e) => setNewAddress({...newAddress, phone: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:border-[#ef7044] outline-none" placeholder="081234567890" />
                            </div>
@@ -520,7 +524,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                                   {deletingAddressId === addr.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                                 </button>
                               </div>
-                              <p className="text-[11px] lg:text-xs text-gray-500 leading-relaxed max-w-[90%]">
+                              <p className="text-[11px] md:text-xs text-gray-500 leading-relaxed max-w-[90%]">
                                 {addr.address_1}, {addr.city}, {addr.province}, {addr.postal_code}
                               </p>
                             </div>
@@ -547,7 +551,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                         <>
                           <p className="text-sm font-bold text-gray-900 mb-1">{cart.shipping_address.first_name} {cart.shipping_address.last_name}</p>
                           <p className="text-xs text-gray-600 font-medium mb-0.5">{cart.shipping_address.phone}</p>
-                          <p className="text-[11px] lg:text-xs text-gray-500 leading-relaxed">
+                          <p className="text-[11px] md:text-xs text-gray-500 leading-relaxed">
                             {cart.shipping_address.address_1}, {cart.shipping_address.city}, {cart.shipping_address.province}, {cart.shipping_address.postal_code}
                           </p>
                         </>
@@ -562,24 +566,24 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
               </div>
             </div>
 
-            {/* DIVIDER MOBILE */}
-            <div className="h-2 bg-gray-100 lg:hidden w-[120%] -ml-6"></div>
+            {/* DIVIDER MOBILE (Hanya muncul di mobile, hilang di tablet/desktop) */}
+            <div className="h-2 bg-gray-100 md:hidden w-[120%] -ml-6"></div>
 
             {/* 🌟 CARD: KURIR PENGIRIMAN */}
-            <div className="bg-white lg:rounded-2xl lg:shadow-sm lg:border border-gray-200 p-5 lg:p-7">
-              <h3 className="text-[13px] lg:text-[16px] font-extrabold text-gray-900 tracking-wide mb-4 lg:mb-6">Pilih Pengiriman</h3>
+            <div className="bg-white md:rounded-2xl md:shadow-sm md:border border-gray-200 p-5 md:p-6 lg:p-7">
+              <h3 className="text-[13px] md:text-[16px] font-extrabold text-gray-900 tracking-wide mb-4 md:mb-6">Pilih Pengiriman</h3>
               
               {isLoadingShipping ? (
                  <div className="flex justify-center py-6">
                     <Loader2 className="w-6 h-6 animate-spin text-[#EF7044]" />
                  </div>
               ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {shippingMethods.length > 0 ? shippingMethods.map((method) => (
                     <div 
                       key={method.id} 
                       onClick={() => handleSelectShipping(method.id)}
-                      className={`p-3 lg:p-4 rounded-xl border transition-all cursor-pointer flex justify-between items-center ${
+                      className={`p-3 md:p-4 rounded-xl border transition-all cursor-pointer flex justify-between items-center ${
                         cart.shipping_methods?.some((m: any) => m.shipping_option_id === method.id)
                         ? "border-[#EF7044] bg-orange-50/30"
                         : "border-gray-200 hover:border-gray-400"
@@ -596,7 +600,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                       </span>
                     </div>
                   )) : (
-                    <div className="col-span-2 text-xs font-medium text-gray-400 bg-gray-50 p-4 rounded-lg text-center border border-gray-200">
+                    <div className="col-span-1 md:col-span-2 text-xs font-medium text-gray-400 bg-gray-50 p-4 rounded-lg text-center border border-gray-200">
                       Alamat belum lengkap. Silakan isi alamat untuk melihat opsi kurir.
                     </div>
                   )}
@@ -605,22 +609,22 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
             </div>
 
             {/* DIVIDER MOBILE */}
-            <div className="h-2 bg-gray-100 lg:hidden w-[120%] -ml-6"></div>
+            <div className="h-2 bg-gray-100 md:hidden w-[120%] -ml-6"></div>
 
             {/* 🌟 CARD: BARANG YANG DIBELI */}
-            <div className="bg-white lg:rounded-2xl lg:shadow-sm lg:border border-gray-200 p-5 lg:p-7">
-               <h3 className="text-[13px] lg:text-[16px] font-extrabold text-gray-900 tracking-wide mb-4 lg:mb-6">Pesanan Anda</h3>
+            <div className="bg-white md:rounded-2xl md:shadow-sm md:border border-gray-200 p-5 md:p-6 lg:p-7">
+               <h3 className="text-[13px] md:text-[16px] font-extrabold text-gray-900 tracking-wide mb-4 md:mb-6">Pesanan Anda</h3>
                <div className="flex flex-col gap-4">
                 {cart.items?.map((item: any, idx: number) => (
                   <div key={item.id} className={`flex gap-4 items-start ${idx !== cart.items.length - 1 ? 'border-b border-gray-100 pb-4' : ''}`}>
-                    <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 shrink-0">
+                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 shrink-0">
                       <img src={item.thumbnail} className="w-full h-full object-cover" alt="" />
                     </div>
                     <div className="flex-1 min-w-0 pt-1">
-                       <h4 className="text-xs lg:text-sm font-bold text-gray-800 truncate mb-1 pr-4">{item.title}</h4>
-                       <p className="text-[10px] lg:text-xs text-gray-500 font-medium mb-1.5">{item.variant?.title}</p>
+                       <h4 className="text-xs md:text-sm font-bold text-gray-800 truncate mb-1 pr-4">{item.title}</h4>
+                       <p className="text-[10px] md:text-xs text-gray-500 font-medium mb-1.5">{item.variant?.title}</p>
                        <div className="flex justify-between items-center mt-1">
-                          <p className="text-xs lg:text-sm font-extrabold text-gray-900">Rp {item.unit_price.toLocaleString("id-ID")}</p>
+                          <p className="text-xs md:text-sm font-extrabold text-gray-900">Rp {item.unit_price.toLocaleString("id-ID")}</p>
                           <span className="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded">Qty: {item.quantity}</span>
                        </div>
                     </div>
@@ -632,12 +636,13 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
           </div>
           
           {/* ==================================================== */}
-          {/* 💻 KOLOM KANAN (4 Kolom): RINGKASAN BELANJA (STICKY) */}
+          {/* 💻 KOLOM KANAN (Fix Width Sticky): RINGKASAN BELANJA */}
           {/* ==================================================== */}
-          <div className="lg:col-span-4 lg:sticky lg:top-[100px] mt-6 lg:mt-0 pb-10 lg:pb-0">
+          {/* w-full untuk mobile, fixed width (320px/380px) & sticky untuk Tablet/Desktop */}
+          <div className="w-full md:w-[320px] lg:w-[380px] shrink-0 md:sticky md:top-[100px] mt-6 md:mt-0 pb-10 md:pb-0 z-10">
             
-            <div className="bg-white lg:rounded-2xl lg:shadow-xl lg:border border-gray-200 p-5 lg:p-6 shadow-[0_0_40px_rgba(0,0,0,0.05)]">
-               <h3 className="text-[14px] lg:text-[16px] font-extrabold text-gray-900 tracking-wide mb-4 border-b border-gray-100 pb-3">
+            <div className="bg-white md:rounded-2xl md:shadow-xl md:border border-gray-200 p-5 md:p-6 shadow-[0_0_40px_rgba(0,0,0,0.05)]">
+               <h3 className="text-[14px] md:text-[16px] font-extrabold text-gray-900 tracking-wide mb-4 border-b border-gray-100 pb-3">
                  Ringkasan Belanja
                </h3>
 
@@ -657,7 +662,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                     <button 
                       onClick={handleApplyPromo}
                       disabled={isApplyingPromo || !promoCode}
-                      className="bg-gray-900 text-white px-4 rounded-lg text-[10px] font-bold hover:bg-gray-700 disabled:bg-gray-300"
+                      className="bg-gray-900 text-white px-4 rounded-lg text-[10px] font-bold hover:bg-gray-700 disabled:bg-gray-300 transition-colors"
                     >
                       {isApplyingPromo ? "..." : "TERAPKAN"}
                     </button>
@@ -666,16 +671,16 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
 
                {/* RINCIAN HARGA */}
                <div className="space-y-2 mb-4">
-                  <div className="flex justify-between text-xs lg:text-[13px] text-gray-600 font-medium">
+                  <div className="flex justify-between text-xs md:text-[13px] text-gray-600 font-medium">
                     <span>Total Harga ({cart.items?.length || 0} barang)</span>
                     <span>Rp {(cart.subtotal || 0).toLocaleString("id-ID")}</span>
                   </div>
-                  <div className="flex justify-between text-xs lg:text-[13px] text-gray-600 font-medium">
+                  <div className="flex justify-between text-xs md:text-[13px] text-gray-600 font-medium">
                     <span>Total Ongkos Kirim</span>
                     <span>Rp {(cart.shipping_total || 0).toLocaleString("id-ID")}</span>
                   </div>
                   {cart.discount_total > 0 && (
-                    <div className="flex justify-between text-xs lg:text-[13px] text-emerald-600 font-bold">
+                    <div className="flex justify-between text-xs md:text-[13px] text-emerald-600 font-bold">
                       <span>Total Diskon Barang</span>
                       <span>- Rp {cart.discount_total.toLocaleString("id-ID")}</span>
                     </div>
@@ -684,8 +689,8 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
 
                <div className="border-t border-gray-200 pt-4 mb-6">
                   <div className="flex justify-between items-center">
-                    <span className="text-[14px] lg:text-[16px] font-bold text-gray-900">Total Belanja</span>
-                    <span className="text-[16px] lg:text-[20px] font-extrabold text-[#EF7044]">
+                    <span className="text-[14px] md:text-[16px] font-bold text-gray-900">Total Belanja</span>
+                    <span className="text-[16px] md:text-[20px] font-extrabold text-[#EF7044]">
                       Rp {(cart.total || 0).toLocaleString("id-ID")}
                     </span>
                   </div>
@@ -694,7 +699,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                <button 
                   onClick={handlePayNow}
                   disabled={isPaying || isLoadingShipping}
-                  className="w-full bg-[#ef7044] text-white py-3.5 rounded-xl font-bold text-sm lg:text-[15px] hover:bg-[#d65f36] transition-colors flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+                  className="w-full bg-[#ef7044] text-white py-3.5 rounded-xl font-bold text-sm md:text-[15px] hover:bg-[#d65f36] transition-colors flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
                >
                   {isPaying ? <Loader2 className="w-5 h-5 animate-spin" /> : "Pilih Pembayaran"}
                </button>
