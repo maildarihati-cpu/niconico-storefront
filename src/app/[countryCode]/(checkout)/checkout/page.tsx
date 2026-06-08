@@ -44,10 +44,10 @@ export default async function CheckoutPage({
   }
 
   return (
-    <div className="bg-[#F9F9F9] min-h-screen font-sans pb-10">
-      <div className="max-w-md mx-auto bg-white min-h-screen shadow-2xl relative">
-        <CheckoutForm cart={cart} customer={customer} />
-      </div>
+    // 🌟 PERBAIKAN: Hapus "max-w-md", ubah menjadi "w-full"
+    // Biarkan komponen CheckoutForm yang mengatur jarak dan grid-nya
+    <div className="bg-gray-50 md:bg-gray-50/50 min-h-screen font-sans w-full">
+      <CheckoutForm cart={cart} customer={customer} />
     </div>
   )
 }
