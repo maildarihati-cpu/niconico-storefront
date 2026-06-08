@@ -164,26 +164,23 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
     }
   }
 
+  // 🌟 PENGGANTI: useEffect Tunggal yang Mencekik Alamat Hantu
   useEffect(() => {
-    fetchShippingMethods(cart.id)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cart.id])
-
-  useEffect(() => {
-    const autoSyncDefaultAddress = async () => {
+    const syncAddressAndShipping = async () => {
       // Dapatkan daftar alamat asli kustomer yang belum dihapus
       const availableAddresses = customer?.addresses?.filter((a: any) => !deletedAddressIds.includes(a.id)) || [];
 
-      // 🌟 LOGIKA PINTAR: Hancurkan alamat "hantu" di keranjang jika buku alamat kosong
-      if (availableAddresses.length === 0 && cart?.shipping_address?.address_1) {
-        setCart((prev: any) => ({ ...prev, shipping_address: null }));
+      // 1. JIKA BUKU ALAMAT KOSONG (User sudah hapus semua alamat)
+      if (availableAddresses.length === 0) {
+        // Hancurkan alamat hantu secara lokal 
+        setCart((prev: any) => ({ ...prev, shipping_address: null, shipping_methods: [] }));
         setShippingMethods([]);
         setIsLoadingShipping(false);
-        return;
+        return; // 🛑 STOP DI SINI! Jangan panggil API Ongkir agar hantu tidak bangkit!
       }
 
-      // 🌟 LOGIKA NORMAL: Auto-sync alamat pertama jika keranjang kosong
-      if ((!cart.shipping_address || !cart.shipping_address.address_1) && availableAddresses.length > 0) {
+      // 2. JIKA KERANJANG KOSONG TAPI BUKU ALAMAT ADA ISINYA (Auto-sync ke alamat pertama)
+      if ((!cart?.shipping_address || !cart.shipping_address.address_1) && availableAddresses.length > 0) {
         setIsLoadingShipping(true);
         try {
           const defaultAddress = availableAddresses[0];
@@ -197,14 +194,20 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
           console.error("Failed to auto-sync default address:", error);
           setIsLoadingShipping(false);
         }
+        return; 
+      }
+
+      // 3. JIKA KERANJANG SUDAH ADA ALAMATNYA (Normal flow)
+      if (cart?.shipping_address?.address_1) {
+         fetchShippingMethods(cart.id);
       } else {
-        setIsLoadingShipping(false);
+         setIsLoadingShipping(false);
       }
     };
 
-    autoSyncDefaultAddress();
+    syncAddressAndShipping();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deletedAddressIds]); // Trigger ulang jika ada alamat yang baru saja dihapus
+  }, [cart.id, deletedAddressIds]);
 
   const handleSelectShipping = async (optionId: string, currentCartId: string = cart.id) => {
     try {
