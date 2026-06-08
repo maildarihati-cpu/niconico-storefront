@@ -3,9 +3,7 @@
 import React, { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { ChevronLeft, MapPin, Loader2, Tag, CheckCircle2, Mail, Plus, AlertCircle, Search, Crosshair, Trash2 } from "lucide-react"
-import Image from "next/image"
-
-// 🌟 PASTIKAN FUNGSI DELETE ADDRESS SUDAH DI-IMPORT DARI SERVER ACTION KAMU
+import Image from "next/image"; 
 import { saveAddressServerAction, deleteAddressServerAction } from "@/lib/address-actions";
 import { 
   updateCartAddressAction, 
@@ -35,8 +33,9 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   
   const [isAddingAddress, setIsAddingAddress] = useState(false)
   
-  // 🌟 STATE UNTUK LOADING DELETE ADDRESS
   const [deletingAddressId, setDeletingAddressId] = useState<string | null>(null);
+  
+  const [deletedAddressIds, setDeletedAddressIds] = useState<string[]>([]);
 
   const [newAddress, setNewAddress] = useState({
     first_name: customer?.first_name || "",
@@ -170,9 +169,6 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cart.id])
 
-  // ==========================================
-  // 🌟 MESIN AUTO-SYNC ALAMAT DEFAULT DARI DRAWER
-  // ==========================================
   useEffect(() => {
     const autoSyncDefaultAddress = async () => {
       if ((!cart.shipping_address || !cart.shipping_address.address_1) && customer?.addresses?.length > 0) {
@@ -195,7 +191,6 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
     autoSyncDefaultAddress();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); 
-  // ==========================================
 
   const handleSelectShipping = async (optionId: string, currentCartId: string = cart.id) => {
     try {
@@ -254,7 +249,6 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
     }
   }
 
-  // 🌟 FUNGSI DELETE ADDRESS + PEMBERSIH CART
   const handleDeleteAddress = async (e: React.MouseEvent, addr: any) => {
     e.stopPropagation(); 
     
@@ -263,36 +257,22 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
 
     setDeletingAddressId(addr.id);
     try {
-      // 1. Hapus dari Buku Alamat (Database Customer)
       await deleteAddressServerAction(addr.id);
 
-      // 2. CEK & SAPU BERSIH CART!
-      // Kalau alamat yang dihapus ternyata sedang nempel di Cart, kita harus kosongkan Cart-nya
+      setDeletedAddressIds(prev => [...prev, addr.id]);
+
       if (cart.shipping_address?.address_1 === addr.address_1) {
-        setIsLoadingShipping(true);
-        // Bikin payload kosong untuk mereset Cart
-        const emptyAddress = {
-          first_name: customer?.first_name || "",
-          last_name: customer?.last_name || "",
-          phone: customer?.phone || "",
-          address_1: "",
-          city: "",
-          province: "",
-          postal_code: "",
-          country_code: "id",
-        };
-        const updatedCart = await updateCartAddressAction(cart.id, emptyAddress, email);
-        setCart(updatedCart);
-        setShippingMethods([]); // Kosongkan ongkir karena alamat hilang
-        setIsLoadingShipping(false);
+        setCart((prevCart: any) => ({
+          ...prevCart,
+          shipping_address: null 
+        }));
+        setShippingMethods([]); 
       }
 
-      // 3. Refresh layar biar mulus
       router.refresh();
     } catch (error) {
       console.error("Error deleting address:", error);
       alert("Failed to delete address. Please try again.");
-      setIsLoadingShipping(false);
     } finally {
       setDeletingAddressId(null);
     }
@@ -356,39 +336,32 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
     }
   }
 
+  const availableAddresses = customer?.addresses?.filter((a: any) => !deletedAddressIds.includes(a.id)) || [];
+
   return (
     <div className="flex flex-col h-full bg-white relative font-sans md:max-w-[1200px] xl:max-w-[1400px] mx-auto w-full md:pt-[100px]">
-      
-      {/* 🌟 HEADER KHUSUS MOBILE (DIHILANGKAN DI TABLET & DESKTOP) */}
+      <div className="relative w-36 h-10 mb-6">
+                <Image 
+                  src="/logo-niconico-black.png" 
+                  alt="Niconico Resort Logo" 
+                  fill 
+                  className="object-contain" 
+                  priority
+                />
+              </div>
       <div className="md:hidden flex items-center px-6 pt-12 pb-4 border-b border-gray-100 sticky top-0 bg-white/80 backdrop-blur-md z-20">
-        <div className="relative w-36 h-10 mb-6">
-                  <Image 
-                    src="/logo-niconico-black.png" 
-                    alt="Niconico Resort Logo" 
-                    fill 
-                    className="object-contain" 
-                    priority
-                  />
-                </div>
         <button onClick={() => router.back()} className="p-2 -ml-2">
           <ChevronLeft className="w-6 h-6 text-gray-800" />
         </button>
-        
-        <h1 className="flex-1 text-center text-lg font-bold text-gray-900 pr-6 tracking-widest">
+        <h1 className="flex-1 text-center text-lg font-bold text-gray-900 pr-6 uppercase tracking-widest">
           Check Out
         </h1>
       </div>
 
       <div className="px-5 py-6 pb-32 md:pb-12 md:px-8">
         
-        {/* ==================================================== */}
-        {/* 🌟 PEMBUNGKUS UTAMA: GRID 2 KOLOM DI TABLET & DESKTOP */}
-        {/* ==================================================== */}
         <div className="md:grid md:grid-cols-12 md:gap-8 lg:gap-16 xl:gap-24 relative md:items-start w-full">
           
-          {/* ==================================================== */}
-          {/* 💻 KOLOM KIRI (7 Kolom): Alamat -> Pengiriman -> Produk */}
-          {/* ==================================================== */}
           <div className="md:col-span-7 flex flex-col gap-6 md:gap-10">
             
             {/* CONTACT INFO */}
@@ -564,8 +537,8 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                     </div>
                   ) : (
                     <>
-                      {customer?.addresses?.length > 0 ? (
-                        customer.addresses.map((addr: any) => (
+                      {availableAddresses.length > 0 ? (
+                        availableAddresses.map((addr: any) => (
                           <div 
                             key={addr.id}
                             onClick={() => handleUpdateAddress(addr)}
@@ -580,17 +553,14 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                                 {addr.first_name} {addr.last_name}
                               </p>
                               
-                              {/* 🌟 CONTAINER IKON KANAN (Check atau Trash) */}
                               <div className="flex items-center gap-2">
                                 {cart.shipping_address?.address_1 === addr.address_1 && (
                                   <CheckCircle2 className="w-4 h-4 text-[#EF7044]" />
                                 )}
                                 
-                                {/* 🌟 TOMBOL DELETE ADDRESS */}
-                                
                                 <button 
                                   type="button"
-                                  onClick={(e) => handleDeleteAddress(e, addr)} // <--- JADI SEPERTI INI
+                                  onClick={(e) => handleDeleteAddress(e, addr)}
                                   disabled={deletingAddressId === addr.id}
                                   className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors disabled:opacity-50"
                                   title="Delete Address"
@@ -624,18 +594,25 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                   )}
                 </div>
               ) : (
-                <div className="bg-gray-50 rounded-3xl p-5 border border-gray-100 flex items-center gap-4">
+                <div 
+                  className="bg-gray-50 rounded-3xl p-5 border border-gray-100 flex items-center gap-4 cursor-pointer hover:bg-gray-100 transition-colors"
+                  onClick={() => {
+                    setShowAddressList(true);
+                    if (availableAddresses.length === 0) setIsAddingAddress(true);
+                  }}
+                >
                   <div className="bg-white p-2.5 rounded-2xl shadow-sm">
                     <MapPin className="w-5 h-5 text-[#EF7044]" />
                   </div>
                   <div className="flex-1">
+                    {/* 🌟 TULISAN "NO ADDRESS FOUND" DIGANTI JADI "ADD NEW ADDRESS..." */}
                     {cart.shipping_address && cart.shipping_address.address_1 ? (
                       <p className="text-[11px] text-gray-600 leading-relaxed uppercase font-medium">
                         <span className="font-black text-gray-900 italic">{cart.shipping_address.first_name} {cart.shipping_address.last_name}</span><br/>
                         {cart.shipping_address.address_1}, {cart.shipping_address.city}
                       </p>
                     ) : (
-                      <p className="text-[11px] italic text-gray-400 font-bold">No Address Found</p>
+                      <p className="text-[11px] italic text-[#EF7044] font-bold">Add New Address...</p>
                     )}
                   </div>
                 </div>
@@ -697,9 +674,6 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
             
           </div>
           
-          {/* ==================================================== */}
-          {/* 💻 KOLOM KANAN (5 Kolom): Sticky Promo -> Summary -> Pay */}
-          {/* ==================================================== */}
           <div className="md:col-span-5 flex flex-col gap-6 md:sticky md:top-[120px] md:h-max mt-8 md:mt-0 pt-8 md:pt-0 border-t border-gray-100 md:border-none">
             
             {/* PROMO */}
