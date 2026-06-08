@@ -36,17 +36,14 @@ export default function StoreSection({ layout = "slider" }: StoreSectionProps) {
         if (data.store_locations) {
           const allStoresFromBackend = data.store_locations;
           
-          // 1. Ambil yang featured (maksimal 3)
           const featuredStores = allStoresFromBackend
             .filter((store: Store) => store.is_featured === true)
             .slice(0, 3);
             
-          // 2. Ambil sisanya (yang tidak masuk ke featured)
           const otherStores = allStoresFromBackend.filter(
             (store: Store) => !featuredStores.some((featured: Store) => featured.id === store.id)
           );
           
-          // 3. Gabungkan: Featured di paling atas/kiri, sisanya mengikuti di belakang
           const finalDisplayStores = [...featuredStores, ...otherStores];
 
           if (layout === "slider") {
@@ -70,8 +67,8 @@ export default function StoreSection({ layout = "slider" }: StoreSectionProps) {
 
   if (loading) {
     return (
-      /* 🌟 PERUBAHAN: Ubah py-20 menjadi py-12 biar konsisten pas loading */
-      <div className="flex justify-center items-center bg-white w-full">
+      /* 🌟 PERUBAHAN: Menyelaraskan margin pada state loading agar layout tidak lompat */
+      <div className="mt-12 mb-12 flex justify-center items-center bg-white w-full">
         <div className="animate-pulse flex gap-6 overflow-hidden w-full max-w-[1200px] px-4 md:px-0">
            {[1, 2, 3].map((i) => (
              <div key={i} className="shrink-0 w-[340px] md:w-[380px] h-[400px] bg-gray-100 rounded-[24px]"></div>
@@ -84,18 +81,17 @@ export default function StoreSection({ layout = "slider" }: StoreSectionProps) {
   if (stores.length === 0) return null;
   
   return (
-    /* 🌟 PERUBAHAN: Ubah pt-16 menjadi pt-12 */
-    <section className="pb-12 bg-white w-full">
+    /* 🌟 PERUBAHAN: Pasang mt-12 & mb-12 (48px), semua class padding (pb-12/pt-*) dihapus bersih */
+    <section className="mt-12 mb-12 bg-white w-full">
       <div className="max-w-[1200px] mx-auto md:max-w-6xl w-full">
         
-        {/* 🌟 KOMENTAR RUSAK SUDAH DICABUT, COMPILER AMAN */}
         {layout === "slider" && (
-          <h2 className="text-3xl text-[25px] font-heavy text-[#000000] mb-8 px-4 md:px-0">
+          /* 🌟 PERUBAHAN: Ditambahkan text-center & w-full agar judul tepat berada di tengah */
+          <h2 className="text-[25px] font-heavy text-[#000000] text-center mb-8 px-4 w-full">
             Visit Our Store
           </h2>
         )}
 
-        {/* 🌟 PERUBAHAN DESKTOP: Menggunakan md:grid agar desktop jadi grid 3 kolom, mobile tetap flex overflow */}
         <div className={
           layout === "slider" 
             ? "flex md:grid md:grid-cols-3 overflow-x-auto md:overflow-visible gap-6 px-4 md:px-0 pb-8 md:pb-0 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
@@ -105,14 +101,12 @@ export default function StoreSection({ layout = "slider" }: StoreSectionProps) {
           {stores.map((store) => (
             <div 
               key={store.id} 
-              // 🌟 PERUBAHAN DESKTOP: Menggunakan md:w-full agar card mengikuti lebar grid di desktop
               className={`bg-[#f8f8f8] rounded-[24px] p-5 shadow-[0_4px_20px_rgb(0,0,0,0.05)] border border-gray-100 flex flex-col transition-all duration-300 hover:shadow-lg ${
                 layout === "slider" ? "snap-start shrink-0 w-[340px] md:w-full" : "w-full"
               }`}
             >
               
               <div className="flex flex-col items-start gap-1 mb-4 min-h-[4rem]">
-                {/* 🌟 BERSIH: Tanpa uppercase dan ukuran font proporsional */}
                 <h3 className="text-base md:text-lg font-heavy text-[#EF7044] tracking-wide w-full">
                   {store.name}
                 </h3>
@@ -156,7 +150,6 @@ export default function StoreSection({ layout = "slider" }: StoreSectionProps) {
             </div>
           ))}
 
-          {/* 🌟 PERUBAHAN DESKTOP: Menyembunyikan Card View All di Desktop (menggunakan md:hidden) */}
           {layout === "slider" && (
             <a 
               href="/our-store" 
@@ -176,7 +169,6 @@ export default function StoreSection({ layout = "slider" }: StoreSectionProps) {
 
         </div>
 
-        {/* 🌟 PERUBAHAN DESKTOP: Menambahkan Button View All yang HANYA muncul di Desktop (menggunakan hidden md:flex) */}
         {layout === "slider" && (
           <div className="hidden md:flex justify-center mt-10 w-full">
             <a 

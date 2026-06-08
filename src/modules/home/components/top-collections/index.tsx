@@ -617,7 +617,7 @@ export default function TopCollections() {
   };
 
   return (
-    /* 🌟 PERUBAHAN: Menghapus pt-12 pb-12 dan menambahkan mt-12 */
+    /* 🌟 PERUBAHAN: Dipastikan mt-12 (48px) dan tanpa padding pt/pb/py */
     <section className="mt-12 bg-white max-w-[1200px] mx-auto md:max-w-6xl relative">
       
       {/* 🌟 HEADER JUDUL & TAB */}
