@@ -119,7 +119,7 @@ const Footer = () => {
               <Link href="/shipping-returns" className="hover:text-[#EF7044] transition-colors">Shipping & Returns</Link>
               <Link href="/contact" className="hover:text-[#EF7044] transition-colors">Contact</Link>
             </div>
-          </div>
+          </div> 
         </div>
 
         {/* 🌟 SOSMED MOBILE (Urutan 3: Hilang di Desktop) */}
