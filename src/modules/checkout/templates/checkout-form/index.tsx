@@ -137,13 +137,49 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   const handleUseCurrentLocation = () => {
     if (!mapInstance) return;
     if (navigator.geolocation) {
+      setIsMapLoading(true); // Munculkan tulisan loading biar user tahu sistem lagi kerja
+      
       navigator.geolocation.getCurrentPosition(
-        (position) => {
+        async (position) => {
           const { latitude, longitude } = position.coords;
+          
+          // 1. Pindahkan kamera peta ke titik GPS
           mapInstance.setView([latitude, longitude], 16);
+
+          // 2. LANGSUNG TEMBAK API NOMINATIM UNTUK TRANSLATE KOORDINAT JADI TEKS ALAMAT
+          try {
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`,
+              { headers: { "User-Agent": "NiconicoResortApp" } }
+            );
+            const data = await response.json();
+            
+            if (data && data.address) {
+              const addr = data.address;
+              const fullFormatted = data.display_name;
+              
+              // 3. Paksa isi form alamatnya saat ini juga!
+              setNewAddress(prev => ({
+                ...prev,
+                address_1: fullFormatted,
+                city: addr.city || addr.town || addr.city_district || "Denpasar",
+                province: addr.state || "Bali",
+                postal_code: addr.postcode || "80117"
+              }));
+            }
+          } catch (err) {
+            console.error("Gagal menarik data alamat GPS:", err);
+          } finally {
+            setIsMapLoading(false);
+          }
         },
-        (err) => { alert("Unable to detect GPS. Please enable location permissions in your browser."); }
+        (err) => { 
+          alert("Unable to detect GPS. Please enable location permissions in your browser.");
+          setIsMapLoading(false);
+        }
       );
+    } else {
+      alert("Geolocation is not supported by your browser.");
     }
   };
   // ==========================================
@@ -221,7 +257,20 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
       setIsLoadingShipping(true) 
       const targetEmail = email || customer?.email || "";
       
-      const updatedCart = await updateCartAddressAction(cart.id, address, targetEmail)
+      // 🌟 JURUS FILTER: Kita saring datanya biar Keranjang Medusa nggak ngambek!
+      // Hanya kirim field yang diizinkan oleh skema Cart API.
+      const safeCartAddress = {
+        first_name: address.first_name || "",
+        last_name: address.last_name || "",
+        phone: address.phone || "",
+        address_1: address.address_1 || "",
+        city: address.city || "",
+        province: address.province || "",
+        country_code: address.country_code || "id",
+        postal_code: address.postal_code || "",
+      };
+      
+      const updatedCart = await updateCartAddressAction(cart.id, safeCartAddress, targetEmail)
       setCart(updatedCart) 
       setShowAddressList(false) 
       setIsAddingAddress(false) 
@@ -229,7 +278,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
       await fetchShippingMethods(updatedCart.id)
     } catch (error) {
       console.error("Error updating address:", error)
-      alert("Failed to update address. Please try again.")
+      alert("Gagal memasukkan alamat ke keranjang. Pastikan semua kolom data sudah terisi penuh.")
       setIsLoadingShipping(false)
     }
   }
