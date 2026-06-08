@@ -674,55 +674,74 @@ export default function StoreTemplate() {
     setMaxPrice(val);
   };
 
-  // FUNGSI FETCH PRODUK OPTIMIZED
+  // FUNGSI FETCH PRODUK
   const fetchStoreProducts = useCallback(async (pageNumber: number, reset = false) => {
     setIsLoading(true);
     try {
-      const limit = 10; 
+      // 🌟 KUNCI UTAMA: Tarik 100 produk sekaligus!
+      // Karena sudah pakai Cache Server 3 Menit, ini nggak akan bikin server jebol, malah super ngebut!
+      const limit = 100; 
       const offset = (pageNumber - 1) * limit;
       
-      // 🌟 1. SIAPKAN QUERY UNTUK BACKEND MEDUSA
-      const queryParams: any = { 
-        limit,
-        offset,
-        order: forceSortNewest ? "-created_at" : "-created_at",
-        // Kurangi beban payload, minta yang penting saja untuk thumbnail card!
-        fields: "id,title,handle,thumbnail,variants.prices.amount,variants.title", 
-      };
-
-      // 🌟 2. PINDAHKAN LOGIC SEARCH & FILTER KE PARAMETER BACKEND
-      if (searchQuery) queryParams.q = searchQuery;
-      if (activeCategory !== "all") queryParams.category_id = [activeCategory]; // Pastikan activeCategory menyimpan ID, bukan handle
-      if (selectedCollection) queryParams.collection_id = [selectedCollection]; // Pastikan menyimpan ID Collection
-      
-      // Hit API Medusa
       const data = await listProducts({
-        queryParams, 
+        queryParams: { 
+          limit,
+          offset,
+          order: "-created_at",
+          // 🌟 Gabungan fields yang sangat lengkap agar tidak ada data gambar/harga yang hilang
+          fields: "*collection,*categories,*variants,*variants.prices,*variants.calculated_price,*variants.images,*variants.inventory_quantity,*variants.manage_inventory,*variants.allow_backorder,+metadata,+tags",
+          q: searchQuery || undefined 
+        }, 
         countryCode: countryCode as string,
       }).catch(() => null);
 
       if (data && data.response) {
         let fetched = data.response.products;
 
-        // 🌟 3. CLIENT-SIDE FILTERING HANYA UNTUK YANG TIDAK DISUPPORT API BAWAAN
-        // (Saran: Kedepannya Harga, Size, dan Warna masukkan sebagai Tags atau Metadata agar bisa di-filter di backend)
-        
+        if (searchQuery) {
+          const queryLower = searchQuery.toLowerCase();
+          fetched = fetched.filter((p: any) => 
+            p.title?.toLowerCase().includes(queryLower) || 
+            p.handle?.toLowerCase().includes(queryLower)
+          );
+        }
+
+        if (activeCategory !== "all") {
+           fetched = fetched.filter((p: any) => 
+             p.categories?.some((c: any) => c.handle?.toLowerCase() === activeCategory.toLowerCase())
+           );
+        }
+
+        if (selectedCollection) {
+          const collectionHandle = selectedCollection.toLowerCase().replace(/ /g, '-');
+          fetched = fetched.filter((p: any) => 
+             p.categories?.some((c: any) => c.handle?.toLowerCase() === collectionHandle)
+           );
+        }
+
         if (selectedColor) {
-           fetched = fetched.filter((p: any) => p.handle?.toLowerCase().endsWith(`-${selectedColor.toLowerCase()}`));
+           fetched = fetched.filter((p: any) => {
+              const handle = p.handle?.toLowerCase() || "";
+              return handle.endsWith(`-${selectedColor.toLowerCase()}`);
+           });
         }
 
-        // Filter Harga di Client (Jika API Medusa belum di-extend untuk price range)
-        if (minPrice > 0 || maxPrice < 5000000) {
-          fetched = fetched.filter((p: any) => {
-            const finalPrice = getProductPrice(p);
-            return finalPrice >= minPrice && finalPrice <= maxPrice;
-          });
-        }
+        fetched = fetched.filter((p: any) => {
+          const finalPrice = getProductPrice(p);
+          return finalPrice >= minPrice && finalPrice <= maxPrice;
+        });
 
-        // Filter Size di Client
         if (selectedSize) {
           fetched = fetched.filter((p: any) => 
-            p.variants?.some((v: any) => v.title.toLowerCase().includes(selectedSize.toLowerCase()))
+            p.variants?.some((v: any) => {
+              const matchSize = v.title.toLowerCase().includes(selectedSize.toLowerCase()) || 
+                                v.options?.some((opt: any) => opt.value?.toLowerCase() === selectedSize.toLowerCase());
+              
+              const qty = v.inventory_quantity || 0;
+              const hasStock = v.manage_inventory === false || v.allow_backorder === true || qty > 0;
+
+              return matchSize && hasStock;
+            })
           );
         }
 
@@ -735,20 +754,11 @@ export default function StoreTemplate() {
         setHasMore(data.response.products.length === limit);
       }
     } catch (error) {
-      console.error("Fetch Error:", error);
+      console.error("Filter Error:", error);
     } finally {
       setIsLoading(false);
     }
-  }, [countryCode, searchQuery, activeCategory, minPrice, maxPrice, selectedSize, selectedCollection, selectedColor, forceSortNewest]);
-
-  // 🌟 PERBAIKAN: Waktu Debounce dipercepat jadi 300ms agar kesan loading lebih instan!
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchStoreProducts(1, true);
-      setPage(1);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [searchQuery, activeCategory, selectedCollection, selectedSize, selectedColor, maxPrice]);
+  }, [countryCode, searchQuery, activeCategory, minPrice, maxPrice, selectedSize, selectedCollection, selectedColor]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
