@@ -59,7 +59,7 @@ const StoryTeller = () => {
           className="story-swiper !pb-14 !overflow-visible"
         >
           {reviews.map((item) => (
-            <SwiperSlide key={item.id} className="!w-[240px] md:!w-[380px] py-4">
+            <SwiperSlide key={item.id} className="!w-[240px] md:!w-[380px] ">
               
               <div className="bg-[#F6F6F6] rounded-[24px] p-6 md:p-10 shadow-[0_15px_40px_-10px_rgba(0,0,0,0.1)] flex flex-col h-full min-h-[340px] md:min-h-[380px] border border-gray-100 mx-auto">
                 
