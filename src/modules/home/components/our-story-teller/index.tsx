@@ -29,11 +29,11 @@ const StoryTeller = () => {
   if (reviews.length === 0) return null
 
   return (
-    <section className="py-20 bg-white overflow-hidden">
+    /* 🌟 PERUBAHAN: Menggunakan mt-12 (Margin top 48px), padding vertikal dan margin bawah dihapus total */
+    <section className="mt-12 bg-white overflow-hidden">
       
       {/* JUDUL */}
-      <div className="container mx-auto text-center mb-10 px-4">
-        {/* 🌟 PERUBAHAN: text-3xl md:text-[25px] diubah menjadi text-[25px] agar fix di mobile dan desktop */}
+      <div className="container mx-auto text-center mb-5 px-4">
         <h2 className="text-[25px] text-justify-center font-heavy text-black tracking-tight">
           Our Story Teller
         </h2>
@@ -45,7 +45,6 @@ const StoryTeller = () => {
           grabCursor={true}
           centeredSlides={true}
           slidesPerView={"auto"} 
-          // 🌟 CUKUP PAKAI INI SAJA DI SWIPER VERSI BARU
           loop={true}
           coverflowEffect={{
             rotate: 0,
@@ -60,10 +59,8 @@ const StoryTeller = () => {
           className="story-swiper !pb-14 !overflow-visible"
         >
           {reviews.map((item) => (
-            // --- KUNCI MATI: !w-[240px] untuk HP. Pakai tanda seru (!) biar gak bisa dilawan Swiper ---
-            <SwiperSlide key={item.id} className="!w-[240px] md:!w-[380px] py-4">
+            <SwiperSlide key={item.id} className="!w-[240px] md:!w-[380px] ">
               
-              {/* BOX UTAMA: Padding disesuaikan jadi p-6 (24px) biar teks gak kejepit tapi box gak melar */}
               <div className="bg-[#F6F6F6] rounded-[24px] p-6 md:p-10 shadow-[0_15px_40px_-10px_rgba(0,0,0,0.1)] flex flex-col h-full min-h-[340px] md:min-h-[380px] border border-gray-100 mx-auto">
                 
                 {/* RATING */}
@@ -83,7 +80,7 @@ const StoryTeller = () => {
                   {item.review_text}
                 </p>
 
-                {/* PROFILE: Dikecilkan dikit menyesuaikan box 240px */}
+                {/* PROFILE */}
                 <div className="flex items-center gap-3 mt-auto">
                   <div className="w-10 h-10 md:w-14 md:h-14 rounded-full overflow-hidden shrink-0 shadow-sm">
                     <img 

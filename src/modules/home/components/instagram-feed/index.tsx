@@ -2,19 +2,19 @@ import Image from "next/image";
 
 export default function InstagramFeed() {
   return (
-    // 🌟 PERBAIKAN: max-w dilebarkan untuk desktop agar 4 kolom tidak sempit
-    <section className="py-12 px-4 md:px-8 max-w-[1000px] lg:max-w-[1200px] mx-auto bg-white">
+    /* 🌟 PERUBAHAN: Murni menggunakan mt-12 (Margin top 48px) saja, tanpa margin bottom atau padding vertikal */
+    <section className="mt-12 px-4 md:px-5 max-w-[1000px] lg:max-w-[1200px] mx-auto bg-white">
       
       {/* HEADER TITLE (Di-center saat Desktop) */}
-      <div className="mb-4 lg:mb-8 lg:text-center text-left">
-        {/* 🌟 PERUBAHAN: text-2xl md:text-3xl lg:text-4xl diubah menjadi text-[25px] */}
+      <div className="mb-5 lg:mb-5 lg:text-center text-left">
+        {/* text-[25px] sesuai rules spec sebelumnya */}
         <h2 className="text-[25px] font-heavy text-[#EF7044]">
           #niconiconfidence
         </h2>
       </div>
 
       {/* ==================================================== */}
-      {/* 📱 TAMPILAN MOBILE & TABLET (TIDAK DISENGGOL SAMA SEKALI) */}
+      {/* 📱 TAMPILAN MOBILE & TABLET (TIDAK DISENGGOL)        */}
       {/* ==================================================== */}
       <div className="lg:hidden">
         {/* BINGKAI ORANYE TIPIS */}
@@ -84,7 +84,7 @@ export default function InstagramFeed() {
             </a>
             <a href="#" className="hover:scale-110 transition-transform">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#000000">
-                <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 2.78-1.15 5.54-3.33 7.39-2.03 1.73-4.8 2.45-7.4 1.94-2.58-.51-4.87-2.18-5.96-4.55-1.03-2.22-1.05-4.9-.04-7.14 1.05-2.31 3.23-4.05 5.76-4.57 1.34-.28 2.73-.24 4.05.08v4.06c-1.15-.31-2.4-.23-3.48.24-1.05.46-1.9 1.3-2.27 2.37-.36 1.03-.27 2.24.23 3.19.49.91 1.41 1.58 2.44 1.8.98.21 2.04.14 2.94-.3 1.05-.51 1.83-1.44 2.15-2.56.24-.86.24-1.78.25-2.67.01-6.45.01-12.91.02-19.36z"/>
+                <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.20-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 2.78-1.15 5.54-3.33 7.39-2.03 1.73-4.8 2.45-7.4 1.94-2.58-.51-4.87-2.18-5.96-4.55-1.03-2.22-1.05-4.9-.04-7.14 1.05-2.31 3.23-4.05 5.76-4.57 1.34-.28 2.73-.24 4.05.08v4.06c-1.15-.31-2.4-.23-3.48.24-1.05.46-1.9 1.3-2.27 2.37-.36 1.03-.27 2.24.23 3.19.49.91 1.41 1.58 2.44 1.8.98.21 2.04.14 2.94-.3 1.05-.51 1.83-1.44 2.15-2.56.24-.86.24-1.78.25-2.67.01-6.45.01-12.91.02-19.36z"/>
               </svg>
             </a>
             <a href="#" className="hover:scale-110 transition-transform">
@@ -97,7 +97,7 @@ export default function InstagramFeed() {
       </div>
 
       {/* ==================================================== */}
-      {/* 💻 TAMPILAN DESKTOP KHUSUS (SAMA PERSIS GAMBAR)      */}
+      {/* 💻 TAMPILAN DESKTOP KHUSUS                           */}
       {/* ==================================================== */}
       <div className="hidden lg:grid grid-cols-4 gap-4 w-full">
         
@@ -126,7 +126,7 @@ export default function InstagramFeed() {
           </a>
         </div>
 
-        {/* KOLOM 3 & 4 (Kanan) -> Dibungkus jadi satu biar rapi bawahnya */}
+        {/* KOLOM 3 & 4 (Kanan) */}
         <div className="col-span-2 flex flex-col gap-4">
           
           <div className="grid grid-cols-2 gap-4">
@@ -142,7 +142,7 @@ export default function InstagramFeed() {
             <img src="https://images.unsplash.com/photo-1564859228273-274232fdb516?q=80&w=600&auto=format&fit=crop" alt="Desktop UGC 8" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
           </a>
 
-          {/* SOSMED DESKTOP (Rata Tengah di bawah box kanan) */}
+          {/* SOSMED DESKTOP */}
           <div className="flex flex-col items-center justify-center pt-2">
             <p className="text-sm font-regular text-gray-800 mb-4">
               Share your confidence moment with niconico resort
@@ -169,7 +169,7 @@ export default function InstagramFeed() {
               </a>
               <a href="#" className="hover:scale-110 transition-transform">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#000000">
-                  <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 2.78-1.15 5.54-3.33 7.39-2.03 1.73-4.8 2.45-7.4 1.94-2.58-.51-4.87-2.18-5.96-4.55-1.03-2.22-1.05-4.9-.04-7.14 1.05-2.31 3.23-4.05 5.76-4.57 1.34-.28 2.73-.24 4.05.08v4.06c-1.15-.31-2.4-.23-3.48.24-1.05.46-1.9 1.3-2.27 2.37-.36 1.03-.27 2.24.23 3.19.49.91 1.41 1.58 2.44 1.8.98.21 2.04.14 2.94-.3 1.05-.51 1.83-1.44 2.15-2.56.24-.86.24-1.78.25-2.67.01-6.45.01-12.91.02-19.36z"/>
+                  <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.20-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 2.78-1.15 5.54-3.33 7.39-2.03 1.73-4.8 2.45-7.4 1.94-2.58-.51-4.87-2.18-5.96-4.55-1.03-2.22-1.05-4.9-.04-7.14 1.05-2.31 3.23-4.05 5.76-4.57 1.34-.28 2.73-.24 4.05.08v4.06c-1.15-.31-2.4-.23-3.48.24-1.05.46-1.9 1.3-2.27 2.37-.36 1.03-.27 2.24.23 3.19.49.91 1.41 1.58 2.44 1.8.98.21 2.04.14 2.94-.3 1.05-.51 1.83-1.44 2.15-2.56.24-.86.24-1.78.25-2.67.01-6.45.01-12.91.02-19.36z"/>
                 </svg>
               </a>
               <a href="#" className="hover:scale-110 transition-transform">

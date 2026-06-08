@@ -323,7 +323,7 @@ const Navbar = () => {
                         </div>
                         <div className="flex flex-col">
                           <h4 className="text-[13px] font-bold text-gray-900 group-hover:text-[#EF7044] transition-colors">{product.title}</h4>
-                          <p className="text-[12px] text-[#EF7044] font-black">{getProductPrice(product)}</p>
+                          
                         </div>
                       </Link>
                     ))

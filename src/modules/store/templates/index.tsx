@@ -8,6 +8,7 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 import { listProducts } from "@lib/data/products";
 import { useCart } from "@/context/cart-context/cart-context";
 import { addToCart as medusaAddToCart } from "@lib/data/cart";
+import NextImage from "next/image";
 
 // Kategori Atas (Sesuaikan handle ini dengan nama di Medusa)
 const topCategories = [
@@ -675,10 +676,11 @@ export default function StoreTemplate() {
   };
 
   // FUNGSI FETCH PRODUK
+  // FUNGSI FETCH PRODUK
   const fetchStoreProducts = useCallback(async (pageNumber: number, reset = false) => {
     setIsLoading(true);
     try {
-      const limit = 10; 
+      const limit = 10; // 🌟 KEMBALI KE 10 (Aman dari limit block Medusa)
       const offset = (pageNumber - 1) * limit;
       
       const data = await listProducts({
@@ -686,6 +688,7 @@ export default function StoreTemplate() {
           limit,
           offset,
           order: "-created_at",
+          // 🌟 KEMBALI KE FIELDS ASLI (Aman dari Bad Request)
           fields: "*collection,*categories,*variants,*variants.prices,*variants.inventory_quantity,*variants.manage_inventory,*variants.allow_backorder",
           q: searchQuery || undefined 
         }, 
@@ -1003,7 +1006,13 @@ export default function StoreTemplate() {
             products.map((product) => (
               <LocalizedClientLink key={product.id} href={`/products/${product.handle}`} className="flex flex-col group block animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="relative aspect-[3/4] bg-gray-50 rounded-[20px] overflow-hidden mb-3 border border-gray-100 shadow-sm">
-                  <img src={product.thumbnail || "/placeholder.png"} alt={product.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <NextImage 
+                        src={product.thumbnail || "/placeholder.png"} 
+                        alt={product.title} 
+                        fill
+                        sizes="(max-width: 768px) 50vw, 20vw"
+                        className="object-cover group-hover:scale-105 transition-transform duration-500" 
+                        />
                   
                   <button onClick={(e) => toggleWishlist(e, product.id)} className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-all ${wishlist.includes(product.id) ? "bg-[#EF7044] text-white" : "bg-white/80 backdrop-blur-sm text-gray-300 hover:text-[#EF7044]"}`}>
                     <Heart className={`w-4 h-4 ${wishlist.includes(product.id) ? "fill-current" : ""}`} />
