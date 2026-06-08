@@ -574,7 +574,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                       ) : (
                         // 🌟 TEXT NO ADDRESS FOUND IN SUMMARY
                         <div className="flex flex-col gap-1 cursor-pointer group" onClick={() => { setShowAddressList(true); setIsAddingAddress(true); }}>
-                           <p className="text-sm font-bold text-[#EF7044] group-hover:text-[#d65f36] transition-colors">No Address Found...</p>
+                           <p className="text-sm font-bold text-[#EF7044] group-hover:text-[#d65f36] transition-colors">Add Address Here...</p>
                            <p className="text-[11px] md:text-xs text-gray-500 font-medium">Click here to add a shipping address.</p>
                         </div>
                       )}
