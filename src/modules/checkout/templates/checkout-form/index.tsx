@@ -336,10 +336,10 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   const availableAddresses = customer?.addresses?.filter((a: any) => !deletedAddressIds.includes(a.id)) || [];
 
   return (
-    <div className="flex flex-col h-full bg-white relative font-sans lg:max-w-[1200px] xl:max-w-[1400px] mx-auto w-full lg:pt-[100px] lg:bg-gray-50/50 min-h-screen">
+    <div className="flex flex-col h-full bg-white relative font-sans w-full md:pt-[100px]">
       
       {/* 🌟 LOGO HEADER (Desktop Only) */}
-      <div className="hidden lg:flex items-center px-8 pb-8 pt-4">
+      <div className="hidden lg:flex items-center px-8 pb-8 pt-4 max-w-[1400px] mx-auto w-full">
         <div className="flex-1 flex flex-col items-center justify-center pr-6 gap-1.5">
   {/* LOGO DI ATAS */}
       <div className="relative w-24 h-6 cursor-pointer" onClick={() => router.push("/")}>
@@ -369,12 +369,12 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
         </h1>
       </div>
 
-      <div className="px-0 lg:px-8 py-0 lg:py-6 pb-32 lg:pb-12 w-full">
+      <div className="px-5 py-6 pb-32 md:pb-12 md:px-8 max-w-[1400px] mx-auto w-full">
         
         {/* ==================================================== */}
         {/* 🌟 PEMBUNGKUS UTAMA: GRID 2 KOLOM MIRIP TOKOPEDIA */}
         {/* ==================================================== */}
-        <div className="lg:grid lg:grid-cols-12 lg:gap-8 xl:gap-10 relative lg:items-start w-full">
+        <div className="md:grid md:grid-cols-12 md:gap-8 lg:gap-16 xl:gap-24 relative md:items-start w-full">
           
           {/* ==================================================== */}
           {/* 💻 KOLOM KIRI (8 Kolom): Form, Alamat, Kurir, Produk */}
