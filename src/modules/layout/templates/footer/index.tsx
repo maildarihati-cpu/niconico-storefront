@@ -25,10 +25,10 @@ const Footer = () => {
   return (
     <footer className="relative bg-black text-white pt-16 flex flex-col items-center overflow-hidden">
       
-      {/* Tombol Back to Top (🌟 PERUBAHAN: Mengubah -top-6 menjadi top-6 agar masuk ke dalam kontainer hitam) */}
+      {/* Tombol Back to Top (🌟 PERUBAHAN: Diubah menjadi top-3 agar posisinya naik sedikit) */}
       <button 
         onClick={scrollToTop}
-        className="absolute top-6 right-6 md:right-12 lg:right-16 w-14 h-14 bg-[#E5E7EB] rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-colors z-20"
+        className="absolute top-3 right-6 md:right-12 lg:right-16 w-14 h-14 bg-[#E5E7EB] rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-colors z-20"
         aria-label="Back to top"
       >
         <ChevronUp className="text-[#EF7044] w-8 h-8" strokeWidth={2.5} />
@@ -86,7 +86,7 @@ const Footer = () => {
             </Link>
             <Link href="https://www.youtube.com/@niconicoswimwearofficial" className="hover:text-[#EF7044] transition-all hover:scale-110">
               <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93-.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
               </svg>
             </Link>
           </div>
@@ -134,7 +134,7 @@ const Footer = () => {
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/></svg>
           </Link>
           <Link href="https://www.youtube.com/@niconicoswimwearofficial" className="hover:text-[#EF7044] transition-all hover:scale-110">
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93?.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
           </Link>
         </div>
       </div>
