@@ -336,7 +336,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   const availableAddresses = customer?.addresses?.filter((a: any) => !deletedAddressIds.includes(a.id)) || [];
 
   return (
-    <div className="w-full min-h-screen bg-gray-50 md:bg-gray-50/50 relative font-sans md:pt-[80px]">
+    <div className="w-full min-h-screen bg-gray-50 md:bg-gray-50/50 relative font-sans">
       
       {/* 🌟 LOGO & HEADER DESKTOP/TABLET (Sticky di atas) */}
       <div className="hidden md:flex items-center px-8 py-5 w-full bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
