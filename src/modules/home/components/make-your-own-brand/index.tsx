@@ -86,7 +86,7 @@ export default function MakeYourOwnBrandSection() {
         </h2>
 
         {/* QUOTE TEXT */}
-        <p className="order-3 lg:order-none text-black text-sm md:text-base font-regular max-w-3xl leading-relaxed text-center mb-10 lg:mb-8 w-full px-4 lg:px-0">
+        <p className="order-3 lg:order-none text-black text-sm md:text-base font-regular max-w-3xl leading-relaxed text-center mb-5 lg:mb-8 w-full px-4 lg:px-0">
           {content.quoteVerbatim}
         </p>
 
@@ -109,4 +109,4 @@ export default function MakeYourOwnBrandSection() {
       
     </section>
   );
-}
+} 
