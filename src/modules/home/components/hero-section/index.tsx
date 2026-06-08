@@ -113,12 +113,12 @@ export default function HeroSection() {
           
           <Link href="/store" className="w-full max-w-[280px]">
             {/* 🌟 PERUBAHAN UTAMA BUTTON: Menggunakan relative & justify-center supaya teks 'SHOP NOW' presisi di tengah layar mobile/desktop. Panah dipisah pakai absolute khusus desktop (lg:flex) */}
-            <button className="group w-full bg-[#EF7044] text-white h-12 rounded-full font-black text-xs tracking-widest uppercase transition-all shadow-lg hover:bg-white hover:text-[#EF7044] relative flex items-center justify-center px-6">
-              <span>SHOP NOW</span>
-              <div className="hidden lg:flex w-8 h-8 rounded-full bg-white text-[#EF7044] items-center justify-center group-hover:bg-[#EF7044] group-hover:text-white transition-colors shrink-0 shadow-sm absolute right-2 top-1/2 -translate-y-1/2">
-                <ArrowUpRight className="w-4 h-4" strokeWidth={2.5} />
-              </div>
-            </button>
+            <button className="group w-full bg-[#EF7044] text-white h-12 rounded-full font-heavy text-sm md:text-lg tracking-widest uppercase transition-all shadow-lg hover:bg-white hover:text-[#EF7044] relative flex items-center justify-center px-6">
+            <span>SHOP NOW</span>
+            <div className="hidden lg:flex w-8 h-8 rounded-full bg-white text-[#EF7044] items-center justify-center group-hover:bg-[#EF7044] group-hover:text-white transition-colors shrink-0 shadow-sm absolute right-2 top-1/2 -translate-y-1/2">
+              <ArrowUpRight className="w-4 h-4" strokeWidth={2.5} />
+            </div>
+</button>
           </Link>
 
         </div>
