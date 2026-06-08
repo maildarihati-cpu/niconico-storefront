@@ -6,7 +6,7 @@ export default function InstagramFeed() {
     <section className="mt-12 px-4 md:px-5 max-w-[1000px] lg:max-w-[1200px] mx-auto bg-white">
       
       {/* HEADER TITLE (Di-center saat Desktop) */}
-      <div className="mb-8 lg:mb-8 lg:text-center text-left">
+      <div className="mb-5 lg:mb-5 lg:text-center text-left">
         {/* text-[25px] sesuai rules spec sebelumnya */}
         <h2 className="text-[25px] font-heavy text-[#EF7044]">
           #niconiconfidence
