@@ -25,10 +25,10 @@ const Footer = () => {
   return (
     <footer className="relative bg-black text-white pt-16 flex flex-col items-center overflow-hidden">
       
-      {/* Tombol Back to Top */}
+      {/* Tombol Back to Top (🌟 PERUBAHAN: Mengubah -top-6 menjadi top-6 agar masuk ke dalam kontainer hitam) */}
       <button 
         onClick={scrollToTop}
-        className="absolute -top-6 right-6 md:right-12 lg:right-16 w-14 h-14 bg-[#E5E7EB] rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-colors z-20"
+        className="absolute top-6 right-6 md:right-12 lg:right-16 w-14 h-14 bg-[#E5E7EB] rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-colors z-20"
         aria-label="Back to top"
       >
         <ChevronUp className="text-[#EF7044] w-8 h-8" strokeWidth={2.5} />
