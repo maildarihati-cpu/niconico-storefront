@@ -336,27 +336,18 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   const availableAddresses = customer?.addresses?.filter((a: any) => !deletedAddressIds.includes(a.id)) || [];
 
   return (
-    <div className="flex flex-col h-full bg-white relative font-sans w-full md:pt-[100px]">
+    <div className="w-full min-h-screen bg-gray-50 relative font-sans md:pt-[100px]">
       
-      {/* 🌟 LOGO HEADER (Desktop Only) */}
-      <div className="hidden lg:flex items-center px-8 pb-8 pt-4 max-w-[1400px] mx-auto w-full">
-        <div className="flex-1 flex flex-col items-center justify-center pr-6 gap-1.5">
-  {/* LOGO DI ATAS */}
-      <div className="relative w-24 h-6 cursor-pointer" onClick={() => router.push("/")}>
-        <Image 
-          src="/logo-niconico-black.png" 
-          alt="Niconico Resort Logo" 
-          fill 
-          className="object-contain" 
-          priority
-        />
-      </div>
-      
-      {/* TEKS DI BAWAHNYA */}
-      <h1 className="text-[13px] font-bold text-gray-900 uppercase tracking-[0.2em]">
-        Check Out
-      </h1>
-    </div>
+      {/* 🌟 LOGO & HEADER DESKTOP (Full Width) */}
+      <div className="hidden lg:flex items-center px-8 pb-8 pt-4 w-full bg-white border-b border-gray-200">
+        <div className="max-w-[1200px] mx-auto w-full flex items-center">
+          <div className="relative w-36 h-10 cursor-pointer" onClick={() => router.push("/")}>
+            <Image src="/logo-niconico-black.png" alt="Niconico Resort Logo" fill className="object-contain" priority />
+          </div>
+          <h1 className="text-xl font-bold text-gray-800 ml-6 pl-6 border-l-2 border-gray-300 uppercase tracking-widest">
+            Checkout
+          </h1>
+        </div>
       </div>
 
       {/* 📱 HEADER KHUSUS MOBILE */}
@@ -369,17 +360,13 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
         </h1>
       </div>
 
-      <div className="px-5 py-6 pb-32 md:pb-12 md:px-8 max-w-[1400px] mx-auto w-full">
-        
-        {/* ==================================================== */}
-        {/* 🌟 PEMBUNGKUS UTAMA: GRID 2 KOLOM MIRIP TOKOPEDIA */}
-        {/* ==================================================== */}
+      <div className="px-5 py-6 pb-32 md:pb-12 md:px-8 max-w-[1200px] mx-auto w-full">
         <div className="md:grid md:grid-cols-12 md:gap-8 lg:gap-16 xl:gap-24 relative md:items-start w-full">
           
           {/* ==================================================== */}
           {/* 💻 KOLOM KIRI (8 Kolom): Form, Alamat, Kurir, Produk */}
           {/* ==================================================== */}
-          <div className="lg:col-span-8 flex flex-col gap-2 lg:gap-6 bg-white lg:bg-transparent">
+          <div className="md:col-span-7 flex flex-col gap-6 md:gap-10">
             
             {/* 🌟 CARD: ALAMAT PENGIRIMAN */}
             <div className="bg-white lg:rounded-2xl lg:shadow-sm lg:border border-gray-200 p-5 lg:p-7">
