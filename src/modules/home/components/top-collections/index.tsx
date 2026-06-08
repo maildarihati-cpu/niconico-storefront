@@ -701,8 +701,8 @@ export default function TopCollections() {
                 
                 {/* 🌟 WADAH TEKS */}
                 <div className="flex flex-col items-center text-center px-2 md:px-0 relative pointer-events-none w-full">
-                {/* 🌟 PERUBAHAN: Pakai 'truncate w-full' biar jadi 1 baris (...), dan naikin mb-2 & md:mb-3 biar jarak harga balikin normal */}
-                <h3 className="text-sm text-gray-800 font-black truncate w-full mb-2 md:text-base md:text-[#EF7044] md:border md:border-[#EF7044] md:rounded-full md:px-4 md:py-1.5 md:max-w-[200px] md:mx-auto md:block md:mb-2 transition-colors duration-300 md:group-hover:bg-[#EF7044] md:group-hover:text-white">
+                {/* 🌟 PERUBAHAN: Class box rounded, border, dan warna orange sekarang langsung aktif di mobile (tanpa md:) */}
+                <h3 className="text-sm md:text-base text-[#EF7044] font-black truncate w-full block mx-auto border border-[#EF7044] rounded-full px-4 py-1.5 bg-white max-w-[160px] md:max-w-[200px] mb-2 transition-colors duration-300 md:group-hover:bg-[#EF7044] md:group-hover:text-white">
                   {product.title}
                 </h3>
                 <p className="text-[#EF7044] text-sm md:text-base font-heavy">
