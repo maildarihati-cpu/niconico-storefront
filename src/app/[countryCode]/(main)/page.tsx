@@ -102,49 +102,49 @@ useEffect(() => {
         <TopCollections />
       </FadeInSection>
 
-      
-      <section className="w-full pt-12 pb-12 bg-white">
-      <h2 className="text-center text-3xl font-heavy text-[25px] tracking-tight text-gray-900 py-6">
-        Feature Products
-      </h2>
-      
-      {/* 🌟 PERUBAHAN DI SINI: flex-col untuk mobile, grid-cols-5 untuk desktop */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 w-full">
-        {[
-          { title: "BIKINIS", img: "/bikinis.png", handle: "bikinis" },
-          { title: "SWIMSUIT", img: "/swimsuit.png", handle: "swimsuit" },
-          { title: "RESORT WEAR", img: "/resort-wear.png", handle: "resort-wear" },
-          { title: "MEN'S WEAR", img: "/mens-wear.png", handle: "mens-wear" },
-          { title: "ACCESSORIES", img: "/accessories.png", handle: "accessories" }
-        ].map((item, idx) => (
-          <FadeInSection key={idx} delay={idx * 150}>
-            {/* 🌟 PERUBAHAN DI SINI: Tinggi disesuaikan lg:h-[600px] khusus desktop agar proporsional saat berjejer */}
-            <LocalizedClientLink 
-              href={`/store?category=${item.handle}`} 
-              className="relative w-full h-[150px] lg:h-[500px] xl:h-[600px] group cursor-pointer overflow-hidden block"
-            >
-              
-              <Image 
-                src={item.img} 
-                alt={item.title} 
-                fill 
-                unoptimized
-                className="object-cover transition-transform duration-700 group-hover:scale-105" 
-              />
-              
-              <div className="absolute inset-0 bg-black/40 transition-colors duration-500 group-hover:bg-[#EF7044]/20"></div>
-              
-              <div className="absolute inset-0 flex items-center justify-center">
-                <h3 className="font-inter text-white text-[28px] lg:text-[22px] xl:text-[28px] text-center px-2 font-heavy italic tracking-[0.15em] drop-shadow-lg uppercase">
-                  {item.title}
-                </h3>
-              </div>
+      {/* 🌟 PERUBAHAN: Dipastikan menggunakan py-12 (padding atas bawah 12) */}
+      <section className="w-full py-12 bg-white">
+        <h2 className="text-center text-3xl font-heavy text-[25px] tracking-tight text-gray-900 py-6">
+          Feature Products
+        </h2>
         
-            </LocalizedClientLink>
-          </FadeInSection>
-        ))}
-      </div>
-    </section>
+        {/* 🌟 PERUBAHAN DI SINI: flex-col untuk mobile, grid-cols-5 untuk desktop */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 w-full">
+          {[
+            { title: "BIKINIS", img: "/bikinis.png", handle: "bikinis" },
+            { title: "SWIMSUIT", img: "/swimsuit.png", handle: "swimsuit" },
+            { title: "RESORT WEAR", img: "/resort-wear.png", handle: "resort-wear" },
+            { title: "MEN'S WEAR", img: "/mens-wear.png", handle: "mens-wear" },
+            { title: "ACCESSORIES", img: "/accessories.png", handle: "accessories" }
+          ].map((item, idx) => (
+            <FadeInSection key={idx} delay={idx * 150}>
+              {/* 🌟 PERUBAHAN DI SINI: Tinggi disesuaikan lg:h-[600px] khusus desktop agar proporsional saat berjejer */}
+              <LocalizedClientLink 
+                href={`/store?category=${item.handle}`} 
+                className="relative w-full h-[150px] lg:h-[500px] xl:h-[600px] group cursor-pointer overflow-hidden block"
+              >
+                
+                <Image 
+                  src={item.img} 
+                  alt={item.title} 
+                  fill 
+                  unoptimized
+                  className="object-cover transition-transform duration-700 group-hover:scale-105" 
+                />
+                
+                <div className="absolute inset-0 bg-black/40 transition-colors duration-500 group-hover:bg-[#EF7044]/20"></div>
+                
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <h3 className="font-inter text-white text-[28px] lg:text-[22px] xl:text-[28px] text-center px-2 font-heavy italic tracking-[0.15em] drop-shadow-lg uppercase">
+                    {item.title}
+                  </h3>
+                </div>
+          
+              </LocalizedClientLink>
+            </FadeInSection>
+          ))}
+        </div>
+      </section>
 
       <FadeInSection>
         <InstagramFeed />

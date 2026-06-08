@@ -70,7 +70,8 @@ export default function StoreSection({ layout = "slider" }: StoreSectionProps) {
 
   if (loading) {
     return (
-      <div className="py-20 flex justify-center items-center bg-white w-full">
+      /* 🌟 PERUBAHAN: Ubah py-20 menjadi py-12 biar konsisten pas loading */
+      <div className="py-12 flex justify-center items-center bg-white w-full">
         <div className="animate-pulse flex gap-6 overflow-hidden w-full max-w-[1200px] px-4 md:px-0">
            {[1, 2, 3].map((i) => (
              <div key={i} className="shrink-0 w-[340px] md:w-[380px] h-[400px] bg-gray-100 rounded-[24px]"></div>
@@ -83,7 +84,8 @@ export default function StoreSection({ layout = "slider" }: StoreSectionProps) {
   if (stores.length === 0) return null;
   
   return (
-    <section className="pt-16 pb-12 bg-white w-full">
+    /* 🌟 PERUBAHAN: Ubah pt-16 menjadi pt-12 */
+    <section className="pt-12 pb-12 bg-white w-full">
       <div className="max-w-[1200px] mx-auto md:max-w-6xl w-full">
         
         {/* 🌟 KOMENTAR RUSAK SUDAH DICABUT, COMPILER AMAN */}
