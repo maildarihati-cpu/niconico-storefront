@@ -435,7 +435,6 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
           {/* ==================================================== */}
           <div className="w-full flex-1 flex flex-col gap-3 md:gap-4">
             
-<<<<<<< HEAD
             {/* CONTACT INFO */}
             <div className="space-y-3">
               <h3 className="text-[10px] lg:text-[12px] font-black text-[#EF7044] uppercase tracking-[0.2em] px-1">Contact Info</h3>
@@ -467,38 +466,6 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                   {showAddressList ? "Cancel" : "Change Address"}
                 </button>
               </div>
-=======
-            {/* 🌟 CARD: SHIPPING ADDRESS */}
-            <div className="bg-white md:rounded-2xl md:shadow-sm md:border border-gray-200 p-5 md:p-6 lg:p-7">
-              <div className="flex items-center justify-between mb-4 md:mb-6">
-                <h3 className="text-[13px] md:text-[16px] font-extrabold text-gray-900 tracking-wide">Shipping Address</h3>
-                {showAddressList ? (
-                   <button onClick={() => { setShowAddressList(false); setIsAddingAddress(false); }} className="text-[11px] md:text-[13px] font-bold text-gray-500 hover:text-[#EF7044]">
-                     Cancel
-                   </button>
-                ) : (
-                  <button onClick={() => { setShowAddressList(true); setIsAddingAddress(false); }} className="text-[11px] md:text-[13px] font-bold text-[#EF7044] hover:text-[#EF7044]/80">
-                     Change Address
-                  </button>
-                )}
-              </div>
-
-              <div className="space-y-4">
-                {/* 🌟 EMAIL INPUT */}
-                <div className="mb-4 pb-4 border-b border-gray-100">
-                   <label className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block">Contact Email</label>
-                   <div className="flex items-center gap-3 bg-gray-50 rounded-xl p-3 border border-gray-200 focus-within:border-[#EF7044] transition-colors">
-                     <Mail className="w-4 h-4 text-gray-400" />
-                     <input 
-                        type="email" 
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="Your email address..."
-                        className="bg-transparent w-full outline-none text-xs md:text-sm font-medium text-gray-800"
-                     />
-                   </div>
-                </div>
->>>>>>> dev
 
                 {/* 🌟 ADDRESS RENDERER */}
                 {showAddressList ? (
@@ -814,6 +781,5 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
 
         </div>
       </div>
-    </div>
   )
 }
