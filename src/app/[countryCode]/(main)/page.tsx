@@ -103,7 +103,7 @@ useEffect(() => {
       </FadeInSection>
 
       {/* 🌟 PERUBAHAN: Dipastikan menggunakan py-12 (padding atas bawah 12) */}
-      <section className="w-full py-12 bg-white">
+      <section className="w-full bg-white">
         <h2 className="text-center text-3xl font-heavy text-[25px] tracking-tight text-gray-900 py-6">
           Feature Products
         </h2>

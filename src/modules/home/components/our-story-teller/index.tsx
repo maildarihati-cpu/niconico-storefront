@@ -30,7 +30,7 @@ const StoryTeller = () => {
 
   return (
     /* 🌟 PERUBAHAN: Ubah py-20 menjadi pt-12 pb-12 */
-    <section className="pt-12 pb-12 bg-white overflow-hidden">
+    <section className="pb-12 bg-white overflow-hidden">
       
       {/* JUDUL */}
       <div className="container mx-auto text-center mb-10 px-4">

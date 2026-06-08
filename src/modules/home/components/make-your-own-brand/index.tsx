@@ -48,7 +48,7 @@ export default function MakeYourOwnBrandSection() {
   const hasVideo = isVideo(content.mediaUrl);
 
   return (
-    <section className="py-16 px-4 md:px-8 max-w-[1100px] mx-auto bg-white flex flex-col lg:flex-row lg:items-center lg:gap-16">
+    <section className="px-4 md:px-8 max-w-[1100px] mx-auto bg-white flex flex-col lg:flex-row lg:items-center lg:gap-16">
       
       {/* 🌟 BAGIAN KIRI DI DESKTOP (Media Card) */}
       <div className="order-2 lg:order-1 w-full lg:w-1/2 aspect-video rounded-3xl md:rounded-[2rem] overflow-hidden relative shadow-md mb-8 lg:mb-0 bg-black group cursor-pointer shrink-0">

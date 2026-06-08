@@ -3,7 +3,7 @@ import Image from "next/image";
 export default function InstagramFeed() {
   return (
     /* 🌟 PERUBAHAN: Ubah py-12 menjadi pt-12 pb-12 agar padding atas & bawah pas berukuran 12 */
-    <section className="pt-12 pb-12 px-4 md:px-8 max-w-[1000px] lg:max-w-[1200px] mx-auto bg-white">
+    <section className="pb-12 px-4 md:px-8 max-w-[1000px] lg:max-w-[1200px] mx-auto bg-white">
       
       {/* HEADER TITLE (Di-center saat Desktop) */}
       <div className="mb-4 lg:mb-8 lg:text-center text-left">
