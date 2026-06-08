@@ -384,7 +384,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
           {/* ==================================================== */}
           {/* 💻 LEFT COLUMN (Flex-1): Form, Address, Courier, Items */}
           {/* ==================================================== */}
-          <div className="w-full flex-1 flex flex-col gap-6 md:gap-8">
+          <div className="w-full flex-1 flex flex-col gap-3 md:gap-4">
             
             {/* 🌟 CARD: SHIPPING ADDRESS */}
             <div className="bg-white md:rounded-2xl md:shadow-sm md:border border-gray-200 p-5 md:p-6 lg:p-7">
