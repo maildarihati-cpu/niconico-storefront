@@ -171,10 +171,22 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
 
   useEffect(() => {
     const autoSyncDefaultAddress = async () => {
-      if ((!cart.shipping_address || !cart.shipping_address.address_1) && customer?.addresses?.length > 0) {
+      // Dapatkan daftar alamat asli kustomer yang belum dihapus
+      const availableAddresses = customer?.addresses?.filter((a: any) => !deletedAddressIds.includes(a.id)) || [];
+
+      // 🌟 LOGIKA PINTAR: Hancurkan alamat "hantu" di keranjang jika buku alamat kosong
+      if (availableAddresses.length === 0 && cart?.shipping_address?.address_1) {
+        setCart((prev: any) => ({ ...prev, shipping_address: null }));
+        setShippingMethods([]);
+        setIsLoadingShipping(false);
+        return;
+      }
+
+      // 🌟 LOGIKA NORMAL: Auto-sync alamat pertama jika keranjang kosong
+      if ((!cart.shipping_address || !cart.shipping_address.address_1) && availableAddresses.length > 0) {
         setIsLoadingShipping(true);
         try {
-          const defaultAddress = customer.addresses[0];
+          const defaultAddress = availableAddresses[0];
           const targetEmail = email || customer?.email || "";
           
           const updatedCart = await updateCartAddressAction(cart.id, defaultAddress, targetEmail);
@@ -185,12 +197,14 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
           console.error("Failed to auto-sync default address:", error);
           setIsLoadingShipping(false);
         }
+      } else {
+        setIsLoadingShipping(false);
       }
     };
 
     autoSyncDefaultAddress();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); 
+  }, [deletedAddressIds]); // Trigger ulang jika ada alamat yang baru saja dihapus
 
   const handleSelectShipping = async (optionId: string, currentCartId: string = cart.id) => {
     try {
@@ -361,10 +375,9 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
       </div>
 
       {/* 🌟 MAIN CONTAINER */}
-      <div className="px-5 py-6 md:py-10 pb-32 md:pb-12 md:px-8 max-w-[1200px] mx-auto w-full">
+      <div className="px-5 py-6 md:pt-6 pb-32 md:pb-12 md:px-8 max-w-[1200px] mx-auto w-full">
         
-        {/* 🌟 LAYOUT 2 KOLOM ALA TOKOPEDIA (Flexbox) */}
-        {/* Mobile: flex-col (bersusun ke bawah). Tablet & Desktop (md/lg): flex-row (bersampingan proporsi 65/35) */}
+        {/* 🌟 LAYOUT 2 KOLOM ALA TOKOPEDIA */}
         <div className="flex flex-col md:flex-row gap-6 lg:gap-10 relative items-start w-full">
           
           {/* ==================================================== */}
@@ -530,13 +543,15 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                             </div>
                           ))
                         ) : (
-                          <div className="p-6 text-center border border-dashed border-gray-300 rounded-xl">
-                            <p className="text-xs font-bold text-gray-400 mb-3">Belum ada alamat tersimpan.</p>
+                          // 🌟 TEXT NO ADDRESS FOUND DI LIST
+                          <div className="p-8 text-center border-2 border-dashed border-gray-300 bg-gray-50 rounded-xl">
+                            <p className="text-sm font-bold text-[#EF7044] mb-1">No Address Found...</p>
+                            <p className="text-xs font-medium text-gray-400">Anda belum memiliki alamat tersimpan.</p>
                           </div>
                         )}
                         <button 
                           onClick={() => setIsAddingAddress(true)}
-                          className="w-full py-3.5 rounded-xl border border-gray-300 text-gray-600 text-xs font-bold hover:bg-gray-50 flex items-center justify-center gap-2 mt-2"
+                          className="w-full py-3.5 rounded-xl border border-gray-300 text-gray-600 text-xs font-bold hover:bg-gray-50 flex items-center justify-center gap-2 mt-2 shadow-sm"
                         >
                           <Plus className="w-4 h-4" /> Tambah Alamat Baru
                         </button>
@@ -556,8 +571,10 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                           </p>
                         </>
                       ) : (
-                        <div className="flex items-center gap-2 cursor-pointer text-[#EF7044] hover:text-[#EF7044]/80 transition-colors" onClick={() => { setShowAddressList(true); setIsAddingAddress(true); }}>
-                           <p className="text-xs font-bold">Silakan Tambah Alamat Pengiriman...</p>
+                        // 🌟 TEXT NO ADDRESS FOUND DI RINGKASAN DEPAN
+                        <div className="flex flex-col gap-1 cursor-pointer group" onClick={() => { setShowAddressList(true); setIsAddingAddress(true); }}>
+                           <p className="text-sm font-bold text-[#EF7044] group-hover:text-[#d65f36] transition-colors">No Address Found...</p>
+                           <p className="text-[11px] md:text-xs text-gray-500 font-medium">Klik di sini untuk menambahkan alamat pengiriman.</p>
                         </div>
                       )}
                     </div>
@@ -638,7 +655,6 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
           {/* ==================================================== */}
           {/* 💻 KOLOM KANAN (Fix Width Sticky): RINGKASAN BELANJA */}
           {/* ==================================================== */}
-          {/* w-full untuk mobile, fixed width (320px/380px) & sticky untuk Tablet/Desktop */}
           <div className="w-full md:w-[320px] lg:w-[380px] shrink-0 md:sticky md:top-[100px] mt-6 md:mt-0 pb-10 md:pb-0 z-10">
             
             <div className="bg-white md:rounded-2xl md:shadow-xl md:border border-gray-200 p-5 md:p-6 shadow-[0_0_40px_rgba(0,0,0,0.05)]">
@@ -716,4 +732,4 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
       </div>
     </div>
   )
-} 
+}
