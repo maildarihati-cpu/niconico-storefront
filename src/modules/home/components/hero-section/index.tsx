@@ -112,23 +112,6 @@ export default function HeroSection() {
           </p>
           
           <Link href="/store" className="w-full max-w-[280px]">
-<<<<<<< HEAD
-            {/* 🌟 PERUBAHAN 2: Button diubah strukturnya. Pakai justify-between, ikon dipindah ke kanan, padding disesuaikan */}
-            <button className="group w-full bg-[#EF7044] text-white py-2 px-2 rounded-full font-bold text-xs tracking-widest uppercase transition-all shadow-lg hover:bg-white hover:text-[#EF7044] grid grid-cols-[32px_1fr_32px] items-center">
-  
-              {/* Panah di kolom kiri (kolom ke-1) */}
-              <div className="w-8 h-8 rounded-full bg-white text-[#EF7044] flex items-center justify-center group-hover:bg-[#EF7044] group-hover:text-white transition-colors shadow-sm">
-                <ArrowUpRight className="w-4 h-4" strokeWidth={2.5} />
-              </div>
-
-              {/* Teks di tengah (kolom ke-2) */}
-              <span className="justify-self-center -ml-8">SHOP NOW</span>
-              
-              {/* Kosongkan kolom ke-3 agar seimbang */}
-              <div className="w-8" />
-              
-            </button>
-=======
             {/* 🌟 PERUBAHAN UTAMA BUTTON: Menggunakan relative & justify-center supaya teks 'SHOP NOW' presisi di tengah layar mobile/desktop. Panah dipisah pakai absolute khusus desktop (lg:flex) */}
             <button className="group w-full bg-[#EF7044] text-white h-12 rounded-full font-heavy text-sm md:text-lg tracking-widest uppercase transition-all shadow-lg hover:bg-white hover:text-[#EF7044] relative flex items-center justify-center px-6">
             <span>SHOP NOW</span>
@@ -136,7 +119,6 @@ export default function HeroSection() {
               <ArrowUpRight className="w-4 h-4" strokeWidth={2.5} />
             </div>
 </button>
->>>>>>> dev
           </Link>
 
         </div>
