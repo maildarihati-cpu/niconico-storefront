@@ -49,8 +49,11 @@ export const listProducts = async ({
     ...(await getAuthHeaders()),
   }
 
+  // 🌟 DI SINI KITA SUNTIKKAN REVALIDATE 3 MENIT (180 DETIK) 🌟
   const next = {
     ...(await getCacheOptions("products")),
+    revalidate: 180, 
+    tags: ["store-products"],
   }
 
   return sdk.client
@@ -67,7 +70,7 @@ export const listProducts = async ({
           ...queryParams,
         },
         headers,
-        next,
+        next, // 👈 Opsi revalidate 180 detik masuk lewat sini
         cache: "force-cache",
       }
     )
