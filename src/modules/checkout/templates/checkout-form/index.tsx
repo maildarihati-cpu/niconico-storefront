@@ -716,4 +716,4 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
       </div>
     </div>
   )
-}
+} 
