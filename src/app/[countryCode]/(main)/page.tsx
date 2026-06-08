@@ -102,7 +102,7 @@ useEffect(() => {
       </FadeInSection>
 
       {/* 🌟 PERUBAHAN: Menghapus padding dan menambahkan mt-12 (Margin Top 48px) */}
-      <section className="w-full mt-10 mb-8 bg-white">
+      <section className="w-full mt-4 mb-8 bg-white">
         <h2 className="text-center text-3xl font-heavy text-[25px] tracking-tight text-gray-900 py-3">
           Feature Products
         </h2>
