@@ -1012,7 +1012,7 @@ export default function StoreTemplate() {
                         fill
                         sizes="(max-width: 768px) 50vw, 20vw"
                         className="object-cover group-hover:scale-105 transition-transform duration-500" 
-/>
+                        />
                   
                   <button onClick={(e) => toggleWishlist(e, product.id)} className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-all ${wishlist.includes(product.id) ? "bg-[#EF7044] text-white" : "bg-white/80 backdrop-blur-sm text-gray-300 hover:text-[#EF7044]"}`}>
                     <Heart className={`w-4 h-4 ${wishlist.includes(product.id) ? "fill-current" : ""}`} />
