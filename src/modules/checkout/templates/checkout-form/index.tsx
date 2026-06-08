@@ -257,10 +257,13 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
 
     setDeletingAddressId(addr.id);
     try {
+      // 1. Tembak Delete ke Database Medusa (Buku Alamat Customer)
       await deleteAddressServerAction(addr.id);
 
+      // 2. Musnahkan dari list UI saat ini juga
       setDeletedAddressIds(prev => [...prev, addr.id]);
 
+      // 3. Jika itu alamat keranjang, kosongkan UI keranjangnya
       if (cart.shipping_address?.address_1 === addr.address_1) {
         setCart((prevCart: any) => ({
           ...prevCart,
@@ -269,7 +272,9 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
         setShippingMethods([]); 
       }
 
-      router.refresh();
+      // 🚫 HAPUS BARIS INI: router.refresh(); 
+      // Jangan di-refresh, biar React State saja yang bekerja memanipulasi layar!
+
     } catch (error) {
       console.error("Error deleting address:", error);
       alert("Failed to delete address. Please try again.");
