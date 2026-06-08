@@ -254,21 +254,45 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
     }
   }
 
-  // 🌟 FUNGSI DELETE ADDRESS DARI DATABASE
-  const handleDeleteAddress = async (e: React.MouseEvent, addressId: string) => {
-    e.stopPropagation(); // Mencegah klik ter-trigger ke fungsi handleUpdateAddress
+  // 🌟 FUNGSI DELETE ADDRESS + PEMBERSIH CART
+  const handleDeleteAddress = async (e: React.MouseEvent, addr: any) => {
+    e.stopPropagation(); 
     
     const isConfirmed = window.confirm("Are you sure you want to delete this address permanently?");
     if (!isConfirmed) return;
 
-    setDeletingAddressId(addressId);
+    setDeletingAddressId(addr.id);
     try {
-      await deleteAddressServerAction(addressId);
-      // Refresh halaman agar data customer yang baru (tanpa alamat tersebut) ter-load
+      // 1. Hapus dari Buku Alamat (Database Customer)
+      await deleteAddressServerAction(addr.id);
+
+      // 2. CEK & SAPU BERSIH CART!
+      // Kalau alamat yang dihapus ternyata sedang nempel di Cart, kita harus kosongkan Cart-nya
+      if (cart.shipping_address?.address_1 === addr.address_1) {
+        setIsLoadingShipping(true);
+        // Bikin payload kosong untuk mereset Cart
+        const emptyAddress = {
+          first_name: customer?.first_name || "",
+          last_name: customer?.last_name || "",
+          phone: customer?.phone || "",
+          address_1: "",
+          city: "",
+          province: "",
+          postal_code: "",
+          country_code: "id",
+        };
+        const updatedCart = await updateCartAddressAction(cart.id, emptyAddress, email);
+        setCart(updatedCart);
+        setShippingMethods([]); // Kosongkan ongkir karena alamat hilang
+        setIsLoadingShipping(false);
+      }
+
+      // 3. Refresh layar biar mulus
       router.refresh();
     } catch (error) {
       console.error("Error deleting address:", error);
       alert("Failed to delete address. Please try again.");
+      setIsLoadingShipping(false);
     } finally {
       setDeletingAddressId(null);
     }
@@ -337,10 +361,6 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
       
       {/* 🌟 HEADER KHUSUS MOBILE (DIHILANGKAN DI TABLET & DESKTOP) */}
       <div className="md:hidden flex items-center px-6 pt-12 pb-4 border-b border-gray-100 sticky top-0 bg-white/80 backdrop-blur-md z-20">
-        
-        <button onClick={() => router.back()} className="p-2 -ml-2">
-          <ChevronLeft className="w-6 h-6 text-gray-800" />
-        </button>
         <div className="relative w-36 h-10 mb-6">
                   <Image 
                     src="/logo-niconico-black.png" 
@@ -350,6 +370,10 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                     priority
                   />
                 </div>
+        <button onClick={() => router.back()} className="p-2 -ml-2">
+          <ChevronLeft className="w-6 h-6 text-gray-800" />
+        </button>
+        
         <h1 className="flex-1 text-center text-lg font-bold text-gray-900 pr-6 tracking-widest">
           Check Out
         </h1>
@@ -563,9 +587,10 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                                 )}
                                 
                                 {/* 🌟 TOMBOL DELETE ADDRESS */}
+                                
                                 <button 
                                   type="button"
-                                  onClick={(e) => handleDeleteAddress(e, addr.id)}
+                                  onClick={(e) => handleDeleteAddress(e, addr)} // <--- JADI SEPERTI INI
                                   disabled={deletingAddressId === addr.id}
                                   className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors disabled:opacity-50"
                                   title="Delete Address"
