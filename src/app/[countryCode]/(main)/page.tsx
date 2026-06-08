@@ -103,7 +103,7 @@ useEffect(() => {
 
       {/* 🌟 PERUBAHAN: Menghapus padding dan menambahkan mt-12 (Margin Top 48px) */}
       <section className="w-full mt-12 bg-white">
-        <h2 className="text-center text-3xl font-heavy text-[25px] tracking-tight text-gray-900 py-6">
+        <h2 className="text-center text-3xl font-heavy text-[25px] tracking-tight text-gray-900 py-3">
           Feature Products
         </h2>
         

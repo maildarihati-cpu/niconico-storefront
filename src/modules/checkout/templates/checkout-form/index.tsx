@@ -379,7 +379,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
       <div className="px-5 py-6 md:pt-6 pb-32 md:pb-12 md:px-8 max-w-[1200px] mx-auto w-full">
         
         {/* 🌟 2-COLUMN LAYOUT */}
-        <div className="flex flex-col md:flex-row gap-6 lg:gap-10 relative items-start w-full">
+        <div className="flex flex-col md:flex-row gap-4 lg:gap-4 relative items-start w-full">
           
           {/* ==================================================== */}
           {/* 💻 LEFT COLUMN (Flex-1): Form, Address, Courier, Items */}
