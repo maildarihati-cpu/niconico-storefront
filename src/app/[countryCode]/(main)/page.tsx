@@ -41,7 +41,6 @@ const FadeInSection = ({ children, delay = 0 }: { children: React.ReactNode, del
   return (
     <div
       ref={domRef}
-      // Durasinya diubah jadi 2000ms (2 detik) dan translate-y-16 (mulai dari lebih bawah)
       className={`transition-all duration-[2000ms] ease-in-out h-full ${
         isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-16"
       }`}
@@ -102,13 +101,13 @@ useEffect(() => {
         <TopCollections />
       </FadeInSection>
 
-      {/* 🌟 PERUBAHAN: Dipastikan menggunakan py-12 (padding atas bawah 12) */}
-      <section className="w-full pb-12bg-white">
+      {/* 🌟 PERUBAHAN: Menghapus padding dan menambahkan mt-12 (Margin Top 48px) */}
+      <section className="w-full mt-12 bg-white">
         <h2 className="text-center text-3xl font-heavy text-[25px] tracking-tight text-gray-900 py-6">
           Feature Products
         </h2>
         
-        {/* 🌟 PERUBAHAN DI SINI: flex-col untuk mobile, grid-cols-5 untuk desktop */}
+        {/* flex-col untuk mobile, grid-cols-5 untuk desktop */}
         <div className="grid grid-cols-1 lg:grid-cols-5 w-full">
           {[
             { title: "BIKINIS", img: "/bikinis.png", handle: "bikinis" },
@@ -118,7 +117,6 @@ useEffect(() => {
             { title: "ACCESSORIES", img: "/accessories.png", handle: "accessories" }
           ].map((item, idx) => (
             <FadeInSection key={idx} delay={idx * 150}>
-              {/* 🌟 PERUBAHAN DI SINI: Tinggi disesuaikan lg:h-[600px] khusus desktop agar proporsional saat berjejer */}
               <LocalizedClientLink 
                 href={`/store?category=${item.handle}`} 
                 className="relative w-full h-[150px] lg:h-[500px] xl:h-[600px] group cursor-pointer overflow-hidden block"

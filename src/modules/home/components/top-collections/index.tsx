@@ -617,8 +617,8 @@ export default function TopCollections() {
   };
 
   return (
-    /* 🌟 PERUBAHAN: py-12 dipecah menjadi pt-12 pb-12 agar padding bottom 12 terlihat jelas */
-    <section className="pt-12 pb-12 bg-white max-w-[1200px] mx-auto md:max-w-6xl relative">
+    /* 🌟 PERUBAHAN: Menghapus pt-12 pb-12 dan menambahkan mt-12 */
+    <section className="mt-12 bg-white max-w-[1200px] mx-auto md:max-w-6xl relative">
       
       {/* 🌟 HEADER JUDUL & TAB */}
       <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-0 md:mb-10 px-0 md:px-4 z-10 relative">
