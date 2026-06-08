@@ -675,12 +675,11 @@ export default function StoreTemplate() {
   };
 
   // FUNGSI FETCH PRODUK
+  // FUNGSI FETCH PRODUK
   const fetchStoreProducts = useCallback(async (pageNumber: number, reset = false) => {
     setIsLoading(true);
     try {
-      // 🌟 KUNCI UTAMA: Tarik 100 produk sekaligus!
-      // Karena sudah pakai Cache Server 3 Menit, ini nggak akan bikin server jebol, malah super ngebut!
-      const limit = 100; 
+      const limit = 10; // 🌟 KEMBALI KE 10 (Aman dari limit block Medusa)
       const offset = (pageNumber - 1) * limit;
       
       const data = await listProducts({
@@ -688,8 +687,8 @@ export default function StoreTemplate() {
           limit,
           offset,
           order: "-created_at",
-          // 🌟 Gabungan fields yang sangat lengkap agar tidak ada data gambar/harga yang hilang
-          fields: "*collection,*categories,*variants,*variants.prices,*variants.calculated_price,*variants.images,*variants.inventory_quantity,*variants.manage_inventory,*variants.allow_backorder,+metadata,+tags",
+          // 🌟 KEMBALI KE FIELDS ASLI (Aman dari Bad Request)
+          fields: "*collection,*categories,*variants,*variants.prices,*variants.inventory_quantity,*variants.manage_inventory,*variants.allow_backorder",
           q: searchQuery || undefined 
         }, 
         countryCode: countryCode as string,
@@ -759,6 +758,15 @@ export default function StoreTemplate() {
       setIsLoading(false);
     }
   }, [countryCode, searchQuery, activeCategory, minPrice, maxPrice, selectedSize, selectedCollection, selectedColor]);
+
+  // 🌟 PERBAIKAN: Waktu Debounce dipercepat jadi 300ms agar kesan loading lebih instan!
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchStoreProducts(1, true);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery, activeCategory, selectedCollection, selectedSize, selectedColor, maxPrice]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
