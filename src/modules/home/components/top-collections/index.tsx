@@ -622,7 +622,7 @@ export default function TopCollections() {
       
       {/* 🌟 HEADER JUDUL & TAB */}
       <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-0 md:mb-10 px-0 md:px-4 z-10 relative">
-        <h2 className="text-3xl font-heavy text-[25px] text-center md:text-left text-gray-900 mb-4 md:mb-0 tracking-tight">
+        <h2 className="text-3xl font-heavy text-[25px] text-center md:text-left text-gray-900 mb-2 md:mb-0 tracking-tight">
           Top Collections
         </h2>
 
@@ -701,13 +701,14 @@ export default function TopCollections() {
                 
                 {/* 🌟 WADAH TEKS */}
                 <div className="flex flex-col items-center text-center px-2 md:px-0 relative pointer-events-none">
-                  <h3 className="text-xs text-gray-800 font-heavy line-clamp-2 h-10 mb-1 md:text-sm md:text-[#EF7044] md:border md:border-[#EF7044] md:rounded-full md:px-4 md:py-1.5 md:h-auto md:w-full md:max-w-[200px] md:mx-auto md:block md:truncate md:bg-white md:mb-3 transition-colors duration-300 md:group-hover:bg-[#EF7044] md:group-hover:text-white">
-                    {product.title}
-                  </h3>
-                  <p className="text-[#EF7044] text-sm md:text-base font-heavy">
-                    {formatMedusaPrice(product)}
-                  </p>
-                </div>
+                {/* 🌟 PERUBAHAN: Ukuran font digedein (text-sm & md:text-base), margin bawah dipangkas (mb-0 & md:mb-1) biar harga mepet */}
+                <h3 className="text-sm text-gray-800 font-black line-clamp-2 h-10 mb-0 md:text-base md:text-[#EF7044] md:border md:border-[#EF7044] md:rounded-full md:px-4 md:py-1.5 md:h-auto md:w-full md:max-w-[200px] md:mx-auto md:block md:truncate md:bg-white md:mb-1 transition-colors duration-300 md:group-hover:bg-[#EF7044] md:group-hover:text-white">
+                  {product.title}
+                </h3>
+                <p className="text-[#EF7044] text-sm md:text-base font-heavy">
+                  {formatMedusaPrice(product)}
+                </p>
+              </div>
               </div>
             ))}
             
