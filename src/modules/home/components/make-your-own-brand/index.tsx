@@ -81,7 +81,7 @@ export default function MakeYourOwnBrandSection() {
       <div className="contents lg:flex lg:flex-col lg:w-1/2 lg:order-2 lg:items-center lg:justify-center">
         
         {/* HEADING */}
-        <h2 className="order-1 lg:order-none text-[25px] font-heavy text-center text-black tracking-tight mb-8 lg:mb-6 w-full">
+        <h2 className="order-1 lg:order-none text-[25px] font-heavy text-center text-black tracking-tight mb-5 lg:mb-6 w-full">
           {content.heading}
         </h2>
 
