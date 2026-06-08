@@ -700,9 +700,9 @@ export default function TopCollections() {
                 </div>
                 
                 {/* 🌟 WADAH TEKS */}
-                <div className="flex flex-col items-center text-center px-2 md:px-0 relative pointer-events-none">
-                {/* 🌟 PERUBAHAN: Ukuran font digedein (text-sm & md:text-base), margin bawah dipangkas (mb-0 & md:mb-1) biar harga mepet */}
-                <h3 className="text-sm text-gray-800 font-black line-clamp-2 h-10 mb-0 md:text-base md:text-[#EF7044] md:border md:border-[#EF7044] md:rounded-full md:px-4 md:py-1.5 md:h-auto md:w-full md:max-w-[200px] md:mx-auto md:block md:truncate md:bg-white md:mb-1 transition-colors duration-300 md:group-hover:bg-[#EF7044] md:group-hover:text-white">
+                <div className="flex flex-col items-center text-center px-2 md:px-0 relative pointer-events-none w-full">
+                {/* 🌟 PERUBAHAN: Pakai 'truncate w-full' biar jadi 1 baris (...), dan naikin mb-2 & md:mb-3 biar jarak harga balikin normal */}
+                <h3 className="text-sm text-gray-800 font-black truncate w-full mb-2 md:text-base md:text-[#EF7044] md:border md:border-[#EF7044] md:rounded-full md:px-4 md:py-1.5 md:max-w-[200px] md:mx-auto md:block md:mb-3 transition-colors duration-300 md:group-hover:bg-[#EF7044] md:group-hover:text-white">
                   {product.title}
                 </h3>
                 <p className="text-[#EF7044] text-sm md:text-base font-heavy">
