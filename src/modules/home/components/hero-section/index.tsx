@@ -102,18 +102,18 @@ export default function HeroSection() {
         <div className="w-full max-w-[1200px] mx-auto flex flex-col items-center lg:items-start text-center lg:text-left mb-4 lg:mb-12">
           
           {/* 🌟 Font judul besar diganti ke font-heavy */}
-          <h1 className="text-[32px] md:text-[42px] lg:text-[56px] font-Black leading-[1.1] text-white mb-3 tracking-tight whitespace-pre-line drop-shadow-md">
+          <h1 className="text-[32px] md:text-[42px] lg:text-[56px] font-black leading-[1.1] text-white mb-3 tracking-tight whitespace-pre-line drop-shadow-md">
             {globalTitle}
           </h1>
           
           {/* 🌟 Font kecil diganti dari font-bold ke font-normal (regular) */}
-          <p className="text-[10px] lg:text-xs font-book tracking-[0.2em] text-white/90 uppercase mb-8 drop-shadow-md">
+          <p className="text-[10px] lg:text-xs font-regular tracking-[0.2em] text-white/90 uppercase mb-8 drop-shadow-md">
             Resort & Swimwear Est. 2004
           </p>
           
           <Link href="/store" className="w-full max-w-[280px]">
             {/* 🌟 PERUBAHAN UTAMA BUTTON: Menggunakan relative & justify-center supaya teks 'SHOP NOW' presisi di tengah layar mobile/desktop. Panah dipisah pakai absolute khusus desktop (lg:flex) */}
-            <button className="group w-full bg-[#EF7044] text-white h-12 rounded-full font-bold text-xs tracking-widest uppercase transition-all shadow-lg hover:bg-white hover:text-[#EF7044] relative flex items-center justify-center px-6">
+            <button className="group w-full bg-[#EF7044] text-white h-12 rounded-full font-black text-xs tracking-widest uppercase transition-all shadow-lg hover:bg-white hover:text-[#EF7044] relative flex items-center justify-center px-6">
               <span>SHOP NOW</span>
               <div className="hidden lg:flex w-8 h-8 rounded-full bg-white text-[#EF7044] items-center justify-center group-hover:bg-[#EF7044] group-hover:text-white transition-colors shrink-0 shadow-sm absolute right-2 top-1/2 -translate-y-1/2">
                 <ArrowUpRight className="w-4 h-4" strokeWidth={2.5} />
