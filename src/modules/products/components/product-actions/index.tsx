@@ -932,7 +932,6 @@ const ProductActions = ({ product, region, customer, children }: { product: any,
           </div>
         </div>
       )}
-
     </div>
   )
 }
