@@ -187,7 +187,19 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
         
         <div className="pt-12 pb-6 px-6 relative flex flex-col items-center flex-shrink-0">
           {/* 🌟 TOMBOL BACK HANYA MUNCUL DI MOBILE (md:hidden) */}
-          <button type="button" onClick={() => router.back()} className="md:hidden absolute left-6 top-14 p-2 bg-white rounded-full shadow-sm border border-gray-100 hover:bg-gray-50 transition-colors">
+          <button 
+            type="button" 
+            onClick={() => {
+              // 1. Paksa semua elemen yang sedang aktif di layar (termasuk keyboard) untuk BLUR/KELUAR
+              if (document.activeElement instanceof HTMLElement) {
+                document.activeElement.blur();
+              }
+              
+              // 2. Baru lakukan navigasi back
+              router.back();
+            }} 
+            className="md:hidden absolute left-6 top-14 p-2 bg-white rounded-full shadow-sm border border-gray-100 hover:bg-gray-50 transition-colors"
+          >
             <ChevronLeft className="w-5 h-5 text-gray-800" />
           </button>
           
