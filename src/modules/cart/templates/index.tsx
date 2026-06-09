@@ -51,10 +51,11 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
           isBundle: true,
           id: bId,
           items: items,
-          title: `${topItem.title} (SET)`,
+          title: `${topItem.title || "Bundle Product"} (SET)`,
           thumbnail: topItem.thumbnail,
-          unit_price: items.reduce((sum: number, i: any) => sum + i.unit_price, 0),
-          quantity: topItem.quantity,
+          // 🌟 PERBAIKAN: Amankan kalkulasi angka agar tidak NaN
+          unit_price: items.reduce((sum: number, i: any) => sum + (i.unit_price || 0), 0),
+          quantity: topItem.quantity || 1,
           variant_title: `Top: ${topItem.metadata?.size || 'M'} / Bottom: ${bottomItem.metadata?.size || 'M'}`
         });
       } else {
@@ -84,7 +85,10 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
     setIsLoadingItem(group.id);
     try {
       if (group.isBundle) {
-        await Promise.all(group.items.map((i: any) => updateLineItem({ lineId: i.id, quantity: newQuantity })));
+        // 🌟 PERBAIKAN: Diubah jadi sequential (antre) agar database Medusa tidak bentrok (Error 409)
+        for (const i of group.items) {
+          await updateLineItem({ lineId: i.id, quantity: newQuantity });
+        }
       } else {
         await updateLineItem({ lineId: group.item.id, quantity: newQuantity });
       }
@@ -100,7 +104,10 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
     setIsLoadingItem(group.id);
     try {
       if (group.isBundle) {
-        await Promise.all(group.items.map((i: any) => deleteLineItem(i.id)));
+        // 🌟 PERBAIKAN: Diubah jadi sequential (antre) 
+        for (const i of group.items) {
+          await deleteLineItem(i.id);
+        }
       } else {
         await deleteLineItem(group.item.id);
       }
@@ -129,7 +136,8 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
   const calculateTotals = () => {
     if (!cart?.items) return { subtotal: 0, tax: 0, shipping: 0, total: 0 };
     const selectedCartItems = cart.items.filter((item: any) => selectedItems.includes(item.id));
-    const subtotal = selectedCartItems.reduce((acc: number, item: any) => acc + (item.unit_price * item.quantity), 0);
+    // 🌟 PERBAIKAN: Pastikan unit_price dan quantity tidak undefined
+    const subtotal = selectedCartItems.reduce((acc: number, item: any) => acc + ((item.unit_price || 0) * (item.quantity || 1)), 0);
     const tax = subtotal * 0; 
     return { subtotal: getPrice(subtotal), tax: getPrice(tax), total: getPrice(subtotal + tax) };
   };
@@ -171,31 +179,21 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
 
   return (
     <>
-      {/* ==================================================== */}
-      {/* 🌟 BACKGROUND OVERLAY BLUR */}
-      {/* ==================================================== */}
       <div 
         className="hidden md:block fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm animate-in fade-in duration-300 cursor-pointer"
         onClick={() => router.back()}
         title="Klik di luar laci untuk menutup"
       />
 
-      {/* ==================================================== */}
-      {/* 🌟 KONTENER UTAMA CART */}
-      {/* ==================================================== */}
       <div className="bg-white min-h-screen relative max-w-full md:fixed md:top-0 md:right-0 md:h-full md:w-[480px] md:z-[101] md:shadow-[0_0_50px_rgba(0,0,0,0.3)] md:animate-in md:slide-in-from-right-full md:duration-500 overflow-y-auto scrollbar-hide font-sans flex flex-col">
         
         <div className="pt-12 pb-6 px-6 relative flex flex-col items-center flex-shrink-0">
-          {/* 🌟 TOMBOL BACK HANYA MUNCUL DI MOBILE (md:hidden) */}
           <button 
             type="button" 
             onClick={() => {
-              // 1. Paksa semua elemen yang sedang aktif di layar (termasuk keyboard) untuk BLUR/KELUAR
               if (document.activeElement instanceof HTMLElement) {
                 document.activeElement.blur();
               }
-              
-              // 2. Baru lakukan navigasi back
               router.back();
             }} 
             className="md:hidden absolute left-6 top-14 p-2 bg-white rounded-full shadow-sm border border-gray-100 hover:bg-gray-50 transition-colors"
@@ -217,11 +215,17 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
                 : selectedItems.includes(group.item.id);
               const isUpdating = isLoadingItem === group.id;
 
-              const displayTitle = group.isBundle ? group.title : group.item.title;
-              const displayPrice = group.isBundle ? group.unit_price : group.item.unit_price;
-              const displayThumb = group.isBundle ? group.thumbnail : group.item.thumbnail;
-              const displayVariant = group.isBundle ? group.variant_title : group.item.variant.title;
-              const displayQty = group.isBundle ? group.quantity : group.item.quantity;
+              // 🌟 PERBAIKAN: Amankan semua akses variabel rendering!
+              const displayTitle = group.isBundle ? group.title : (group.item.title || "Product");
+              const displayPrice = group.isBundle ? group.unit_price : (group.item.unit_price || 0);
+              const displayThumb = (group.isBundle ? group.thumbnail : group.item.thumbnail) || "/placeholder.png";
+              
+              // 🌟 "BOM WAKTU" DIMATIKAN DI SINI:
+              const displayVariant = group.isBundle 
+                ? group.variant_title 
+                : (group.item.variant?.title || group.item.variant_title || "Regular");
+                
+              const displayQty = group.isBundle ? group.quantity : (group.item.quantity || 1);
 
               return (
                 <div key={group.id} className={`bg-white rounded-[24px] p-3 flex gap-4 shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-50 transition-opacity ${isUpdating ? "opacity-50 pointer-events-none" : ""}`}>
