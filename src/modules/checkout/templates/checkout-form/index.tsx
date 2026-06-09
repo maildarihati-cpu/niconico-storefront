@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { ChevronLeft, MapPin, Loader2, Tag, Search, Crosshair, Trash2, ShieldCheck, Plus, Mail } from "lucide-react"
+import { ChevronLeft, MapPin, Loader2, Tag, Search, Crosshair, Trash2, ShieldCheck, Plus, Mail, Pen } from "lucide-react"
 import Image from "next/image"; 
 import { saveAddressServerAction, deleteAddressServerAction } from "@/lib/address-actions";
 import { 
@@ -32,6 +32,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   const [showAddressList, setShowAddressList] = useState(false)
   
   const [isAddingAddress, setIsAddingAddress] = useState(false)
+  const [editingAddressId, setEditingAddressId] = useState<string | null>(null)
   
   const [deletingAddressId, setDeletingAddressId] = useState<string | null>(null);
   
@@ -137,16 +138,13 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   const handleUseCurrentLocation = () => {
     if (!mapInstance) return;
     if (navigator.geolocation) {
-      setIsMapLoading(true); // Show loading text so user knows system is working
+      setIsMapLoading(true); 
       
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const { latitude, longitude } = position.coords;
-          
-          // 1. Move map camera to GPS point
           mapInstance.setView([latitude, longitude], 16);
 
-          // 2. DIRECTLY HIT NOMINATIM API TO TRANSLATE COORDINATES TO ADDRESS TEXT
           try {
             const response = await fetch(
               `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`,
@@ -158,7 +156,6 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
               const addr = data.address;
               const fullFormatted = data.display_name;
               
-              // 3. Force fill the address form right now!
               setNewAddress(prev => ({
                 ...prev,
                 address_1: fullFormatted,
@@ -204,22 +201,17 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cart.id])
 
-  // 🌟 REPLACEMENT: Single useEffect that prevents Ghost Address
   useEffect(() => {
     const syncAddressAndShipping = async () => {
-      // Get customer's original address list that hasn't been deleted
       const availableAddresses = customer?.addresses?.filter((a: any) => !deletedAddressIds.includes(a.id)) || [];
 
-      // 1. IF ADDRESS BOOK IS EMPTY (User has deleted all addresses)
       if (availableAddresses.length === 0) {
-        // Destroy ghost address locally 
         setCart((prev: any) => ({ ...prev, shipping_address: null, shipping_methods: [] }));
         setShippingMethods([]);
         setIsLoadingShipping(false);
-        return; // 🛑 STOP HERE! Don't call Shipping API so the ghost doesn't rise!
+        return; 
       }
 
-      // 2. IF CART IS EMPTY BUT ADDRESS BOOK HAS CONTENT (Auto-sync to first address)
       if ((!cart?.shipping_address || !cart.shipping_address.address_1) && availableAddresses.length > 0) {
         setIsLoadingShipping(true);
         try {
@@ -237,7 +229,6 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
         return; 
       }
 
-      // 3. IF CART ALREADY HAS AN ADDRESS (Normal flow)
       if (cart?.shipping_address?.address_1) {
          fetchShippingMethods(cart.id);
       } else {
@@ -263,8 +254,6 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
       setIsLoadingShipping(true) 
       const targetEmail = email || customer?.email || "";
       
-      // 🌟 FILTER TRICK: We filter the data so Medusa Cart doesn't get upset!
-      // Only send fields allowed by the Cart API schema.
       const safeCartAddress = {
         first_name: address.first_name || "",
         last_name: address.last_name || "",
@@ -280,6 +269,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
       setCart(updatedCart) 
       setShowAddressList(false) 
       setIsAddingAddress(false) 
+      setEditingAddressId(null)
       
       await fetchShippingMethods(updatedCart.id)
     } catch (error) {
@@ -288,6 +278,37 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
       setIsLoadingShipping(false)
     }
   }
+
+  const handleCancelAddressForm = () => {
+    setIsAddingAddress(false);
+    setEditingAddressId(null);
+    setNewAddress({
+      first_name: customer?.first_name || "",
+      last_name: customer?.last_name || "",
+      phone: customer?.phone || "",
+      address_1: "",
+      city: "",
+      province: "",
+      postal_code: "",
+      country_code: "id",
+    });
+  };
+
+  const handleStartEditAddress = (e: React.MouseEvent, addr: any) => {
+    e.stopPropagation();
+    setEditingAddressId(addr.id);
+    setNewAddress({
+      first_name: addr.first_name || "",
+      last_name: addr.last_name || "",
+      phone: addr.phone || "",
+      address_1: addr.address_1 || "",
+      city: addr.city || "",
+      province: addr.province || "",
+      postal_code: addr.postal_code || "",
+      country_code: addr.country_code || "id",
+    });
+    setIsAddingAddress(true);
+  };
 
   const handleSaveNewAddress = async () => {
     if (!newAddress.first_name || !newAddress.address_1 || !newAddress.city) {
@@ -309,8 +330,9 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
         postal_code: newAddress.postal_code,
       }
 
-      await saveAddressServerAction(payload, null) 
+      await saveAddressServerAction(payload, editingAddressId) 
       await handleUpdateAddress(payload)
+      setEditingAddressId(null)
       
     } catch (error) {
       console.error("Failed to save address:", error)
@@ -408,7 +430,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   return (
     <div className="w-full min-h-screen bg-gray-50 md:bg-gray-50/50 relative font-sans">
       
-      {/* 🌟 LOGO & HEADER DESKTOP/TABLET (Sticky on top) */}
+      {/* 🌟 LOGO & HEADER DESKTOP/TABLET */}
       <div className="hidden md:flex items-center px-8 py-5 w-full bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
         <div className="max-w-[1200px] mx-auto w-full flex items-center">
           <div className="relative w-36 h-10 cursor-pointer" onClick={() => router.push("/")}>
@@ -433,11 +455,10 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
       {/* 🌟 MAIN CONTAINER */}
       <div className="px-5 py-6 md:pt-6 pb-32 md:pb-12 md:px-8 max-w-[1200px] mx-auto w-full">
         
-        {/* 🌟 2-COLUMN LAYOUT TOKOPEDIA STYLE */}
         <div className="flex flex-col md:flex-row gap-4 lg:gap-4 relative items-start w-full">
           
           {/* ==================================================== */}
-          {/* 💻 LEFT COLUMN (Flex-1): Form, Address, Courier, Products */}
+          {/* 💻 LEFT COLUMN */}
           {/* ==================================================== */}
           <div className="w-full flex-1 flex flex-col gap-4 md:gap-4">
             
@@ -446,7 +467,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
               <div className="flex items-center justify-between mb-4 md:mb-6">
                 <h3 className="text-[13px] md:text-[16px] font-extrabold text-gray-900 tracking-wide">Shipping Address</h3>
                 {showAddressList ? (
-                   <button onClick={() => { setShowAddressList(false); setIsAddingAddress(false); }} className="text-[11px] md:text-[13px] font-bold text-gray-500 hover:text-[#EF7044]">
+                   <button onClick={handleCancelAddressForm} className="text-[11px] md:text-[13px] font-bold text-gray-500 hover:text-[#EF7044]">
                      Cancel
                    </button>
                 ) : (
@@ -478,8 +499,10 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                     {isAddingAddress ? (
                       <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-inner flex flex-col gap-4">
                         <div className="flex justify-between items-center mb-2 border-b border-gray-100 pb-3">
-                          <h4 className="text-sm font-bold text-gray-900">Address Details</h4>
-                          <button onClick={() => setIsAddingAddress(false)} className="p-1 hover:bg-gray-100 rounded-full transition-colors"><ChevronLeft className="w-4 h-4" /></button>
+                          <h4 className="text-sm font-bold text-gray-900">
+                            {editingAddressId ? "Edit Address Details" : "Address Details"}
+                          </h4>
+                          <button onClick={handleCancelAddressForm} className="p-1 hover:bg-gray-100 rounded-full transition-colors"><ChevronLeft className="w-4 h-4" /></button>
                         </div>
                         
                         <div className="relative w-full h-[200px] md:h-[300px] rounded-xl overflow-hidden mb-2 border border-gray-300">
@@ -555,9 +578,9 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                         </div>
 
                         <div className="flex gap-3 mt-4 pt-4 border-t border-gray-100">
-                          <button onClick={() => setIsAddingAddress(false)} className="px-6 py-2.5 rounded-lg border border-gray-300 text-gray-600 text-xs font-bold hover:bg-gray-50">Cancel</button>
+                          <button onClick={handleCancelAddressForm} className="px-6 py-2.5 rounded-lg border border-gray-300 text-gray-600 text-xs font-bold hover:bg-gray-50">Cancel</button>
                           <button onClick={handleSaveNewAddress} disabled={isLoadingShipping} className="flex-1 bg-[#ef7044] text-white py-2.5 rounded-lg font-bold hover:bg-[#d65f36] text-xs flex justify-center items-center gap-2 disabled:opacity-50">
-                            {isLoadingShipping ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Address"}
+                            {isLoadingShipping ? <Loader2 className="w-4 h-4 animate-spin" /> : editingAddressId ? "Update Address" : "Save Address"}
                           </button>
                         </div>
                       </div>
@@ -584,14 +607,24 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                                   </p>
                                   <p className="text-xs text-gray-600 mt-0.5 font-medium">{addr.phone}</p>
                                 </div>
-                                <button 
-                                  type="button"
-                                  onClick={(e) => handleDeleteAddress(e, addr)}
-                                  disabled={deletingAddressId === addr.id}
-                                  className="text-gray-400 hover:text-red-500 p-1"
-                                >
-                                  {deletingAddressId === addr.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                                </button>
+                                <div className="flex items-center gap-1">
+                                  <button 
+                                    type="button"
+                                    onClick={(e) => handleStartEditAddress(e, addr)}
+                                    className="text-gray-400 hover:text-[#EF7044] p-1.5"
+                                    title="Edit Address"
+                                  >
+                                    <Pen className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button 
+                                    type="button"
+                                    onClick={(e) => handleDeleteAddress(e, addr)}
+                                    disabled={deletingAddressId === addr.id}
+                                    className="text-gray-400 hover:text-red-500 p-1.5"
+                                  >
+                                    {deletingAddressId === addr.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                                  </button>
+                                </div>
                               </div>
                               <p className="text-[11px] md:text-xs text-gray-500 leading-relaxed max-w-[90%]">
                                 {addr.address_1}, {addr.city}, {addr.province}, {addr.postal_code}
@@ -599,14 +632,13 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                             </div>
                           ))
                         ) : (
-                          // 🌟 TEXT NO ADDRESS FOUND DI LIST
                           <div className="p-8 text-center border-2 border-dashed border-gray-300 bg-gray-50 rounded-xl">
                             <p className="text-sm font-bold text-[#EF7044] mb-1">No Address Found...</p>
                             <p className="text-xs font-medium text-gray-400">You don't have any saved addresses.</p>
                           </div>
                         )}
                         <button 
-                          onClick={() => setIsAddingAddress(true)}
+                          onClick={() => { setIsAddingAddress(true); setEditingAddressId(null); }}
                           className="w-full py-3.5 rounded-xl border border-gray-300 text-gray-600 text-xs font-bold hover:bg-gray-50 flex items-center justify-center gap-2 mt-2 shadow-sm"
                         >
                           <Plus className="w-4 h-4" /> Add New Address
@@ -627,8 +659,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                           </p>
                         </>
                       ) : (
-                        // 🌟 TEXT NO ADDRESS FOUND DI RINGKASAN DEPAN
-                        <div className="flex flex-col gap-1 cursor-pointer group" onClick={() => { setShowAddressList(true); setIsAddingAddress(true); }}>
+                        <div className="flex flex-col gap-1 cursor-pointer group" onClick={() => { setShowAddressList(true); setIsAddingAddress(true); setEditingAddressId(null); }}>
                            <p className="text-sm font-bold text-[#EF7044] group-hover:text-[#d65f36] transition-colors">No Address Found...</p>
                            <p className="text-[11px] md:text-xs text-gray-500 font-medium">Click here to add a shipping address.</p>
                         </div>
@@ -639,7 +670,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
               </div>
             </div>
 
-            {/* MOBILE DIVIDER (Only visible on mobile, hidden on tablet/desktop) */}
+            {/* MOBILE DIVIDER */}
             <div className="h-2 bg-gray-100 md:hidden w-[120%] -ml-6"></div>
 
             {/* 🌟 CARD: SHIPPING COURIER */}
@@ -684,7 +715,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
             {/* MOBILE DIVIDER */}
             <div className="h-2 bg-gray-100 md:hidden w-[120%] -ml-6"></div>
 
-            {/* 🌟 CARD: PURCHASED ITEMS */}
+            {/* 🌟 CARD: PURCHASED ITEMS WITH DETAILED VARIANT RENDERER */}
             <div className="bg-white md:rounded-2xl md:shadow-sm md:border border-gray-200 p-5 md:p-6 lg:p-7">
                <h3 className="text-[13px] md:text-[16px] font-extrabold text-gray-900 tracking-wide mb-4 md:mb-6">Your Order</h3>
                <div className="flex flex-col gap-4">
@@ -695,7 +726,27 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                     </div>
                     <div className="flex-1 min-w-0 pt-1">
                        <h4 className="text-xs md:text-sm font-bold text-gray-800 truncate mb-1 pr-4">{item.title}</h4>
-                       <p className="text-[10px] md:text-xs text-gray-500 font-medium mb-1.5">{item.variant?.title}</p>
+                       <p className="text-[10px] md:text-xs text-gray-400 font-medium mb-1.5">{item.variant?.title}</p>
+                       
+                       {/* 🌟 DISPLAY PENUH DETAIL VARIAN & METADATA (KOLOR, UKURAN, BUNDLE TYPE) */}
+                       <div className="flex flex-wrap gap-1 mb-2">
+                         {item.metadata?.color && (
+                           <span className="bg-gray-100 text-gray-600 text-[9px] md:text-[10px] font-bold px-2 py-0.5 rounded">
+                             Color: {item.metadata.color}
+                           </span>
+                         )}
+                         {item.metadata?.size && (
+                           <span className="bg-gray-100 text-gray-600 text-[9px] md:text-[10px] font-bold px-2 py-0.5 rounded">
+                             Size: {item.metadata.size}
+                           </span>
+                         )}
+                         {item.metadata?.is_bundle && (
+                           <span className="bg-orange-50 text-[#EF7044] text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wide">
+                             {item.metadata.bundle_type || "SET BUNDLE"}
+                           </span>
+                         )}
+                       </div>
+
                        <div className="flex justify-between items-center mt-1">
                           <p className="text-xs md:text-sm font-extrabold text-gray-900">Rp {item.unit_price.toLocaleString("id-ID")}</p>
                           <span className="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded">Qty: {item.quantity}</span>
@@ -709,7 +760,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
           </div>
           
           {/* ==================================================== */}
-          {/* 💻 RIGHT COLUMN (Sticky Fixed Width): ORDER SUMMARY */}
+          {/* 💻 RIGHT COLUMN (ORDER SUMMARY) */}
           {/* ==================================================== */}
           <div className="w-full md:w-[320px] lg:w-[380px] shrink-0 md:sticky md:top-[100px] mt-6 md:mt-0 pb-10 md:pb-0 z-10">
             

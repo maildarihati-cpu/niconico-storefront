@@ -905,7 +905,8 @@ const ProductActions = ({ product, region, customer, children }: { product: any,
 
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-8">
               <div className="w-40 shrink-0">
-                <img src="/size-guide-model.png" alt="Measurement Guide" className="w-full h-auto object-contain" />
+                {/* 🌟 INI BAGIAN YANG DIUBAH SESUAI REQUEST BOS */}
+                <img src="/niconico-swimwear-meassurements-small.png" alt="Measurement Guide" className="w-full h-auto object-contain" />
               </div>
               <div className="flex flex-col gap-5 pt-2">
                 <div>
