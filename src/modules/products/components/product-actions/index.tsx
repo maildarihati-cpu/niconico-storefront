@@ -16,21 +16,18 @@ interface SizeData {
   qty: number
 }
 
-// 🌟 PERBAIKAN: Menambahkan `children` agar Accordion bisa diselipkan sesuai desain
 const ProductActions = ({ product, region, customer, children }: { product: any, region: any, customer: any, children?: ReactNode }) => {
   const countryCode = useParams().countryCode as string
   const router = useRouter() 
   const { cart: mainCart, addToCart: refreshCartCount } = useCart() 
   const posthog = usePostHog()
 
-  // 🌟 LOGIKA WARNA
   const colorName = product?.metadata?.color_name || "White"
   const colorId = product?.metadata?.color_id || "#FFFFFF" 
   const groupId = product?.metadata?.group_id || null 
 
   const [relatedProducts, setRelatedProducts] = useState<any[]>([])
 
-  // 🌟 FETCH PRODUK SAUDARA (PAKAI HANDLE LOGIC BYPASS MEDUSA)
   useEffect(() => {
     const fetchRelatedColors = async () => {
       if (!groupId) {
@@ -42,7 +39,6 @@ const ProductActions = ({ product, region, customer, children }: { product: any,
         const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000";
         const apiKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "";
 
-        // Tarik 100 produk terbaru
         const res = await fetch(`${backendUrl}/store/products?limit=100`, {
           method: "GET",
           headers: {
@@ -54,7 +50,6 @@ const ProductActions = ({ product, region, customer, children }: { product: any,
         if (res.ok) {
           const data = await res.json();
           
-          // Filter saudara berdasarkan kemiripan 'handle' (karena metadata disembunyikan API)
           const trueSiblings = data.products?.filter((p: any) => {
             return p.handle?.toLowerCase().includes(groupId.toLowerCase());
           }) || [];
@@ -212,7 +207,6 @@ const ProductActions = ({ product, region, customer, children }: { product: any,
     }
   }, [product.id])
 
-  // 🌟 LOGIKA WISHLIST YANG SUDAH DIPERBAIKI (SINKRONISASI AKTIF)
   const toggleWishlist = async () => {
     const localWishlist = JSON.parse(localStorage.getItem("wishlist") || "[]")
     let updatedWishlist = []
@@ -223,11 +217,9 @@ const ProductActions = ({ product, region, customer, children }: { product: any,
       updatedWishlist = [...localWishlist, product.id]
     }
     
-    // 1. Selalu simpan di Local Storage agar responsif di sisi kustomer
     localStorage.setItem("wishlist", JSON.stringify(updatedWishlist))
     setIsWishlisted(!isWishlisted)
 
-    // 2. Jurus Update Database Medusa Jika Login
     const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://api.niconicoresort.com"
     try {
       const customerRes = await fetch(`${backendUrl}/store/customers/me`, {
@@ -255,28 +247,24 @@ const ProductActions = ({ product, region, customer, children }: { product: any,
     }
   }
 
-  // 🌟 LOGIKA BUY NOW YANG SUDAH DIUBAH (Langsung Lempar ke Cart)
+  // 🌟 PERBAIKAN: Hapus object metadata agar aman dikirim ke Server Action Medusa
   const handleBuyNow = async (isSetBundle = false, redirectToCart = false) => {
     setIsAdding(true)
     try {
       if (isSetBundle) {
         if (!selectedModalTopVariant || !selectedModalBottomVariant) return alert("Please select a size for both Top and Bottom!")
-        const uniqueSetId = `BUNDLE-${Date.now()}`
         
         await addToCart({ 
           variantId: selectedModalTopVariant.id, 
           quantity: setQuantity, 
           countryCode: countryCode || "id",
-          metadata: { is_bundle: true, bundle_id: uniqueSetId, bundle_type: "TOP", size: topSize, color: colorName }
         })
         await addToCart({ 
           variantId: selectedModalBottomVariant.id, 
           quantity: setQuantity, 
           countryCode: countryCode || "id",
-          metadata: { is_bundle: true, bundle_id: uniqueSetId, bundle_type: "BOTTOM", size: bottomSize, color: colorName }
         })
 
-        // 🌟 SUNTIKKAN SENSOR 'ADD TO CART' UNTUK PEMBELIAN BUNDLE DI SINI
         if (posthog) {
           posthog.capture('add_to_cart', {
             product_id: product.id,
@@ -301,15 +289,13 @@ const ProductActions = ({ product, region, customer, children }: { product: any,
           variantId: selectedRegulerVariant.id, 
           quantity: setQuantity, 
           countryCode: countryCode || "id",
-          metadata: { color: colorName }
         })
         
-        // 🌟 SUNTIKKAN SENSOR 'ADD TO CART' UNTUK PEMBELIAN REGULER DI SINI
         if (posthog) {
           posthog.capture('add_to_cart', {
             product_id: product.id,
             product_name: product.title,
-            product_type: selectedType, // Mencatat apakah dia beli Top saja atau Bottom saja
+            product_type: selectedType, 
             quantity: setQuantity
           })
         }
@@ -337,7 +323,7 @@ const ProductActions = ({ product, region, customer, children }: { product: any,
       <h2 className="text-2xl md:text-3xl lg:text-[28px] font-bold text-[#EF7044] mb-6">{mainDisplayPrice}</h2>
 
       {/* ======================================================= */}
-      {/* 🌟 DESKTOP UI (Layout presisi sesuai referensi gambar) */}
+      {/* 🌟 DESKTOP UI */}
       {/* ======================================================= */}
       <div className="hidden lg:flex flex-col w-full">
         
@@ -354,7 +340,7 @@ const ProductActions = ({ product, region, customer, children }: { product: any,
           {/* Related Colors Logic */}
           <div className="flex flex-wrap gap-2 ml-4">
             {relatedProducts.length > 0 && relatedProducts.map((relProd: any) => {
-              if (relProd.id === product.id) return null; // Skip active color, already shown
+              if (relProd.id === product.id) return null;
               
               let extractedColor = "#eeeeee"; 
               let displayName = "Unknown";
@@ -475,13 +461,10 @@ const ProductActions = ({ product, region, customer, children }: { product: any,
           </div>
         )}
 
-        {/* 🌟 Accordion Children diselipkan di sini (Sebelum tombol Cart) */}
         {children}
 
-        {/* Desktop Actions (Quantity, Add to Cart, Buy Now, Wishlist) */}
+        {/* Desktop Actions */}
         <div className="flex flex-col gap-6 w-full pt-4">
-          
-          {/* Quantity Selector */}
           <div className="flex items-center gap-4">
             <div className="flex items-center border border-gray-300 rounded-full px-5 py-2.5 gap-6">
               <button onClick={() => setSetQuantity(Math.max(1, setQuantity - 1))} className="text-gray-500 font-bold text-lg hover:text-[#EF7044] transition-colors leading-none pb-0.5">−</button>
@@ -491,7 +474,6 @@ const ProductActions = ({ product, region, customer, children }: { product: any,
             <span className="text-[14px] font-medium text-gray-800">Quantity</span>
           </div>
 
-          {/* Buttons Row */}
           <div className="flex items-center gap-4 w-full">
             <button 
               onClick={() => selectedType === "SET" ? setIsSetModalOpen(true) : handleBuyNow(false, false)} 
@@ -509,7 +491,6 @@ const ProductActions = ({ product, region, customer, children }: { product: any,
               {isAdding ? "WAIT..." : "Buy Now"}
             </button>
 
-            {/* Wishlist Circle Button */}
             <button 
               onClick={toggleWishlist} 
               className={`w-[54px] h-[54px] shrink-0 flex items-center justify-center border-2 rounded-full transition-colors ${
@@ -524,7 +505,7 @@ const ProductActions = ({ product, region, customer, children }: { product: any,
       </div>
 
       {/* ======================================================= */}
-      {/* 📱 MOBILE UI (Layout Asli Tidak Dirubah) */}
+      {/* 📱 MOBILE UI */}
       {/* ======================================================= */}
       <div className="lg:hidden flex flex-col w-full">
         
@@ -689,7 +670,6 @@ const ProductActions = ({ product, region, customer, children }: { product: any,
           )}
         </div>
 
-        {/* 🌟 Accordion Children ditaruh di sini untuk Mobile */}
         {children}
 
         {/* Sticky Buy Now Mobile */}
@@ -905,7 +885,6 @@ const ProductActions = ({ product, region, customer, children }: { product: any,
 
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-8">
               <div className="w-40 shrink-0">
-                {/* 🌟 INI BAGIAN YANG DIUBAH SESUAI REQUEST BOS */}
                 <img src="/niconico-swimwear-meassurements-small.png" alt="Measurement Guide" className="w-full h-auto object-contain" />
               </div>
               <div className="flex flex-col gap-5 pt-2">
