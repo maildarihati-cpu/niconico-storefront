@@ -1,8 +1,9 @@
 "use client"
 
 import React, { useState } from "react"
-import { X, ChevronLeft, Package, Truck, Gift, CheckCircle2, Loader2 } from "lucide-react"
+import { X, ChevronLeft, Package, Truck, Gift, CheckCircle2, Loader2, ExternalLink } from "lucide-react"
 import Image from "next/image"
+import Link from "next/link"
 
 interface OrderHistoryProps {
   orders: any[];
@@ -21,14 +22,11 @@ export default function OrderHistory({ orders = [], setView, onClose }: OrderHis
 
   // 🌟 LOGIC STATUS (SINKRON DENGAN DASHBOARD ADMIN MEDUSA)
   const getOrderCategory = (order: any) => {
-    // Kalau kustomer sudah klik "Order Delivered" secara manual di app
     if (optimisticCompletedIds.includes(order.id)) return "Delivered"
     
     const pStatus = order.payment_status
     const fStatus = order.fulfillment_status
     
-    // 4. DELIVERED: Di Dashboard Admin status fulfillment sudah "delivered"
-    // Atau status order keseluruhan sudah "completed"
     if (
       fStatus === "delivered" || 
       order.status === "completed"
@@ -36,7 +34,6 @@ export default function OrderHistory({ orders = [], setView, onClose }: OrderHis
       return "Delivered"
     }
 
-    // 3. ON THE WAY: Di Dashboard Admin status fulfillment sudah diubah jadi "shipped"
     if (
       pStatus === "captured" && 
       (fStatus === "shipped" || fStatus === "partially_shipped")
@@ -44,7 +41,6 @@ export default function OrderHistory({ orders = [], setView, onClose }: OrderHis
       return "On The Way"
     }
     
-    // 2. PREPARED: Uang masuk (captured) atau fulfillment masih diproses/fulfilled (belum shipped)
     if (
       pStatus === "captured" && 
       (fStatus === "not_fulfilled" || fStatus === "fulfilled" || !fStatus)
@@ -52,14 +48,12 @@ export default function OrderHistory({ orders = [], setView, onClose }: OrderHis
       return "Prepared"
     }
 
-    // 1. PENDING: Uang belum masuk, masih ketahan, atau menunggu pembayaran
     return "Pending"
   }
 
   const handleMarkAsDelivered = async (orderId: string) => {
     setIsUpdating(true)
     try {
-      // Menyimpan ID secara lokal agar pindah ke tab Delivered
       setOptimisticCompletedIds(prev => [...prev, orderId])
       setSelectedOrder(null)
       setActiveTab("Delivered")
@@ -85,7 +79,6 @@ export default function OrderHistory({ orders = [], setView, onClose }: OrderHis
     }
   }
 
-  // 🌟 HELPER UNTUK MENG-RENDER DETAIL METADATA ITEM
   const renderItemDetails = (item: any) => {
     const isBundle = item.metadata?.is_bundle;
     const color = item.metadata?.color;
@@ -109,7 +102,6 @@ export default function OrderHistory({ orders = [], setView, onClose }: OrderHis
             {bundleType || "SET BUNDLE"}
           </span>
         )}
-        {/* Kalau tidak ada metadata sama sekali, tampilkan variant title default */}
         {!color && !size && (item.variant_title || item.variant?.title) && (
           <span className="bg-gray-100 text-gray-600 text-[9px] font-bold px-1.5 py-0.5 rounded">
             Variant: {item.variant_title || item.variant?.title}
@@ -118,6 +110,16 @@ export default function OrderHistory({ orders = [], setView, onClose }: OrderHis
       </div>
     );
   };
+
+  // 🌟 FUNGSI PENGECEKAN LINK TRACKING
+  const isValidUrl = (string: string) => {
+    try {
+      new URL(string);
+      return true;
+    } catch (_) {
+      return false;  
+    }
+  }
 
   return (
     <div className="flex flex-col h-full bg-white font-sans text-gray-900">
@@ -162,49 +164,62 @@ export default function OrderHistory({ orders = [], setView, onClose }: OrderHis
             <p className="text-[12px] font-medium">No orders found.</p>
           </div>
         ) : (
-          filteredOrders.map((order) => (
-            <div key={order.id} className="bg-white p-5 rounded-[16px] border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)]">
-              <div className="flex justify-between items-start mb-4">
-                <h3 className="font-extrabold text-[15px] text-gray-900">Order #{order.display_id}</h3>
-                <span className="text-[11px] text-gray-400 font-medium">
-                  {new Date(order.created_at).toLocaleDateString("en-GB", { day: 'numeric', month: '2-digit', year: 'numeric' })}
-                </span>
-              </div>
-              
-              <div className="space-y-2 text-[12px] text-gray-500 mb-5">
-                <div className="flex gap-2">
-                  <span className="w-28">Tracking number:</span>
-                  <span className="font-bold text-gray-900">{order.fulfillments?.[0]?.tracking_number || "-"}</span>
-                </div>
-                <div className="flex justify-between">
-                  <div className="flex gap-2">
-                    <span className="w-20">Quantity:</span>
-                    <span className="font-bold text-gray-900">{order.items?.reduce((acc: number, item: any) => acc + item.quantity, 0) || 0}</span>
-                  </div>
-                  <div className="flex gap-2 text-right">
-                    <span>Subtotal:</span>
-                    <span className="font-bold text-gray-900">Rp {(order.total || 0).toLocaleString("id-ID")}</span>
-                  </div>
-                </div>
-              </div>
+          filteredOrders.map((order) => {
+            const rawTracking = order.fulfillments?.[0]?.tracking_links?.[0]?.url || order.fulfillments?.[0]?.tracking_number || "-";
+            const isTrackingUrl = isValidUrl(rawTracking);
+            const isShipped = getOrderCategory(order) === "On The Way" || getOrderCategory(order) === "Delivered";
 
-              <div className="flex justify-between items-center pt-2">
-                <span className={`text-[11px] font-extrabold uppercase ${
-                  activeTab === "Pending" ? "text-[#F6BA61]" : 
-                  activeTab === "Prepared" ? "text-[#EF7044]" :
-                  activeTab === "On The Way" ? "text-[#20D05B]" : "text-[#20D05B]"
-                }`}>
-                  {activeTab}
-                </span>
-                <button 
-                  onClick={() => setSelectedOrder(order)}
-                  className="text-[12px] font-medium border border-gray-800 text-gray-800 px-6 py-1.5 rounded-full hover:bg-gray-900 hover:text-white transition-all"
-                >
-                  Details
-                </button>
+            return (
+              <div key={order.id} className="bg-white p-5 rounded-[16px] border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)]">
+                <div className="flex justify-between items-start mb-4">
+                  <h3 className="font-extrabold text-[15px] text-gray-900">Order #{order.display_id}</h3>
+                  <span className="text-[11px] text-gray-400 font-medium">
+                    {new Date(order.created_at).toLocaleDateString("en-GB", { day: 'numeric', month: '2-digit', year: 'numeric' })}
+                  </span>
+                </div>
+                
+                <div className="space-y-2 text-[12px] text-gray-500 mb-5">
+                  <div className="flex gap-2 items-center">
+                    <span className="w-28">Tracking Details:</span>
+                    {/* 🌟 LOGIC TRACK MY ORDER BERDASARKAN STATUS */}
+                    {isShipped && isTrackingUrl ? (
+                      <a href={rawTracking} target="_blank" rel="noopener noreferrer" className="font-bold text-[#1A3382] hover:underline flex items-center gap-1">
+                        Track My Order <ExternalLink className="w-3 h-3" />
+                      </a>
+                    ) : (
+                      <span className="font-bold text-gray-900">{rawTracking}</span>
+                    )}
+                  </div>
+                  <div className="flex justify-between">
+                    <div className="flex gap-2">
+                      <span className="w-20">Quantity:</span>
+                      <span className="font-bold text-gray-900">{order.items?.reduce((acc: number, item: any) => acc + item.quantity, 0) || 0}</span>
+                    </div>
+                    <div className="flex gap-2 text-right">
+                      <span>Subtotal:</span>
+                      <span className="font-bold text-gray-900">Rp {(order.total || 0).toLocaleString("id-ID")}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center pt-2">
+                  <span className={`text-[11px] font-extrabold uppercase ${
+                    activeTab === "Pending" ? "text-[#F6BA61]" : 
+                    activeTab === "Prepared" ? "text-[#EF7044]" :
+                    activeTab === "On The Way" ? "text-[#1A3382]" : "text-[#20D05B]"
+                  }`}>
+                    {activeTab}
+                  </span>
+                  <button 
+                    onClick={() => setSelectedOrder(order)}
+                    className="text-[12px] font-medium border border-gray-800 text-gray-800 px-6 py-1.5 rounded-full hover:bg-gray-900 hover:text-white transition-all"
+                  >
+                    Details
+                  </button>
+                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 
@@ -212,13 +227,10 @@ export default function OrderHistory({ orders = [], setView, onClose }: OrderHis
       {selectedOrder && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/0 backdrop-blur-sm animate-in fade-in duration-200">
           
-          {/* Latar belakang transparan untuk klik-tutup */}
           <div className="absolute inset-0 cursor-pointer" onClick={() => setSelectedOrder(null)}></div>
           
-          {/* KOTAK POPUP MELAYANG (Max Width 400px, Max Height 85vh) */}
           <div className="bg-white w-full max-w-[400px] max-h-[85vh] rounded-[32px] flex flex-col relative z-10 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
             
-            {/* Header Popup */}
             <div className="flex justify-between items-center p-6 shrink-0 border-b border-gray-100">
               <button onClick={() => setSelectedOrder(null)} className="p-2 border border-gray-200 rounded-full hover:bg-gray-50">
                 <ChevronLeft className="w-5 h-5 text-gray-600" />
@@ -229,10 +241,8 @@ export default function OrderHistory({ orders = [], setView, onClose }: OrderHis
               </button>
             </div>
 
-            {/* Isi Popup yang Bisa di-Scroll */}
             <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
               
-              {/* Banner Status */}
               <div className={`rounded-[16px] p-5 flex justify-between items-center ${getBannerData(getOrderCategory(selectedOrder)).bg}`}>
                 <div>
                   <h3 className="text-white font-bold text-[15px] mb-1">{getBannerData(getOrderCategory(selectedOrder)).title}</h3>
@@ -247,9 +257,22 @@ export default function OrderHistory({ orders = [], setView, onClose }: OrderHis
                   <span className="text-gray-500">Order number</span>
                   <span className="text-gray-900 font-medium">#{selectedOrder.display_id}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Tracking Number</span>
-                  <span className="text-gray-900 font-medium">{selectedOrder.fulfillments?.[0]?.tracking_number || "-"}</span>
+                
+                {/* 🌟 LOGIC TRACK MY ORDER DI POPUP DETAIL 🌟 */}
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-500">Tracking Link</span>
+                  {(() => {
+                    const rawTracking = selectedOrder.fulfillments?.[0]?.tracking_links?.[0]?.url || selectedOrder.fulfillments?.[0]?.tracking_number || "-";
+                    const isShipped = getOrderCategory(selectedOrder) === "On The Way" || getOrderCategory(selectedOrder) === "Delivered";
+                    if (isShipped && isValidUrl(rawTracking)) {
+                      return (
+                        <a href={rawTracking} target="_blank" rel="noopener noreferrer" className="bg-orange-50 text-[#EF7044] px-3 py-1 rounded-full font-bold text-[11px] hover:bg-[#EF7044] hover:text-white transition-colors flex items-center gap-1">
+                          Track Order <ExternalLink className="w-3 h-3" />
+                        </a>
+                      );
+                    }
+                    return <span className="text-gray-900 font-medium">{rawTracking}</span>;
+                  })()}
                 </div>
                 
                 <div className="flex justify-between">
@@ -264,7 +287,7 @@ export default function OrderHistory({ orders = [], setView, onClose }: OrderHis
                 </div>
               </div>
 
-              {/* 🌟 LIST BARANG YANG DIBELI BESERTA DETAIL VARIAN 🌟 */}
+              {/* LIST BARANG */}
               <div className="space-y-4 border-b border-gray-100 pb-6">
                 {selectedOrder.items && selectedOrder.items.length > 0 ? (
                   selectedOrder.items.map((item: any) => (
@@ -274,10 +297,7 @@ export default function OrderHistory({ orders = [], setView, onClose }: OrderHis
                           {item.product_title || item.title || "Unknown Product"} 
                           <span className="ml-2 text-gray-500 font-black">x{item.quantity}</span>
                         </span>
-                        
-                        {/* 🌟 DETAIL METADATA RAPI */}
                         {renderItemDetails(item)}
-                        
                       </div>
                       <span className="text-gray-900 font-medium whitespace-nowrap">Rp {(item.unit_price || 0).toLocaleString("id-ID")}</span>
                     </div>
