@@ -107,8 +107,8 @@ const Footer = () => {
 
           <div className="w-2/3 lg:w-auto flex justify-end lg:justify-start gap-x-8 md:gap-x-12 xl:gap-x-24">
             <div className="flex flex-col gap-y-5 lg:gap-y-6 text-[13px] md:text-[14px] lg:text-[16px] text-gray-200 font-regular tracking-wide">
-              <Link href="/faq-returns" className="hover:text-[#EF7044] transition-colors">FAQ/Returns</Link>
-              <Link href="/return-policy" className="hover:text-[#EF7044] transition-colors">Return Policy</Link>
+              <Link href="/faq" className="hover:text-[#EF7044] transition-colors">FAQ/Returns</Link>
+              <Link href="/refund-policy" className="hover:text-[#EF7044] transition-colors">Refund Policy</Link>
               <Link href="/privacy-policy" className="hover:text-[#EF7044] transition-colors">Privacy Policy</Link>
               <Link href="/terms-of-service" className="hover:text-[#EF7044] transition-colors">Terms of Service</Link>
             </div>
@@ -116,7 +116,7 @@ const Footer = () => {
             <div className="flex flex-col gap-y-5 lg:gap-y-6 text-[13px] md:text-[14px] lg:text-[16px] text-gray-200 font-regular tracking-wide">
               <Link href="/about" className="hover:text-[#EF7044] transition-colors">About Us</Link>
               <Link href="/faq" className="hover:text-[#EF7044] transition-colors">FAQ</Link>
-              <Link href="/shipping-returns" className="hover:text-[#EF7044] transition-colors">Shipping & Returns</Link>
+              <Link href="/faq" className="hover:text-[#EF7044] transition-colors">Shipping & Returns</Link>
               <Link href="/contact" className="hover:text-[#EF7044] transition-colors">Contact</Link>
             </div>
           </div> 
