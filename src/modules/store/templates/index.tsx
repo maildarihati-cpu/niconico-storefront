@@ -649,9 +649,42 @@ export default function StoreTemplate({ initialProducts = [] }: { initialProduct
     }).format(amount);
   };
 
+  // 🌟 PERBAIKAN: FORMAT HARGA MENGENALI SET BUNDLE (TOP + BOTTOM)
   const getProductPrice = (product: any) => {
-    const price = product.variants?.[0]?.prices?.[0]?.amount || 0;
-    return countryCode === "id" ? price : price / 100;
+    const variants = product.variants || [];
+    if (variants.length === 0) return 0;
+
+    const targetCurrency = countryCode === "id" ? "idr" : "usd";
+
+    // 1. Cek apakah produk ini punya TOP dan BOTTOM
+    const topVars = variants.filter((v: any) => v.options?.some((opt: any) => opt.value?.toLowerCase().trim() === "top"));
+    const bottomVars = variants.filter((v: any) => v.options?.some((opt: any) => opt.value?.toLowerCase().trim() === "bottom"));
+
+    if (topVars.length > 0 && bottomVars.length > 0) {
+      // 2. Jika punya keduanya, jumlahkan harga termurah dari Top + Bottom
+      const getMinPrice = (vars: any[]) => {
+        const prices = vars.map((v) => {
+          const pObj = v.calculated_price || v.prices?.find((p: any) => p.currency_code?.toLowerCase() === targetCurrency) || v.prices?.[0];
+          if (!pObj) return 0;
+          let amt = pObj.calculated_amount || pObj.amount;
+          return (pObj.currency_code || targetCurrency).toLowerCase() === "idr" ? amt : amt / 100;
+        });
+        const validPrices = prices.filter(p => p > 0);
+        return validPrices.length > 0 ? Math.min(...validPrices) : 0;
+      };
+
+      return getMinPrice(topVars) + getMinPrice(bottomVars);
+    }
+
+    // 3. Kalau bukan Set (hanya reguler), ambil harga biasa
+    const variant = variants[0];
+    const priceObject = variant.calculated_price || variant.prices?.find((p: any) => p.currency_code?.toLowerCase() === targetCurrency) || variant.prices?.[0];
+    if (!priceObject) return 0;
+    
+    let amount = priceObject.calculated_amount || priceObject.amount;
+    const currency = (priceObject.currency_code || targetCurrency).toLowerCase();
+    
+    return currency === "idr" ? amount : amount / 100;
   };
 
   // 🌟 LOGIC PENGGUGUR (Mutually Exclusive)
