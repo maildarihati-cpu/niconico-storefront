@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronDown, ChevronUp, ArrowUp } from "lucide-react";
+import { ChevronDown, ChevronUp, ArrowUp } from "lucide-react";
 
 // ==========================================
 // 🌟 DATA PRIVACY POLICY (UPDATE TERBARU)
@@ -251,12 +251,7 @@ function AccordionItem({ question, answer, isOpen, onClick }: { question: string
   );
 }
 
-// ==========================================
-// 🌟 HALAMAN UTAMA PRIVACY POLICY
-// ==========================================
 export default function PrivacyPolicyPage() {
-  const router = useRouter();
-  
   const [openItems, setOpenItems] = useState<string[]>([]);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
@@ -290,21 +285,13 @@ export default function PrivacyPolicyPage() {
       style={{ fontFamily: "'Avenir Book', Avenir, 'Century Gothic', sans-serif" }}
     >
       
-      {/* 🌟 HEADER LOKAL */}
-      <div className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-gray-100 px-6 py-4 flex items-center justify-between shadow-sm">
-        <button 
-          onClick={() => router.back()} 
-          className="p-2 border border-gray-200 rounded-full hover:bg-gray-50 transition-colors"
-        >
-          <ChevronLeft className="w-5 h-5 text-gray-800" />
-        </button>
-        <div className="absolute left-1/2 -translate-x-1/2 text-center">
-          <h1 className="text-[18px] font-bold tracking-wide leading-tight">Privacy Policy</h1>
-        </div>
-      </div>
-
-      {/* 🌟 KONTEN ACCORDION */}
-      <div className="max-w-[800px] mx-auto px-6 pt-10">
+      {/* 🌟 CONTAINER KONTEN (PT-28 memberikan ruang agar tidak tertutup Navbar Global) */}
+      <div className="max-w-[800px] mx-auto px-6 pt-28">
+        
+        {/* 🌟 JUDUL PRIVACY POLICY DI BAWAH NAVBAR */}
+        <h1 className="text-[24px] md:text-[28px] font-bold text-gray-900 mb-10 tracking-wide">
+          Privacy Policy
+        </h1>
         
         {privacyPolicyData.map((category, catIdx) => (
           <div key={category.category} className="mb-10">

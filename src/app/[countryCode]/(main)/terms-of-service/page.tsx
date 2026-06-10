@@ -112,4 +112,114 @@ const tosData = [
   },
 ];
 
-// ... (Gunakan fungsi AccordionItem dan Page Layout yang SAMA persis dengan FAQ sebelumnya)
+// ==========================================
+// 🌟 KOMPONEN ACCORDION ITEM
+// ==========================================
+function AccordionItem({ question, answer, isOpen, onClick }: { question: string, answer: React.ReactNode, isOpen: boolean, onClick: () => void }) {
+  return (
+    <div className="border-b border-gray-200 last:border-0">
+      <button 
+        onClick={onClick}
+        className="w-full flex justify-between items-center py-4 text-left transition-colors hover:text-[#EF7044]"
+      >
+        <span className="text-[14px] md:text-[15px] font-medium text-gray-900 pr-4">{question}</span>
+        {isOpen ? (
+          <ChevronUp className="w-5 h-5 text-gray-600 flex-shrink-0" />
+        ) : (
+          <ChevronDown className="w-5 h-5 text-gray-600 flex-shrink-0" />
+        )}
+      </button>
+      <div 
+        className={`overflow-hidden transition-all duration-300 ease-in-out ${
+          isOpen ? "max-h-[1000px] pb-5 opacity-100" : "max-h-0 opacity-0"
+        }`}
+      >
+        {answer}
+      </div>
+    </div>
+  );
+}
+
+// ==========================================
+// 🌟 HALAMAN UTAMA TERMS OF SERVICE
+// ==========================================
+export default function TermsOfServicePage() {
+  const [openItems, setOpenItems] = useState<string[]>([]);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  const toggleAccordion = (id: string) => {
+    setOpenItems((prev) => 
+      prev.includes(id) 
+        ? prev.filter((item) => item !== id) 
+        : [...prev, id] 
+    );
+  };
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 300) {
+        setShowScrollTop(true);
+      } else {
+        setShowScrollTop(false);
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  return (
+    <div 
+      className="min-h-screen bg-white text-gray-900 pb-20 relative" 
+      style={{ fontFamily: "'Avenir Book', Avenir, 'Century Gothic', sans-serif" }}
+    >
+      
+      {/* 🌟 CONTAINER KONTEN (PT-28 memberikan ruang agar tidak tertutup Navbar Global) */}
+      <div className="max-w-[800px] mx-auto px-6 pt-28">
+        
+        {/* 🌟 JUDUL TOS DI BAWAH NAVBAR */}
+        <h1 className="text-[24px] md:text-[28px] font-bold text-gray-900 mb-10 tracking-wide">
+          Terms of Service
+        </h1>
+        
+        {tosData.map((category, catIdx) => (
+          <div key={category.category} className="mb-10">
+            <h2 className="text-[18px] md:text-[20px] font-bold text-gray-900 mb-2 tracking-wide">
+              {category.category}
+            </h2>
+            
+            <div className="border-t border-gray-200">
+              {tosData[catIdx].items.map((item, itemIdx) => {
+                const uniqueId = `${catIdx}-${itemIdx}`;
+                return (
+                  <AccordionItem
+                    key={uniqueId}
+                    question={item.question}
+                    answer={item.answer}
+                    isOpen={openItems.includes(uniqueId)}
+                    onClick={() => toggleAccordion(uniqueId)}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        ))}
+
+      </div>
+
+      {/* 🌟 TOMBOL BACK TO TOP */}
+      {showScrollTop && (
+        <button 
+          onClick={scrollToTop}
+          className="fixed bottom-8 right-6 w-12 h-12 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center shadow-lg hover:bg-[#EF7044] hover:text-white transition-all z-50 animate-in fade-in slide-in-from-bottom-5"
+        >
+          <ArrowUp className="w-6 h-6" />
+        </button>
+      )}
+
+    </div>
+  );
+}

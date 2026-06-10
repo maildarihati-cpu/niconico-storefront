@@ -165,22 +165,17 @@ function AccordionItem({ question, answer, isOpen, onClick }: { question: string
 // 🌟 HALAMAN UTAMA FAQ & RETURNS
 // ==========================================
 export default function FAQReturnsPage() {
-  const router = useRouter();
-  
-  // State untuk melacak accordion mana yang terbuka
-  // Disimpan dalam bentuk "kategoriIndex-itemIndex"
   const [openItems, setOpenItems] = useState<string[]>([]);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   const toggleAccordion = (id: string) => {
     setOpenItems((prev) => 
       prev.includes(id) 
-        ? prev.filter((item) => item !== id) // Tutup jika sudah terbuka
-        : [...prev, id] // Buka jika tertutup (bisa buka lebih dari 1 sekaligus)
+        ? prev.filter((item) => item !== id) 
+        : [...prev, id] 
     );
   };
 
-  // Logic memunculkan tombol "Back to Top"
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 300) {
@@ -198,36 +193,25 @@ export default function FAQReturnsPage() {
   };
 
   return (
-    // 🌟 KUNCI: Memaksa penggunaan font Avenir Book sesuai request
     <div 
       className="min-h-screen bg-white text-gray-900 pb-20 relative" 
       style={{ fontFamily: "'Avenir Book', Avenir, 'Century Gothic', sans-serif" }}
     >
       
-      {/* 🌟 HEADER HEADER (Mengikuti referensi desain) */}
-      <div className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-gray-100 px-6 py-4 flex items-center justify-between shadow-sm">
-        <button 
-          onClick={() => router.back()} 
-          className="p-2 border border-gray-200 rounded-full hover:bg-gray-50 transition-colors"
-        >
-          <ChevronLeft className="w-5 h-5 text-gray-800" />
-        </button>
-        <h1 className="absolute left-1/2 -translate-x-1/2 text-[18px] font-bold tracking-wide">
+      {/* 🌟 CONTAINER KONTEN (PT-28 memberikan ruang agar tidak tertutup Navbar Global) */}
+      <div className="max-w-[800px] mx-auto px-6 pt-28">
+        
+        {/* 🌟 JUDUL SEKARANG BERADA DI BAWAH NAVBAR */}
+        <h1 className="text-[24px] md:text-[28px] font-bold text-gray-900 mb-10 tracking-wide">
           FAQ & Returns
         </h1>
-      </div>
-
-      {/* 🌟 KONTEN FAQ */}
-      <div className="max-w-[800px] mx-auto px-6 pt-10">
         
         {faqData.map((category, catIdx) => (
           <div key={category.category} className="mb-10">
-            {/* Judul Kategori */}
             <h2 className="text-[18px] md:text-[20px] font-bold text-gray-900 mb-2 tracking-wide">
               {category.category}
             </h2>
             
-            {/* List Accordion di dalam kategori */}
             <div className="border-t border-gray-200">
               {category.items.map((item, itemIdx) => {
                 const uniqueId = `${catIdx}-${itemIdx}`;
@@ -247,7 +231,7 @@ export default function FAQReturnsPage() {
 
       </div>
 
-      {/* 🌟 TOMBOL BACK TO TOP (Sesuai ujung kanan bawah gambar referensi) */}
+      {/* 🌟 TOMBOL BACK TO TOP */}
       {showScrollTop && (
         <button 
           onClick={scrollToTop}
