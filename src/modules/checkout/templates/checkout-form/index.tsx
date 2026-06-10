@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect, useRef, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { ChevronLeft, MapPin, Loader2, Tag, Search, Crosshair, Trash2, ShieldCheck, Plus, Mail, Pen } from "lucide-react"
 import Image from "next/image"; 
@@ -48,6 +48,52 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
     postal_code: "",
     country_code: "id", 
   })
+
+  // ==========================================
+  // 🌟 LOGIKA GROUPING (SAMA SEPERTI CART)
+  // ==========================================
+  const groupedItems = useMemo(() => {
+    const groups: any[] = [];
+    const bundles: Record<string, any[]> = {};
+
+    if (!cart?.items) return groups;
+
+    cart.items.forEach((item: any) => {
+      if (item.metadata?.is_bundle && item.metadata?.bundle_id) {
+        const bId = item.metadata.bundle_id;
+        if (!bundles[bId]) bundles[bId] = [];
+        bundles[bId].push(item);
+      } else {
+        groups.push({ isBundle: false, id: item.id, item });
+      }
+    });
+
+    Object.keys(bundles).forEach(bId => {
+      const items = bundles[bId];
+      const topItem = items.find((i: any) => i.metadata?.bundle_type === "TOP") || items[0];
+      const bottomItem = items.find((i: any) => i.metadata?.bundle_type === "BOTTOM") || items[1];
+
+      if (topItem && bottomItem) {
+        const bundleColor = topItem.metadata?.color || bottomItem.metadata?.color;
+        const colorText = bundleColor ? `Color: ${bundleColor} • ` : "";
+
+        groups.push({
+          isBundle: true,
+          id: bId,
+          items: items,
+          title: `${topItem.title || "Bundle Product"} (SET)`,
+          thumbnail: topItem.thumbnail,
+          unit_price: items.reduce((sum: number, i: any) => sum + (i.unit_price || 0), 0),
+          quantity: topItem.quantity || 1,
+          variant_title: `${colorText}Top: ${topItem.metadata?.size || '-'} / Bottom: ${bottomItem.metadata?.size || '-'}`
+        });
+      } else {
+         items.forEach((i: any) => groups.push({ isBundle: false, id: i.id, item: i }));
+      }
+    });
+
+    return groups;
+  }, [cart?.items]);
 
   // ==========================================
   // 🌟 MAP ENGINE (PIN POINT)
@@ -719,41 +765,41 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
             <div className="bg-white md:rounded-2xl md:shadow-sm md:border border-gray-200 p-5 md:p-6 lg:p-7">
                <h3 className="text-[13px] md:text-[16px] font-extrabold text-gray-900 tracking-wide mb-4 md:mb-6">Your Order</h3>
                <div className="flex flex-col gap-4">
-                {cart.items?.map((item: any, idx: number) => (
-                  <div key={item.id} className={`flex gap-4 items-start ${idx !== cart.items.length - 1 ? 'border-b border-gray-100 pb-4' : ''}`}>
-                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 shrink-0">
-                      <img src={item.thumbnail} className="w-full h-full object-cover" alt="" />
-                    </div>
-                    <div className="flex-1 min-w-0 pt-1">
-                       <h4 className="text-xs md:text-sm font-bold text-gray-800 truncate mb-1 pr-4">{item.title}</h4>
-                       <p className="text-[10px] md:text-xs text-gray-400 font-medium mb-1.5">{item.variant?.title}</p>
-                       
-                       {/* 🌟 DISPLAY PENUH DETAIL VARIAN & METADATA (KOLOR, UKURAN, BUNDLE TYPE) */}
-                       <div className="flex flex-wrap gap-1 mb-2">
-                         {item.metadata?.color && (
-                           <span className="bg-gray-100 text-gray-600 text-[9px] md:text-[10px] font-bold px-2 py-0.5 rounded">
-                             Color: {item.metadata.color}
-                           </span>
-                         )}
-                         {item.metadata?.size && (
-                           <span className="bg-gray-100 text-gray-600 text-[9px] md:text-[10px] font-bold px-2 py-0.5 rounded">
-                             Size: {item.metadata.size}
-                           </span>
-                         )}
-                         {item.metadata?.is_bundle && (
-                           <span className="bg-orange-50 text-[#EF7044] text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wide">
-                             {item.metadata.bundle_type || "SET BUNDLE"}
-                           </span>
-                         )}
-                       </div>
+                {/* 🌟 PERBAIKAN: Gunakan groupedItems yang sudah diracik seperti di Cart */}
+                {groupedItems.length > 0 ? groupedItems.map((group: any, idx: number) => {
+                  const displayTitle = group.isBundle ? group.title : (group.item.title || "Product");
+                  const displayPrice = group.isBundle ? group.unit_price : (group.item.unit_price || 0);
+                  const displayThumb = (group.isBundle ? group.thumbnail : group.item.thumbnail) || "/placeholder.png";
+                  
+                  let displayVariant = "";
+                  if (group.isBundle) {
+                    displayVariant = group.variant_title;
+                  } else {
+                    const regColor = group.item.metadata?.color;
+                    const regVariant = group.item.variant?.title || group.item.variant_title || "Regular";
+                    displayVariant = regColor ? `Color: ${regColor} • Size: ${regVariant}` : regVariant;
+                  }
+                  
+                  const displayQty = group.isBundle ? group.quantity : (group.item.quantity || 1);
 
-                       <div className="flex justify-between items-center mt-1">
-                          <p className="text-xs md:text-sm font-extrabold text-gray-900">Rp {item.unit_price.toLocaleString("id-ID")}</p>
-                          <span className="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded">Qty: {item.quantity}</span>
-                       </div>
+                  return (
+                    <div key={group.id} className={`flex gap-4 items-start ${idx !== groupedItems.length - 1 ? 'border-b border-gray-100 pb-4' : ''}`}>
+                      <div className="w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 shrink-0">
+                        <img src={displayThumb} className="w-full h-full object-cover" alt={displayTitle} />
+                      </div>
+                      <div className="flex-1 min-w-0 pt-1">
+                         <h4 className="text-xs md:text-sm font-bold text-gray-800 truncate mb-1 pr-4">{displayTitle}</h4>
+                         <p className="text-[10px] md:text-xs text-gray-500 font-medium mb-1.5">{displayVariant}</p>
+                         <div className="flex justify-between items-center mt-1">
+                            <p className="text-xs md:text-sm font-extrabold text-gray-900">Rp {displayPrice.toLocaleString("id-ID")}</p>
+                            <span className="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded">Qty: {displayQty}</span>
+                         </div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                }) : (
+                   <p className="text-xs text-gray-500">No items to checkout.</p>
+                )}
                </div>
             </div>
             

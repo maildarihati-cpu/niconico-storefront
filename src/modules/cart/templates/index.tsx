@@ -47,16 +47,20 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
       const bottomItem = items.find((i: any) => i.metadata?.bundle_type === "BOTTOM") || items[1];
 
       if (topItem && bottomItem) {
+        // 🌟 PERBAIKAN LOGIC WARNA: Tangkap warna dari metadata Top/Bottom
+        const bundleColor = topItem.metadata?.color || bottomItem.metadata?.color;
+        const colorText = bundleColor ? `Color: ${bundleColor} • ` : "";
+
         groups.push({
           isBundle: true,
           id: bId,
           items: items,
           title: `${topItem.title || "Bundle Product"} (SET)`,
           thumbnail: topItem.thumbnail,
-          // 🌟 PERBAIKAN: Amankan kalkulasi angka agar tidak NaN
           unit_price: items.reduce((sum: number, i: any) => sum + (i.unit_price || 0), 0),
           quantity: topItem.quantity || 1,
-          variant_title: `Top: ${topItem.metadata?.size || 'M'} / Bottom: ${bottomItem.metadata?.size || 'M'}`
+          // 🌟 Teks warna dan ukuran digabung di sini agar rapi
+          variant_title: `${colorText}Top: ${topItem.metadata?.size || '-'} / Bottom: ${bottomItem.metadata?.size || '-'}`
         });
       } else {
          items.forEach((i: any) => groups.push({ isBundle: false, id: i.id, item: i }));
@@ -85,7 +89,6 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
     setIsLoadingItem(group.id);
     try {
       if (group.isBundle) {
-        // 🌟 PERBAIKAN: Diubah jadi sequential (antre) agar database Medusa tidak bentrok (Error 409)
         for (const i of group.items) {
           await updateLineItem({ lineId: i.id, quantity: newQuantity });
         }
@@ -104,7 +107,6 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
     setIsLoadingItem(group.id);
     try {
       if (group.isBundle) {
-        // 🌟 PERBAIKAN: Diubah jadi sequential (antre) 
         for (const i of group.items) {
           await deleteLineItem(i.id);
         }
@@ -136,7 +138,6 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
   const calculateTotals = () => {
     if (!cart?.items) return { subtotal: 0, tax: 0, shipping: 0, total: 0 };
     const selectedCartItems = cart.items.filter((item: any) => selectedItems.includes(item.id));
-    // 🌟 PERBAIKAN: Pastikan unit_price dan quantity tidak undefined
     const subtotal = selectedCartItems.reduce((acc: number, item: any) => acc + ((item.unit_price || 0) * (item.quantity || 1)), 0);
     const tax = subtotal * 0; 
     return { subtotal: getPrice(subtotal), tax: getPrice(tax), total: getPrice(subtotal + tax) };
@@ -177,11 +178,21 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
     }
   };
 
+  const handleSafeBack = (e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    setTimeout(() => {
+      router.back();
+    }, 100);
+  };
+
   return (
     <>
       <div 
         className="hidden md:block fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm animate-in fade-in duration-300 cursor-pointer"
-        onClick={() => router.back()}
+        onClick={handleSafeBack}
         title="Klik di luar laci untuk menutup"
       />
 
@@ -190,12 +201,7 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
         <div className="pt-12 pb-6 px-6 relative flex flex-col items-center flex-shrink-0">
           <button 
             type="button" 
-            onClick={() => {
-              if (document.activeElement instanceof HTMLElement) {
-                document.activeElement.blur();
-              }
-              router.back();
-            }} 
+            onClick={handleSafeBack}
             className="md:hidden absolute left-6 top-14 p-2 bg-white rounded-full shadow-sm border border-gray-100 hover:bg-gray-50 transition-colors"
           >
             <ChevronLeft className="w-5 h-5 text-gray-800" />
@@ -215,15 +221,21 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
                 : selectedItems.includes(group.item.id);
               const isUpdating = isLoadingItem === group.id;
 
-              // 🌟 PERBAIKAN: Amankan semua akses variabel rendering!
               const displayTitle = group.isBundle ? group.title : (group.item.title || "Product");
               const displayPrice = group.isBundle ? group.unit_price : (group.item.unit_price || 0);
               const displayThumb = (group.isBundle ? group.thumbnail : group.item.thumbnail) || "/placeholder.png";
               
-              // 🌟 "BOM WAKTU" DIMATIKAN DI SINI:
-              const displayVariant = group.isBundle 
-                ? group.variant_title 
-                : (group.item.variant?.title || group.item.variant_title || "Regular");
+              // 🌟 PERBAIKAN LOGIC WARNA: Pengaturan render untuk varian Set vs Reguler
+              let displayVariant = "";
+              if (group.isBundle) {
+                // Teks bundle sudah rapi di-generate di useMemo
+                displayVariant = group.variant_title;
+              } else {
+                // Untuk item reguler, kita tarik warnanya juga dari metadata
+                const regColor = group.item.metadata?.color;
+                const regVariant = group.item.variant?.title || group.item.variant_title || "Regular";
+                displayVariant = regColor ? `Color: ${regColor} • Size: ${regVariant}` : regVariant;
+              }
                 
               const displayQty = group.isBundle ? group.quantity : (group.item.quantity || 1);
 
