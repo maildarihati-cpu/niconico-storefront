@@ -19,13 +19,16 @@ export default function OrderHistory({ orders = [], setView, onClose }: OrderHis
 
   const tabs = ["Pending", "Prepared", "On The Way", "Delivered"]
 
+  // 🌟 LOGIC STATUS (SINKRON DENGAN DASHBOARD ADMIN MEDUSA)
   const getOrderCategory = (order: any) => {
+    // Kalau kustomer sudah klik "Order Delivered" secara manual di app
     if (optimisticCompletedIds.includes(order.id)) return "Delivered"
     
     const pStatus = order.payment_status
     const fStatus = order.fulfillment_status
     
-    // 4. DELIVERED: Uang ditarik dan barang sudah sampai / complete
+    // 4. DELIVERED: Di Dashboard Admin status fulfillment sudah "delivered"
+    // Atau status order keseluruhan sudah "completed"
     if (
       fStatus === "delivered" || 
       order.status === "completed"
@@ -33,29 +36,30 @@ export default function OrderHistory({ orders = [], setView, onClose }: OrderHis
       return "Delivered"
     }
 
-    // 3. ON THE WAY: Uang ditarik dan barang sudah dipacking/diserahkan kurir
+    // 3. ON THE WAY: Di Dashboard Admin status fulfillment sudah diubah jadi "shipped"
     if (
       pStatus === "captured" && 
-      (fStatus === "fulfilled" || fStatus === "shipped" || fStatus === "partially_shipped")
+      (fStatus === "shipped" || fStatus === "partially_shipped")
     ) {
       return "On The Way"
     }
     
-    // 2. PREPARED: Uang sudah ditarik, tapi barang masih disiapkan
+    // 2. PREPARED: Uang masuk (captured) atau fulfillment masih diproses/fulfilled (belum shipped)
     if (
       pStatus === "captured" && 
-      (fStatus === "not_fulfilled" || !fStatus)
+      (fStatus === "not_fulfilled" || fStatus === "fulfilled" || !fStatus)
     ) {
       return "Prepared"
     }
 
-    // 1. PENDING: Uang baru ditahan (Authorized/Awaiting) atau belum bayar
+    // 1. PENDING: Uang belum masuk, masih ketahan, atau menunggu pembayaran
     return "Pending"
   }
 
   const handleMarkAsDelivered = async (orderId: string) => {
     setIsUpdating(true)
     try {
+      // Menyimpan ID secara lokal agar pindah ke tab Delivered
       setOptimisticCompletedIds(prev => [...prev, orderId])
       setSelectedOrder(null)
       setActiveTab("Delivered")
@@ -80,6 +84,40 @@ export default function OrderHistory({ orders = [], setView, onClose }: OrderHis
         return { bg: "bg-[#F6BA61]", title: "Your order is pending", icon: <Package className="w-8 h-8 text-white" /> }
     }
   }
+
+  // 🌟 HELPER UNTUK MENG-RENDER DETAIL METADATA ITEM
+  const renderItemDetails = (item: any) => {
+    const isBundle = item.metadata?.is_bundle;
+    const color = item.metadata?.color;
+    const size = item.metadata?.size;
+    const bundleType = item.metadata?.bundle_type;
+
+    return (
+      <div className="flex flex-wrap gap-1 mt-1">
+        {color && (
+          <span className="bg-gray-100 text-gray-600 text-[9px] font-bold px-1.5 py-0.5 rounded">
+            Color: {color}
+          </span>
+        )}
+        {size && (
+          <span className="bg-gray-100 text-gray-600 text-[9px] font-bold px-1.5 py-0.5 rounded">
+            Size: {size}
+          </span>
+        )}
+        {isBundle && (
+          <span className="bg-orange-50 text-[#EF7044] text-[9px] font-black px-1.5 py-0.5 rounded uppercase">
+            {bundleType || "SET BUNDLE"}
+          </span>
+        )}
+        {/* Kalau tidak ada metadata sama sekali, tampilkan variant title default */}
+        {!color && !size && (item.variant_title || item.variant?.title) && (
+          <span className="bg-gray-100 text-gray-600 text-[9px] font-bold px-1.5 py-0.5 rounded">
+            Variant: {item.variant_title || item.variant?.title}
+          </span>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="flex flex-col h-full bg-white font-sans text-gray-900">
@@ -214,7 +252,6 @@ export default function OrderHistory({ orders = [], setView, onClose }: OrderHis
                   <span className="text-gray-900 font-medium">{selectedOrder.fulfillments?.[0]?.tracking_number || "-"}</span>
                 </div>
                 
-                {/* 🌟 NAMA ALAMAT MUNCUL DI SINI 🌟 */}
                 <div className="flex justify-between">
                   <span className="text-gray-500">Delivery address</span>
                   <span className="text-gray-900 font-bold text-right max-w-[60%] leading-tight">
@@ -227,24 +264,22 @@ export default function OrderHistory({ orders = [], setView, onClose }: OrderHis
                 </div>
               </div>
 
-              {/* 🌟 LIST BARANG YANG DIBELI 🌟 */}
+              {/* 🌟 LIST BARANG YANG DIBELI BESERTA DETAIL VARIAN 🌟 */}
               <div className="space-y-4 border-b border-gray-100 pb-6">
                 {selectedOrder.items && selectedOrder.items.length > 0 ? (
                   selectedOrder.items.map((item: any) => (
-                    <div key={item.id} className="flex justify-between items-start text-[13px]">
+                    <div key={item.id} className="flex justify-between items-start text-[13px] border-b border-dashed border-gray-100 last:border-0 pb-3 last:pb-0">
                       <div className="flex flex-col max-w-[70%]">
                         <span className="text-gray-900 font-bold leading-tight">
                           {item.product_title || item.title || "Unknown Product"} 
                           <span className="ml-2 text-gray-500 font-black">x{item.quantity}</span>
                         </span>
-                        {/* Menampilkan varian (misal: Warna Pink, Size M) */}
-                        {(item.variant_title || item.variant?.title) && (
-                          <span className="text-gray-400 text-[10px] uppercase font-bold mt-0.5">
-                            Variant: {item.variant_title || item.variant?.title}
-                          </span>
-                        )}
+                        
+                        {/* 🌟 DETAIL METADATA RAPI */}
+                        {renderItemDetails(item)}
+                        
                       </div>
-                      <span className="text-gray-900 font-medium">Rp {(item.unit_price || 0).toLocaleString("id-ID")}</span>
+                      <span className="text-gray-900 font-medium whitespace-nowrap">Rp {(item.unit_price || 0).toLocaleString("id-ID")}</span>
                     </div>
                   ))
                 ) : (
