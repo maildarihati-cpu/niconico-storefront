@@ -3,21 +3,22 @@
 import React, { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { useRouter, useParams } from "next/navigation";
-import { ChevronLeft, Check, Trash2, Loader2, X } from "lucide-react"; 
+import { ChevronLeft, Check, Trash2, Loader2 } from "lucide-react"; 
 import { useCart } from "@/context/cart-context/cart-context";
 import { updateLineItem, deleteLineItem } from "@lib/data/cart";
 import { StoreCart, StoreCustomer } from "@medusajs/types";
 import { prepareCheckoutCart } from "@lib/util/checkout-util"; 
 
-// 🌟 PERBAIKAN: Tambahkan props isOpen dan onClose
+// 🌟 PERBAIKAN: Tambahkan setView ke dalam Props
 interface CartTemplateProps {
   cart: StoreCart | any;
   customer?: StoreCustomer | null;
   isOpen?: boolean;
   onClose?: () => void;
+  setView?: (view: string) => void; // 👈 Wajib ada untuk memanggil laci Login
 }
 
-export default function CartTemplate({ cart: initialCart, customer, isOpen = true, onClose }: CartTemplateProps) {
+export default function CartTemplate({ cart: initialCart, customer, isOpen = true, onClose, setView }: CartTemplateProps) {
   const router = useRouter();
   const { countryCode } = useParams();
   
@@ -149,27 +150,37 @@ export default function CartTemplate({ cart: initialCart, customer, isOpen = tru
   const handleCheckout = async () => {
     if (selectedItems.length === 0) return;
     
+    // 🌟 PERBAIKAN LOGIC CHECKOUT:
     if (!customer || !customer.id) {
-      document.cookie = "return_to=/" + countryCode + "/cart; path=/; max-age=3600";
-      if (onClose) onClose(); // Tutup laci sebelum pindah
-      router.push(`/${countryCode}/cart?auth=login`, { scroll: false });
+      // 1. Simpan cookie agar setelah login kustomer dilempar kembali ke checkout (atau keranjang)
+      document.cookie = "return_to=/" + countryCode + "/checkout; path=/; max-age=3600";
+      
+      // 2. Transisi mulus: Ganti wujud laci dari Cart menjadi Login
+      if (setView) {
+        setView("login");
+      } else {
+         // Fallback kalau setView tidak ada (misal diakses langsung dari URL lama)
+        if (onClose) onClose();
+        router.push(`/${countryCode}/cart?auth=login`, { scroll: false });
+      }
       return; 
     }
 
+    // 🌟 Jika Kustomer Sudah Login, Lanjut Proses Checkout:
     setIsCheckoutLoading(true);
 
     try {
       const isAllSelected = cart?.items?.length === selectedItems.length;
 
       if (isAllSelected) {
-        if (onClose) onClose(); // Tutup laci sebelum pindah
+        if (onClose) onClose(); // Tutup laci sebelum pindah ke full page checkout
         router.push(`/${countryCode}/checkout`);
       } else {
         const itemsToCheckout = cart.items.filter((item: any) => selectedItems.includes(item.id));
         const checkoutCartId = await prepareCheckoutCart(cart, itemsToCheckout);
 
         if (checkoutCartId) {
-          if (onClose) onClose(); // Tutup laci sebelum pindah
+          if (onClose) onClose(); // Tutup laci sebelum pindah ke full page checkout
           router.push(`/${countryCode}/checkout?cart_id=${checkoutCartId}`);
         } else {
           console.error("Error creating checkout cart");
@@ -182,7 +193,6 @@ export default function CartTemplate({ cart: initialCart, customer, isOpen = tru
     }
   };
 
-  // 🌟 FUNGSI PENUTUP LACI (MENGGANTIKAN ROUTER.BACK)
   const handleSafeClose = (e?: React.MouseEvent) => {
     if (e) e.preventDefault();
     if (document.activeElement instanceof HTMLElement) {
@@ -192,28 +202,24 @@ export default function CartTemplate({ cart: initialCart, customer, isOpen = tru
       if (onClose) {
         onClose();
       } else {
-        router.back(); // Fallback kalau kebetulan dibuka sebagai halaman terpisah
+        router.back(); 
       }
     }, 100);
   };
 
-  // 🌟 JIKA LACI SEDANG TUTUP, JANGAN RENDER APA-APA
   if (!isOpen) return null;
 
   return (
     <>
-      {/* 🌟 OVERLAY GELAP (Tampil di Mobile dan Desktop) */}
       <div 
         className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm animate-in fade-in duration-300 cursor-pointer"
         onClick={handleSafeClose}
         title="Klik di luar laci untuk menutup"
       />
 
-      {/* 🌟 LACI UTAMA (Fixed Side Panel) */}
       <div className="bg-white fixed top-0 right-0 h-full w-full sm:w-[480px] z-[101] shadow-[0_0_50px_rgba(0,0,0,0.3)] animate-in slide-in-from-right duration-300 overflow-y-auto scrollbar-hide font-sans flex flex-col">
         
         <div className="pt-12 pb-6 px-6 relative flex flex-col items-center flex-shrink-0">
-          {/* Tombol Tutup Laci */}
           <button 
             type="button" 
             onClick={handleSafeClose}

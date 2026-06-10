@@ -92,6 +92,7 @@ export default function ProfileContent({ onClose, view, setView }: ProfileConten
       customer={customerData} 
       isOpen={true} 
       onClose={onClose} 
+      setView={setView} // 🌟 INI OBATNYA BOS! Agar CartView bisa manggil LoginView
     />
   );
   
