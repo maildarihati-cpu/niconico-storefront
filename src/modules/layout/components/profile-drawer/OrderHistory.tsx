@@ -113,6 +113,7 @@ export default function OrderHistory({ orders = [], setView, onClose }: OrderHis
 
   // 🌟 FUNGSI PENGECEKAN LINK TRACKING
   const isValidUrl = (string: string) => {
+    if (!string) return false;
     try {
       new URL(string);
       return true;
@@ -165,8 +166,16 @@ export default function OrderHistory({ orders = [], setView, onClose }: OrderHis
           </div>
         ) : (
           filteredOrders.map((order) => {
-            const rawTracking = order.fulfillments?.[0]?.tracking_links?.[0]?.url || order.fulfillments?.[0]?.tracking_number || "-";
-            const isTrackingUrl = isValidUrl(rawTracking);
+            // 🌟 LOGIC EXTRAKSI RESI MEDUSA YANG BENAR 🌟
+            const fulfillment = order.fulfillments?.[order.fulfillments.length - 1]; // Ambil pengiriman terakhir
+            let tUrl = fulfillment?.tracking_links?.[0]?.url;
+            let tNum = fulfillment?.tracking_links?.[0]?.tracking_number || fulfillment?.tracking_numbers?.[0]; // PERHATIKAN PENGGUNAAN "tracking_numbers" (Plural Array)
+
+            // Kalau admin input link langsung ke field resi biasa, kita paksa dia jadi Link URL
+            if (!tUrl && tNum && isValidUrl(tNum)) {
+              tUrl = tNum;
+            }
+
             const isShipped = getOrderCategory(order) === "On The Way" || getOrderCategory(order) === "Delivered";
 
             return (
@@ -181,13 +190,13 @@ export default function OrderHistory({ orders = [], setView, onClose }: OrderHis
                 <div className="space-y-2 text-[12px] text-gray-500 mb-5">
                   <div className="flex gap-2 items-center">
                     <span className="w-28">Tracking Details:</span>
-                    {/* 🌟 LOGIC TRACK MY ORDER BERDASARKAN STATUS */}
-                    {isShipped && isTrackingUrl ? (
-                      <a href={rawTracking} target="_blank" rel="noopener noreferrer" className="font-bold text-[#1A3382] hover:underline flex items-center gap-1">
+                    {/* 🌟 TOMBOL / TEKS TRACKING 🌟 */}
+                    {isShipped && tUrl ? (
+                      <a href={tUrl} target="_blank" rel="noopener noreferrer" className="font-bold text-[#1A3382] hover:underline flex items-center gap-1">
                         Track My Order <ExternalLink className="w-3 h-3" />
                       </a>
                     ) : (
-                      <span className="font-bold text-gray-900">{rawTracking}</span>
+                      <span className="font-bold text-gray-900">{tNum || "-"}</span>
                     )}
                   </div>
                   <div className="flex justify-between">
@@ -262,16 +271,22 @@ export default function OrderHistory({ orders = [], setView, onClose }: OrderHis
                 <div className="flex justify-between items-center">
                   <span className="text-gray-500">Tracking Link</span>
                   {(() => {
-                    const rawTracking = selectedOrder.fulfillments?.[0]?.tracking_links?.[0]?.url || selectedOrder.fulfillments?.[0]?.tracking_number || "-";
+                    const fulfillment = selectedOrder.fulfillments?.[selectedOrder.fulfillments.length - 1];
+                    let tUrl = fulfillment?.tracking_links?.[0]?.url;
+                    let tNum = fulfillment?.tracking_links?.[0]?.tracking_number || fulfillment?.tracking_numbers?.[0];
+
+                    if (!tUrl && tNum && isValidUrl(tNum)) tUrl = tNum;
+
                     const isShipped = getOrderCategory(selectedOrder) === "On The Way" || getOrderCategory(selectedOrder) === "Delivered";
-                    if (isShipped && isValidUrl(rawTracking)) {
+                    
+                    if (isShipped && tUrl) {
                       return (
-                        <a href={rawTracking} target="_blank" rel="noopener noreferrer" className="bg-orange-50 text-[#EF7044] px-3 py-1 rounded-full font-bold text-[11px] hover:bg-[#EF7044] hover:text-white transition-colors flex items-center gap-1">
+                        <a href={tUrl} target="_blank" rel="noopener noreferrer" className="bg-orange-50 text-[#EF7044] px-3 py-1 rounded-full font-bold text-[11px] hover:bg-[#EF7044] hover:text-white transition-colors flex items-center gap-1">
                           Track Order <ExternalLink className="w-3 h-3" />
                         </a>
                       );
                     }
-                    return <span className="text-gray-900 font-medium">{rawTracking}</span>;
+                    return <span className="text-gray-900 font-medium">{tNum || "-"}</span>;
                   })()}
                 </div>
                 
