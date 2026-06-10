@@ -3,18 +3,21 @@
 import React, { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { useRouter, useParams } from "next/navigation";
-import { ChevronLeft, Check, Trash2, Loader2 } from "lucide-react"; 
+import { ChevronLeft, Check, Trash2, Loader2, X } from "lucide-react"; 
 import { useCart } from "@/context/cart-context/cart-context";
 import { updateLineItem, deleteLineItem } from "@lib/data/cart";
 import { StoreCart, StoreCustomer } from "@medusajs/types";
 import { prepareCheckoutCart } from "@lib/util/checkout-util"; 
 
+// 🌟 PERBAIKAN: Tambahkan props isOpen dan onClose
 interface CartTemplateProps {
   cart: StoreCart | any;
   customer?: StoreCustomer | null;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
-export default function CartTemplate({ cart: initialCart, customer }: CartTemplateProps) {
+export default function CartTemplate({ cart: initialCart, customer, isOpen = true, onClose }: CartTemplateProps) {
   const router = useRouter();
   const { countryCode } = useParams();
   
@@ -47,7 +50,6 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
       const bottomItem = items.find((i: any) => i.metadata?.bundle_type === "BOTTOM") || items[1];
 
       if (topItem && bottomItem) {
-        // 🌟 PERBAIKAN LOGIC WARNA: Tangkap warna dari metadata Top/Bottom
         const bundleColor = topItem.metadata?.color || bottomItem.metadata?.color;
         const colorText = bundleColor ? `Color: ${bundleColor} • ` : "";
 
@@ -59,7 +61,6 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
           thumbnail: topItem.thumbnail,
           unit_price: items.reduce((sum: number, i: any) => sum + (i.unit_price || 0), 0),
           quantity: topItem.quantity || 1,
-          // 🌟 Teks warna dan ukuran digabung di sini agar rapi
           variant_title: `${colorText}Top: ${topItem.metadata?.size || '-'} / Bottom: ${bottomItem.metadata?.size || '-'}`
         });
       } else {
@@ -150,6 +151,7 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
     
     if (!customer || !customer.id) {
       document.cookie = "return_to=/" + countryCode + "/cart; path=/; max-age=3600";
+      if (onClose) onClose(); // Tutup laci sebelum pindah
       router.push(`/${countryCode}/cart?auth=login`, { scroll: false });
       return; 
     }
@@ -160,12 +162,14 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
       const isAllSelected = cart?.items?.length === selectedItems.length;
 
       if (isAllSelected) {
+        if (onClose) onClose(); // Tutup laci sebelum pindah
         router.push(`/${countryCode}/checkout`);
       } else {
         const itemsToCheckout = cart.items.filter((item: any) => selectedItems.includes(item.id));
         const checkoutCartId = await prepareCheckoutCart(cart, itemsToCheckout);
 
         if (checkoutCartId) {
+          if (onClose) onClose(); // Tutup laci sebelum pindah
           router.push(`/${countryCode}/checkout?cart_id=${checkoutCartId}`);
         } else {
           console.error("Error creating checkout cart");
@@ -178,31 +182,42 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
     }
   };
 
-  const handleSafeBack = (e?: React.MouseEvent) => {
+  // 🌟 FUNGSI PENUTUP LACI (MENGGANTIKAN ROUTER.BACK)
+  const handleSafeClose = (e?: React.MouseEvent) => {
     if (e) e.preventDefault();
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
     setTimeout(() => {
-      router.back();
+      if (onClose) {
+        onClose();
+      } else {
+        router.back(); // Fallback kalau kebetulan dibuka sebagai halaman terpisah
+      }
     }, 100);
   };
 
+  // 🌟 JIKA LACI SEDANG TUTUP, JANGAN RENDER APA-APA
+  if (!isOpen) return null;
+
   return (
     <>
+      {/* 🌟 OVERLAY GELAP (Tampil di Mobile dan Desktop) */}
       <div 
-        className="hidden md:block fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm animate-in fade-in duration-300 cursor-pointer"
-        onClick={handleSafeBack}
+        className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm animate-in fade-in duration-300 cursor-pointer"
+        onClick={handleSafeClose}
         title="Klik di luar laci untuk menutup"
       />
 
-      <div className="bg-white min-h-screen relative max-w-full md:fixed md:top-0 md:right-0 md:h-full md:w-[480px] md:z-[101] md:shadow-[0_0_50px_rgba(0,0,0,0.3)] md:animate-in md:slide-in-from-right-full md:duration-500 overflow-y-auto scrollbar-hide font-sans flex flex-col">
+      {/* 🌟 LACI UTAMA (Fixed Side Panel) */}
+      <div className="bg-white fixed top-0 right-0 h-full w-full sm:w-[480px] z-[101] shadow-[0_0_50px_rgba(0,0,0,0.3)] animate-in slide-in-from-right duration-300 overflow-y-auto scrollbar-hide font-sans flex flex-col">
         
         <div className="pt-12 pb-6 px-6 relative flex flex-col items-center flex-shrink-0">
+          {/* Tombol Tutup Laci */}
           <button 
             type="button" 
-            onClick={handleSafeBack}
-            className="md:hidden absolute left-6 top-14 p-2 bg-white rounded-full shadow-sm border border-gray-100 hover:bg-gray-50 transition-colors"
+            onClick={handleSafeClose}
+            className="absolute left-6 top-14 p-2 bg-white rounded-full shadow-sm border border-gray-100 hover:bg-gray-50 transition-colors"
           >
             <ChevronLeft className="w-5 h-5 text-gray-800" />
           </button>
@@ -225,13 +240,10 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
               const displayPrice = group.isBundle ? group.unit_price : (group.item.unit_price || 0);
               const displayThumb = (group.isBundle ? group.thumbnail : group.item.thumbnail) || "/placeholder.png";
               
-              // 🌟 PERBAIKAN LOGIC WARNA: Pengaturan render untuk varian Set vs Reguler
               let displayVariant = "";
               if (group.isBundle) {
-                // Teks bundle sudah rapi di-generate di useMemo
                 displayVariant = group.variant_title;
               } else {
-                // Untuk item reguler, kita tarik warnanya juga dari metadata
                 const regColor = group.item.metadata?.color;
                 const regVariant = group.item.variant?.title || group.item.variant_title || "Regular";
                 displayVariant = regColor ? `Color: ${regColor} • Size: ${regVariant}` : regVariant;

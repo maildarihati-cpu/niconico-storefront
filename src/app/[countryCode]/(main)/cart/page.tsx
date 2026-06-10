@@ -1,6 +1,6 @@
 import { retrieveCart } from "@lib/data/cart"
 import { retrieveCustomer } from "@lib/data/customer"
-import CartTemplate from "@modules/cart/templates"
+import CartTemplate from "@/modules/layout/components/profile-drawer/CartView"
 import { Metadata } from "next"
 
 export const revalidate = 0 // Memaksa data selalu fresh dari backend
