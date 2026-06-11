@@ -27,8 +27,8 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   const [isApplyingPromo, setIsApplyingPromo] = useState(false)
   const [isPaying, setIsPaying] = useState(false)
   
+  // 🌟 LOGIC EMAIL MURNI (TANPA DIRUSAK)
   const [email, setEmail] = useState(initialCart?.email || customer?.email || "")
-  // 🌟 STATE BARU UNTUK PHONE GUEST
   const [guestPhone, setGuestPhone] = useState(initialCart?.shipping_address?.phone || customer?.phone || "")
   
   const [shippingMethods, setShippingMethods] = useState<any[]>([])
@@ -41,6 +41,9 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   const [deletingAddressId, setDeletingAddressId] = useState<string | null>(null);
   const [deletedAddressIds, setDeletedAddressIds] = useState<string[]>([]);
 
+  // 🌟 STATE UNTUK DAFTAR NEGARA DINAMIS DARI REGION MEDUSA
+  const [countryOptions, setCountryOptions] = useState<any[]>([]);
+
   const [newAddress, setNewAddress] = useState({
     first_name: customer?.first_name || "",
     last_name: customer?.last_name || "",
@@ -49,11 +52,11 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
     city: "",
     province: "",
     postal_code: "",
-    country_code: "id", 
+    country_code: "", 
   })
 
   // ==========================================
-  // 🌟 LOGIKA GROUPING
+  // 🌟 LOGIKA GROUPING BUNDLE
   // ==========================================
   const groupedItems = useMemo(() => {
     const groups: any[] = [];
@@ -99,6 +102,44 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   }, [cart?.items]);
 
   // ==========================================
+  // 🌟 FETCH COUNTRIES BERDASARKAN REGION CART (INDONESIA / INTERNATIONAL)
+  // ==========================================
+  useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000";
+        const apiKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "";
+        
+        const res = await fetch(`${backendUrl}/store/regions`, {
+          headers: { "x-publishable-api-key": apiKey }
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          // 🌟 MENDETEKSI OTOMATIS REGION CART SAAT INI
+          const activeRegion = data.regions?.find((r: any) => r.id === cart?.region_id) || data.regions?.[0];
+          
+          if (activeRegion && activeRegion.countries) {
+            const sortedCountries = activeRegion.countries.sort((a: any, b: any) => 
+              (a.display_name || a.name).localeCompare(b.display_name || b.name)
+            );
+            setCountryOptions(sortedCountries);
+            
+            setNewAddress((prev) => ({
+              ...prev,
+              country_code: prev.country_code || sortedCountries[0].iso_2
+            }));
+          }
+        }
+      } catch (error) {
+        console.error("Gagal menarik data negara:", error);
+      }
+    };
+    
+    fetchCountries();
+  }, [cart?.region_id]);
+
+  // ==========================================
   // 🌟 MAP ENGINE (PIN POINT)
   // ==========================================
   const mapRef = useRef<HTMLDivElement>(null);
@@ -107,6 +148,8 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   const [isSearchingMap, setIsSearchingMap] = useState(false);
   const [isMapLoading, setIsMapLoading] = useState(false);
   const [leafletLoaded, setLeafletLoaded] = useState(false);
+
+  const showAddressForm = isAddingAddress || !customer;
 
   useEffect(() => {
     if (typeof window === "undefined" || leafletLoaded) return;
@@ -122,7 +165,8 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   }, [leafletLoaded]);
 
   useEffect(() => {
-    if (!leafletLoaded || !mapRef.current || !isAddingAddress || mapInstance) return;
+    if (!leafletLoaded || !mapRef.current || !showAddressForm || mapInstance) return;
+    
     const L = (window as any).L;
     const defaultLat = -8.6500;
     const defaultLng = 115.2167;
@@ -159,7 +203,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
       }
     });
     return () => { map.remove(); setMapInstance(null); };
-  }, [leafletLoaded, isAddingAddress]); 
+  }, [leafletLoaded, showAddressForm, mapInstance]); 
 
   const handleSearchLocation = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -313,7 +357,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
         province: address.province || "",
         country_code: address.country_code || "id",
         postal_code: address.postal_code || "",
-        metadata: { is_guest: !customer } // 🌟 INJEKSI STEMPEL GUEST UNTUK BACKEND
+        metadata: { is_guest: !customer } // 🌟 INJEKSI STEMPEL GUEST
       };
       
       const updatedCart = await updateCartAddressAction(cart.id, safeCartAddress, targetEmail)
@@ -341,7 +385,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
       city: "",
       province: "",
       postal_code: "",
-      country_code: "id",
+      country_code: countryOptions.length > 0 ? countryOptions[0].iso_2 : "id",
     });
   };
 
@@ -356,7 +400,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
       city: addr.city || "",
       province: addr.province || "",
       postal_code: addr.postal_code || "",
-      country_code: addr.country_code || "id",
+      country_code: addr.country_code || (countryOptions.length > 0 ? countryOptions[0].iso_2 : "id"),
     });
     setIsAddingAddress(true);
   };
@@ -384,7 +428,6 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
         metadata: { is_guest: !customer }
       }
 
-      // 🌟 HANYA SIMPAN KE PROFILE JIKA CUSTOMER LOGIN
       if (customer) {
         await saveAddressServerAction(payload, editingAddressId) 
       }
@@ -602,106 +645,142 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
 
               <div className="space-y-4">
                 {/* 🌟 ADDRESS RENDERER */}
-                {showAddressList || !customer ? (
+                {showAddressForm ? (
                   <div className="grid gap-3 animate-in fade-in duration-300">
-                    {isAddingAddress || !customer ? (
-                      <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-inner flex flex-col gap-4">
-                        <div className="flex justify-between items-center mb-2 border-b border-gray-100 pb-3">
-                          <h4 className="text-sm font-bold text-gray-900">
-                            {editingAddressId ? "Edit Address Details" : "Address Details"}
-                          </h4>
-                          {customer && (
-                            <button onClick={handleCancelAddressForm} className="p-1 hover:bg-gray-100 rounded-full transition-colors"><ChevronLeft className="w-4 h-4" /></button>
-                          )}
-                        </div>
-                        
-                        <div className="relative w-full h-[200px] md:h-[300px] rounded-xl overflow-hidden mb-2 border border-gray-300">
-                          <form onSubmit={handleSearchLocation} className="absolute top-3 left-3 right-3 z-[400]">
-                            <div className="bg-white rounded-lg shadow-md flex items-center px-3 py-2 border border-gray-200">
-                              <Search className="w-4 h-4 text-gray-400 mr-2" />
-                              <input type="text" value={searchQueryMap} onChange={(e) => setSearchQueryMap(e.target.value)} placeholder="Search location on Map..." className="w-full text-xs outline-none text-gray-700 bg-transparent" />
-                              <button type="submit" disabled={isSearchingMap} className="text-[10px] bg-[#EF7044] text-white px-3 py-1.5 rounded-md font-bold ml-2">SEARCH</button>
-                            </div>
-                          </form>
-                          <div ref={mapRef} className="w-full h-full z-[100]" />
-                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-[400]">
-                            <div className="relative bottom-4 flex flex-col items-center">
-                              <MapPin className="w-8 h-8 text-[#ef7044] fill-white drop-shadow-md" />
-                              <div className="w-2 h-2 bg-black/30 rounded-full blur-[2px] mt-0.5" />
-                            </div>
+                    <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-inner flex flex-col gap-4">
+                      <div className="flex justify-between items-center mb-2 border-b border-gray-100 pb-3">
+                        <h4 className="text-sm font-bold text-gray-900">
+                          {editingAddressId ? "Edit Address Details" : "Address Details"}
+                        </h4>
+                        {customer && (
+                          <button onClick={handleCancelAddressForm} className="p-1 hover:bg-gray-100 rounded-full transition-colors"><ChevronLeft className="w-4 h-4" /></button>
+                        )}
+                      </div>
+                      
+                      <div className="relative w-full h-[200px] md:h-[300px] rounded-xl overflow-hidden mb-2 border border-gray-300">
+                        <form onSubmit={handleSearchLocation} className="absolute top-3 left-3 right-3 z-[400]">
+                          <div className="bg-white rounded-lg shadow-md flex items-center px-3 py-2 border border-gray-200">
+                            <Search className="w-4 h-4 text-gray-400 mr-2" />
+                            <input type="text" value={searchQueryMap} onChange={(e) => setSearchQueryMap(e.target.value)} placeholder="Search location on Map..." className="w-full text-xs outline-none text-gray-700 bg-transparent" />
+                            <button type="submit" disabled={isSearchingMap} className="text-[10px] bg-[#EF7044] text-white px-3 py-1.5 rounded-md font-bold ml-2">SEARCH</button>
                           </div>
-                          <button type="button" onClick={handleUseCurrentLocation} className="absolute bottom-3 right-3 bg-white text-gray-800 text-[10px] font-bold px-3 py-2 rounded-lg shadow-md flex items-center gap-1.5 border border-gray-200 z-[400]">
-                            <Crosshair className="w-3 h-3" /> Use GPS
-                          </button>
+                        </form>
+                        <div ref={mapRef} className="w-full h-full z-[100]" />
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-[400]">
+                          <div className="relative bottom-4 flex flex-col items-center">
+                            <MapPin className="w-8 h-8 text-[#ef7044] fill-white drop-shadow-md" />
+                            <div className="w-2 h-2 bg-black/30 rounded-full blur-[2px] mt-0.5" />
+                          </div>
                         </div>
+                        <button type="button" onClick={handleUseCurrentLocation} className="absolute bottom-3 right-3 bg-white text-gray-800 text-[10px] font-bold px-3 py-2 rounded-lg shadow-md flex items-center gap-1.5 border border-gray-200 z-[400]">
+                          <Crosshair className="w-3 h-3" /> Use GPS
+                        </button>
+                      </div>
 
-                        <div className="flex items-start gap-3 mb-2 px-2 bg-blue-50/50 p-3 rounded-lg border border-blue-100">
-                          <MapPin className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
-                          {isMapLoading ? (
-                            <p className="text-[11px] text-gray-500 animate-pulse font-medium">Reading map coordinates...</p>
-                          ) : (
-                            <p className="text-[11px] md:text-xs text-gray-800 leading-relaxed font-semibold">
-                              {newAddress.address_1 || "Drag the map to pinpoint the exact delivery coordinates."}
-                            </p>
-                          )}
-                        </div>
+                      <div className="flex items-start gap-3 mb-2 px-2 bg-blue-50/50 p-3 rounded-lg border border-blue-100">
+                        <MapPin className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+                        {isMapLoading ? (
+                          <p className="text-[11px] text-gray-500 animate-pulse font-medium">Reading map coordinates...</p>
+                        ) : (
+                          <p className="text-[11px] md:text-xs text-gray-800 leading-relaxed font-semibold">
+                            {newAddress.address_1 || "Drag the map to pinpoint the exact delivery coordinates."}
+                          </p>
+                        )}
+                      </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                           <div className="md:col-span-2">
-                             <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Full Address Details</label>
-                             <textarea rows={3} required value={newAddress.address_1} onChange={(e) => setNewAddress({...newAddress, address_1: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:border-[#ef7044] outline-none" placeholder="Street Name, Building, Landmark..." />
-                           </div>
-                           <div>
-                             <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">City / District</label>
-                             <input type="text" required value={newAddress.city} onChange={(e) => setNewAddress({...newAddress, city: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:border-[#ef7044] outline-none" />
-                           </div>
-                           <div>
-                             <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">State / Province</label>
-                             <input type="text" required value={newAddress.province} onChange={(e) => setNewAddress({...newAddress, province: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:border-[#ef7044] outline-none" />
-                           </div>
-                           <div>
-                             <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Postal Code</label>
-                             <input type="text" required value={newAddress.postal_code} onChange={(e) => setNewAddress({...newAddress, postal_code: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:border-[#ef7044] outline-none" />
-                           </div>
-                           <div>
-                             <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Country</label>
-                             <select value={newAddress.country_code} onChange={e => setNewAddress({...newAddress, country_code: e.target.value})} className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:border-[#ef7044] outline-none appearance-none">
-                               <option value="id">Indonesia (ID)</option>
-                               <option value="sg">Singapore (SG)</option>
-                               <option value="my">Malaysia (MY)</option>
-                               <option value="au">Australia (AU)</option>
-                               <option value="us">United States (US)</option>
-                             </select>
-                           </div>
-                           <div>
-                             <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">First Name</label>
-                             <input type="text" required value={newAddress.first_name} onChange={(e) => setNewAddress({...newAddress, first_name: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:border-[#ef7044] outline-none" />
-                           </div>
-                           <div>
-                             <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Last Name</label>
-                             <input type="text" required value={newAddress.last_name} onChange={(e) => setNewAddress({...newAddress, last_name: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:border-[#ef7044] outline-none" />
-                           </div>
-                           
-                           {/* HANYA TAMPILKAN DI SINI JIKA MEMBER, GUEST SUDAH DI ATAS */}
-                           {customer && (
-                             <div className="md:col-span-2">
-                               <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Phone Number</label>
-                               <input type="tel" required value={newAddress.phone} onChange={(e) => setNewAddress({...newAddress, phone: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:border-[#ef7044] outline-none" placeholder="081234567890" />
-                             </div>
-                           )}
-                        </div>
-
-                        <div className="flex gap-3 mt-4 pt-4 border-t border-gray-100">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="md:col-span-2">
+                            <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Full Address Details</label>
+                            <textarea rows={3} required value={newAddress.address_1} onChange={(e) => setNewAddress({...newAddress, address_1: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:border-[#ef7044] outline-none" placeholder="Street Name, Building, Landmark..." />
+                          </div>
+                          <div>
+                            <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">City / District</label>
+                            <input type="text" required value={newAddress.city} onChange={(e) => setNewAddress({...newAddress, city: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:border-[#ef7044] outline-none" />
+                          </div>
+                          <div>
+                            <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">State / Province</label>
+                            <input type="text" required value={newAddress.province} onChange={(e) => setNewAddress({...newAddress, province: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:border-[#ef7044] outline-none" />
+                          </div>
+                          <div>
+                            <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Postal Code</label>
+                            <input type="text" required value={newAddress.postal_code} onChange={(e) => setNewAddress({...newAddress, postal_code: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:border-[#ef7044] outline-none" />
+                          </div>
+                          
+                          {/* 🌟 DINAMIS DARI REGION MEDUSA */}
+                          <div>
+                            <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Country</label>
+                            <select 
+                              value={newAddress.country_code} 
+                              onChange={e => setNewAddress({...newAddress, country_code: e.target.value})} 
+                              className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:border-[#ef7044] outline-none appearance-none"
+                            >
+                              {countryOptions.length > 0 ? (
+                                countryOptions.map((c: any) => (
+                                  <option key={c.iso_2} value={c.iso_2}>
+                                    {c.display_name || c.name} ({c.iso_2.toUpperCase()})
+                                  </option>
+                                ))
+                              ) : (
+                                <option value="id">Indonesia (ID)</option>
+                              )}
+                            </select>
+                          </div>
+                          
+                          <div>
+                            <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">First Name</label>
+                            <input type="text" required value={newAddress.first_name} onChange={(e) => setNewAddress({...newAddress, first_name: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:border-[#ef7044] outline-none" />
+                          </div>
+                          <div>
+                            <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Last Name</label>
+                            <input type="text" required value={newAddress.last_name} onChange={(e) => setNewAddress({...newAddress, last_name: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:border-[#ef7044] outline-none" />
+                          </div>
+                          
                           {customer && (
-                            <button onClick={handleCancelAddressForm} className="px-6 py-2.5 rounded-lg border border-gray-300 text-gray-600 text-xs font-bold hover:bg-gray-50">Cancel</button>
+                            <div className="md:col-span-2">
+                              <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Phone Number</label>
+                              <input type="tel" required value={newAddress.phone} onChange={(e) => setNewAddress({...newAddress, phone: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:border-[#ef7044] outline-none" placeholder="081234567890" />
+                            </div>
                           )}
-                          <button onClick={handleSaveNewAddress} disabled={isLoadingShipping} className="flex-1 bg-[#ef7044] text-white py-2.5 rounded-lg font-bold hover:bg-[#d65f36] text-xs flex justify-center items-center gap-2 disabled:opacity-50">
-                            {isLoadingShipping ? <Loader2 className="w-4 h-4 animate-spin" /> : (customer ? (editingAddressId ? "Update Address" : "Save Address") : "Use This Address")}
-                          </button>
+                      </div>
+
+                      <div className="flex gap-3 mt-4 pt-4 border-t border-gray-100">
+                        {customer && (
+                          <button onClick={handleCancelAddressForm} className="px-6 py-2.5 rounded-lg border border-gray-300 text-gray-600 text-xs font-bold hover:bg-gray-50">Cancel</button>
+                        )}
+                        <button onClick={handleSaveNewAddress} disabled={isLoadingShipping} className="flex-1 bg-[#ef7044] text-white py-2.5 rounded-lg font-bold hover:bg-[#d65f36] text-xs flex justify-center items-center gap-2 disabled:opacity-50">
+                          {isLoadingShipping ? <Loader2 className="w-4 h-4 animate-spin" /> : (customer ? (editingAddressId ? "Update Address" : "Save Address") : "Use This Address")}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {/* TAMPILAN MEMBER - PILIH ALAMAT */}
+                    {!showAddressList && customer && (
+                      <div className="flex gap-4 items-start">
+                        <MapPin className="w-5 h-5 text-[#EF7044] shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                          {cart.shipping_address && cart.shipping_address.address_1 ? (
+                            <>
+                              <p className="text-sm font-bold text-gray-900 mb-1">{cart.shipping_address.first_name} {cart.shipping_address.last_name}</p>
+                              <p className="text-xs text-gray-600 font-medium mb-0.5">{cart.shipping_address.phone}</p>
+                              <p className="text-[11px] md:text-xs text-gray-500 leading-relaxed">
+                                {cart.shipping_address.address_1}, {cart.shipping_address.city}, {cart.shipping_address.province}, {cart.shipping_address.postal_code}
+                              </p>
+                            </>
+                          ) : (
+                            <div className="flex flex-col gap-1 cursor-pointer group" onClick={() => { setShowAddressList(true); setIsAddingAddress(true); setEditingAddressId(null); }}>
+                               <p className="text-sm font-bold text-[#EF7044] group-hover:text-[#d65f36] transition-colors">Address Incomplete...</p>
+                               <p className="text-[11px] md:text-xs text-gray-500 font-medium">Click here to fill your shipping address.</p>
+                            </div>
+                          )}
                         </div>
                       </div>
-                    ) : (
-                      <>
+                    )}
+
+                    {/* TAMPILAN MEMBER - LIST ALAMAT (Jika ditekan Choose Another Address) */}
+                    {showAddressList && customer && (
+                      <div className="grid gap-3 animate-in fade-in duration-300">
                         {availableAddresses.length > 0 ? (
                           availableAddresses.map((addr: any) => (
                             <div 
@@ -759,29 +838,9 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                         >
                           <Plus className="w-4 h-4" /> Add New Address
                         </button>
-                      </>
+                      </div>
                     )}
-                  </div>
-                ) : (
-                  <div className="flex gap-4 items-start">
-                    <MapPin className="w-5 h-5 text-[#EF7044] shrink-0 mt-0.5" />
-                    <div className="flex-1">
-                      {cart.shipping_address && cart.shipping_address.address_1 ? (
-                        <>
-                          <p className="text-sm font-bold text-gray-900 mb-1">{cart.shipping_address.first_name} {cart.shipping_address.last_name}</p>
-                          <p className="text-xs text-gray-600 font-medium mb-0.5">{cart.shipping_address.phone}</p>
-                          <p className="text-[11px] md:text-xs text-gray-500 leading-relaxed">
-                            {cart.shipping_address.address_1}, {cart.shipping_address.city}, {cart.shipping_address.province}, {cart.shipping_address.postal_code}
-                          </p>
-                        </>
-                      ) : (
-                        <div className="flex flex-col gap-1 cursor-pointer group" onClick={() => { setShowAddressList(true); setIsAddingAddress(true); setEditingAddressId(null); }}>
-                           <p className="text-sm font-bold text-[#EF7044] group-hover:text-[#d65f36] transition-colors">Address Incomplete...</p>
-                           <p className="text-[11px] md:text-xs text-gray-500 font-medium">Click here to fill your shipping address.</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  </>
                 )}
               </div>
             </div>
