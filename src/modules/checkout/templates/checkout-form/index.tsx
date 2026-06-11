@@ -100,7 +100,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   }, [cart?.items]);
 
   // ==========================================
-  // 🌟 FETCH REGION (NEGARA)
+  // 🌟 FETCH REGION
   // ==========================================
   useEffect(() => {
     const fetchCountries = async () => {
@@ -137,7 +137,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   }, [cart?.region_id]);
 
   // ==========================================
-  // 🌟 MAP ENGINE LEAFLET (DISEMBUHKAN DENGAN RESIZEOBSERVER)
+  // 🌟 MAP ENGINE LEAFLET
   // ==========================================
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
@@ -148,31 +148,21 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
 
   const showAddressForm = isAddingAddress || !customer;
 
-  // 1. INJEKSI SCRIPT & CSS LEAFLET SECARA AMAN
   useEffect(() => {
     if (typeof window === "undefined") return;
-    
-    // Cegah injeksi ganda jika sudah ada
-    if ((window as any).L) {
-      setLeafletLoaded(true);
-      return;
-    }
+    if ((window as any).L) { setLeafletLoaded(true); return; }
 
     const cssId = "leaflet-css-checkout";
     if (!document.getElementById(cssId)) {
       const link = document.createElement("link");
-      link.id = cssId;
-      link.rel = "stylesheet";
-      link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+      link.id = cssId; link.rel = "stylesheet"; link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
       document.head.appendChild(link);
     }
 
     const scriptId = "leaflet-js-checkout";
     if (!document.getElementById(scriptId)) {
       const script = document.createElement("script");
-      script.id = scriptId;
-      script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-      script.async = true;
+      script.id = scriptId; script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"; script.async = true;
       script.onload = () => setLeafletLoaded(true);
       document.body.appendChild(script);
     } else {
@@ -180,32 +170,21 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
     }
   }, []);
 
-  // 2. INISIALISASI PETA DENGAN RESIZE OBSERVER
   useEffect(() => {
     if (!leafletLoaded || !mapRef.current || !showAddressForm) return;
-    if (mapInstanceRef.current) return; // Jangan buat ulang jika peta sudah ada
+    if (mapInstanceRef.current) return; 
 
     const L = (window as any).L;
     const defaultLat = -8.6500;
     const defaultLng = 115.2167;
 
-    const map = L.map(mapRef.current, { 
-      center: [defaultLat, defaultLng], 
-      zoom: 15, 
-      zoomControl: false 
-    });
-
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
+    const map = L.map(mapRef.current, { center: [defaultLat, defaultLng], zoom: 15, zoomControl: false });
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
 
     mapInstanceRef.current = map;
 
-    // 🌟 OBAT PAMUNGKAS: Paksa peta refresh saat animasi wadah/container berubah!
     const resizeObserver = new ResizeObserver(() => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.invalidateSize();
-      }
+      if (mapInstanceRef.current) mapInstanceRef.current.invalidateSize();
     });
     resizeObserver.observe(mapRef.current);
 
@@ -238,10 +217,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
 
     return () => { 
       resizeObserver.disconnect();
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove(); 
-        mapInstanceRef.current = null; 
-      }
+      if (mapInstanceRef.current) { mapInstanceRef.current.remove(); mapInstanceRef.current = null; }
     };
   }, [leafletLoaded, showAddressForm]); 
 
@@ -272,23 +248,19 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
     if (!mapInstanceRef.current) return;
     if (navigator.geolocation) {
       setIsMapLoading(true); 
-      
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const { latitude, longitude } = position.coords;
           mapInstanceRef.current.setView([latitude, longitude], 16);
-
           try {
             const response = await fetch(
               `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`,
               { headers: { "User-Agent": "NiconicoResortApp" } }
             );
             const data = await response.json();
-            
             if (data && data.address) {
               const addr = data.address;
               const fullFormatted = data.display_name;
-              
               setNewAddress(prev => ({
                 ...prev,
                 address_1: fullFormatted,
@@ -318,10 +290,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
     try {
       const options = await getShippingOptionsAction(currentCartId)
       setShippingMethods(options)
-      
-      if (options.length > 0) {
-        await handleSelectShipping(options[0].id, currentCartId)
-      }
+      if (options.length > 0) { await handleSelectShipping(options[0].id, currentCartId) }
     } catch (error) {
       console.error("Error fetching shipping options:", error)
     } finally {
@@ -350,10 +319,8 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
         try {
           const defaultAddress = availableAddresses[0];
           const targetEmail = email || customer?.email || "";
-          
           const updatedCart = await updateCartAddressAction(cart.id, defaultAddress, targetEmail);
           setCart(updatedCart);
-          
           await fetchShippingMethods(updatedCart.id);
         } catch (error) {
           console.error("Failed to auto-sync default address:", error);
@@ -382,11 +349,20 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
     }
   }
 
+  // ==========================================
+  // 🌟 PERBAIKAN: FORCE PUSH API AGAR EMAIL & ALAMAT PASTI MASUK
+  // ==========================================
   const handleUpdateAddress = async (address: any) => {
     try {
-      setIsLoadingShipping(true) 
+      setIsLoadingShipping(true);
       const targetEmail = email || customer?.email || "";
       const targetPhone = customer ? address.phone : guestPhone || address.phone;
+      
+      if (!targetEmail) {
+        alert("Email is required!");
+        setIsLoadingShipping(false);
+        return;
+      }
       
       const safeCartAddress = {
         first_name: address.first_name || "",
@@ -397,20 +373,40 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
         province: address.province || "",
         country_code: address.country_code || "id",
         postal_code: address.postal_code || "",
-        metadata: { is_guest: !customer } 
       };
+
+      // 🌟 LAKUKAN PENYERANGAN API LANGSUNG KE MEDUSA 
+      // Memaksa email, shipping, dan billing masuk ke cart!
+      const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000";
+      const apiKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "";
       
-      const updatedCart = await updateCartAddressAction(cart.id, safeCartAddress, targetEmail)
-      setCart(updatedCart) 
-      setShowAddressList(false) 
-      setIsAddingAddress(false) 
-      setEditingAddressId(null)
+      await fetch(`${backendUrl}/store/carts/${cart.id}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-publishable-api-key": apiKey
+        },
+        body: JSON.stringify({
+          email: targetEmail,
+          shipping_address: safeCartAddress,
+          billing_address: safeCartAddress, // Wajib disamakan agar order valid!
+          metadata: { is_guest: !customer } // Stempel rahasia untuk Backend
+        })
+      });
       
-      await fetchShippingMethods(updatedCart.id)
+      // Update state via Next.js Action bawaan agar cookies tersinkronisasi
+      const updatedCart = await updateCartAddressAction(cart.id, safeCartAddress, targetEmail);
+      
+      setCart(updatedCart);
+      setShowAddressList(false);
+      setIsAddingAddress(false);
+      setEditingAddressId(null);
+      
+      await fetchShippingMethods(updatedCart.id);
     } catch (error) {
-      console.error("Error updating address:", error)
-      alert("Failed to add address to cart. Please ensure all data fields are fully filled.")
-      setIsLoadingShipping(false)
+      console.error("Error updating address:", error);
+      alert("Failed to add address to cart. Please ensure all data fields are fully filled.");
+      setIsLoadingShipping(false);
     }
   }
 
@@ -465,13 +461,13 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
         province: newAddress.province,
         country_code: newAddress.country_code,
         postal_code: newAddress.postal_code,
-        metadata: { is_guest: !customer }
       }
 
       if (customer) {
         await saveAddressServerAction(payload, editingAddressId) 
       }
       
+      // handleUpdateAddress akan mengurus force-push API
       await handleUpdateAddress(payload)
       setEditingAddressId(null)
       
@@ -697,7 +693,6 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                         )}
                       </div>
                       
-                      {/* WADAH PETA LEAFLET */}
                       <div className="relative w-full h-[200px] md:h-[300px] rounded-xl overflow-hidden mb-2 border border-gray-300 bg-gray-100">
                         <form onSubmit={handleSearchLocation} className="absolute top-3 left-3 right-3 z-[400]">
                           <div className="bg-white rounded-lg shadow-md flex items-center px-3 py-2 border border-gray-200">
@@ -747,7 +742,6 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                             <input type="text" required value={newAddress.postal_code} onChange={(e) => setNewAddress({...newAddress, postal_code: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:border-[#ef7044] outline-none" />
                           </div>
                           
-                          {/* 🌟 DINAMIS DARI REGION MEDUSA */}
                           <div>
                             <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Country</label>
                             <select 
@@ -796,7 +790,6 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                   </div>
                 ) : (
                   <>
-                    {/* TAMPILAN MEMBER - PILIH ALAMAT */}
                     {!showAddressList && customer && (
                       <div className="flex gap-4 items-start">
                         <MapPin className="w-5 h-5 text-[#EF7044] shrink-0 mt-0.5" />
@@ -819,7 +812,6 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                       </div>
                     )}
 
-                    {/* TAMPILAN MEMBER - LIST ALAMAT (Jika ditekan Choose Another Address) */}
                     {showAddressList && customer && (
                       <div className="grid gap-3 animate-in fade-in duration-300">
                         {availableAddresses.length > 0 ? (
@@ -844,20 +836,8 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                                   <p className="text-xs text-gray-600 mt-0.5 font-medium">{addr.phone}</p>
                                 </div>
                                 <div className="flex items-center gap-1">
-                                  <button 
-                                    type="button"
-                                    onClick={(e) => handleStartEditAddress(e, addr)}
-                                    className="text-gray-400 hover:text-[#EF7044] p-1.5"
-                                    title="Edit Address"
-                                  >
-                                    <Pen className="w-3.5 h-3.5" />
-                                  </button>
-                                  <button 
-                                    type="button"
-                                    onClick={(e) => handleDeleteAddress(e, addr)}
-                                    disabled={deletingAddressId === addr.id}
-                                    className="text-gray-400 hover:text-red-500 p-1.5"
-                                  >
+                                  <button type="button" onClick={(e) => handleStartEditAddress(e, addr)} className="text-gray-400 hover:text-[#EF7044] p-1.5"><Pen className="w-3.5 h-3.5" /></button>
+                                  <button type="button" onClick={(e) => handleDeleteAddress(e, addr)} disabled={deletingAddressId === addr.id} className="text-gray-400 hover:text-red-500 p-1.5">
                                     {deletingAddressId === addr.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                                   </button>
                                 </div>
@@ -873,10 +853,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                             <p className="text-xs font-medium text-gray-400">You don't have any saved addresses.</p>
                           </div>
                         )}
-                        <button 
-                          onClick={() => { setIsAddingAddress(true); setEditingAddressId(null); }}
-                          className="w-full py-3.5 rounded-xl border border-gray-300 text-gray-600 text-xs font-bold hover:bg-gray-50 flex items-center justify-center gap-2 mt-2 shadow-sm"
-                        >
+                        <button onClick={() => { setIsAddingAddress(true); setEditingAddressId(null); }} className="w-full py-3.5 rounded-xl border border-gray-300 text-gray-600 text-xs font-bold hover:bg-gray-50 flex items-center justify-center gap-2 mt-2 shadow-sm">
                           <Plus className="w-4 h-4" /> Add New Address
                         </button>
                       </div>
@@ -894,9 +871,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
               <h3 className="text-[13px] md:text-[16px] font-extrabold text-gray-900 tracking-wide mb-4 md:mb-6">Select Shipping</h3>
               
               {isLoadingShipping ? (
-                 <div className="flex justify-center py-6">
-                    <Loader2 className="w-6 h-6 animate-spin text-[#EF7044]" />
-                 </div>
+                 <div className="flex justify-center py-6"><Loader2 className="w-6 h-6 animate-spin text-[#EF7044]" /></div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {shippingMethods.length > 0 ? shippingMethods.map((method) => (
@@ -904,9 +879,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                       key={method.id} 
                       onClick={() => handleSelectShipping(method.id)}
                       className={`p-3 md:p-4 rounded-xl border transition-all cursor-pointer flex justify-between items-center ${
-                        cart.shipping_methods?.some((m: any) => m.shipping_option_id === method.id)
-                        ? "border-[#EF7044] bg-orange-50/30"
-                        : "border-gray-200 hover:border-gray-400"
+                        cart.shipping_methods?.some((m: any) => m.shipping_option_id === method.id) ? "border-[#EF7044] bg-orange-50/30" : "border-gray-200 hover:border-gray-400"
                       }`}
                     >
                       <div>
@@ -915,9 +888,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                          </p>
                          <p className="text-[10px] text-gray-500 mt-1 font-medium">Estimated Arrival: 2-3 Days</p>
                       </div>
-                      <span className="text-sm font-bold text-gray-900">
-                        Rp {method.amount?.toLocaleString("id-ID") || 0}
-                      </span>
+                      <span className="text-sm font-bold text-gray-900">Rp {method.amount?.toLocaleString("id-ID") || 0}</span>
                     </div>
                   )) : (
                     <div className="col-span-1 md:col-span-2 text-xs font-medium text-gray-400 bg-gray-50 p-4 rounded-lg text-center border border-gray-200">
@@ -939,16 +910,12 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                   const displayTitle = group.isBundle ? group.title : (group.item.title || "Product");
                   const displayPrice = group.isBundle ? group.unit_price : (group.item.unit_price || 0);
                   const displayThumb = (group.isBundle ? group.thumbnail : group.item.thumbnail) || "/placeholder.png";
-                  
                   let displayVariant = "";
-                  if (group.isBundle) {
-                    displayVariant = group.variant_title;
-                  } else {
+                  if (group.isBundle) { displayVariant = group.variant_title; } else {
                     const regColor = group.item.metadata?.color;
                     const regVariant = group.item.variant?.title || group.item.variant_title || "Regular";
                     displayVariant = regColor ? `Color: ${regColor} • Size: ${regVariant}` : regVariant;
                   }
-                  
                   const displayQty = group.isBundle ? group.quantity : (group.item.quantity || 1);
 
                   return (
@@ -989,19 +956,9 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                  <div className="flex gap-2">
                     <div className="relative flex-1">
                       <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                      <input 
-                        type="text" 
-                        placeholder="Save more with a promo code" 
-                        value={promoCode}
-                        onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                        className="w-full border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-xs font-bold focus:border-[#EF7044] outline-none"
-                      />
+                      <input type="text" placeholder="Save more with a promo code" value={promoCode} onChange={(e) => setPromoCode(e.target.value.toUpperCase())} className="w-full border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-xs font-bold focus:border-[#EF7044] outline-none" />
                     </div>
-                    <button 
-                      onClick={handleApplyPromo}
-                      disabled={isApplyingPromo || !promoCode}
-                      className="bg-gray-900 text-white px-4 rounded-lg text-[10px] font-bold hover:bg-gray-700 disabled:bg-gray-300 transition-colors"
-                    >
+                    <button onClick={handleApplyPromo} disabled={isApplyingPromo || !promoCode} className="bg-gray-900 text-white px-4 rounded-lg text-[10px] font-bold hover:bg-gray-700 disabled:bg-gray-300 transition-colors">
                       {isApplyingPromo ? "..." : "APPLY"}
                     </button>
                  </div>
@@ -1009,42 +966,21 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
 
                {/* PRICE BREAKDOWN */}
                <div className="space-y-2 mb-4">
-                  <div className="flex justify-between text-xs md:text-[13px] text-gray-600 font-medium">
-                    <span>Total Price ({cart.items?.length || 0} items)</span>
-                    <span>Rp {(cart.subtotal || 0).toLocaleString("id-ID")}</span>
-                  </div>
-                  <div className="flex justify-between text-xs md:text-[13px] text-gray-600 font-medium">
-                    <span>Total Shipping Fee</span>
-                    <span>Rp {(cart.shipping_total || 0).toLocaleString("id-ID")}</span>
-                  </div>
-                  {cart.discount_total > 0 && (
-                    <div className="flex justify-between text-xs md:text-[13px] text-emerald-600 font-bold">
-                      <span>Total Item Discount</span>
-                      <span>- Rp {cart.discount_total.toLocaleString("id-ID")}</span>
-                    </div>
-                  )}
+                  <div className="flex justify-between text-xs md:text-[13px] text-gray-600 font-medium"><span>Total Price ({cart.items?.length || 0} items)</span><span>Rp {(cart.subtotal || 0).toLocaleString("id-ID")}</span></div>
+                  <div className="flex justify-between text-xs md:text-[13px] text-gray-600 font-medium"><span>Total Shipping Fee</span><span>Rp {(cart.shipping_total || 0).toLocaleString("id-ID")}</span></div>
+                  {cart.discount_total > 0 && <div className="flex justify-between text-xs md:text-[13px] text-emerald-600 font-bold"><span>Total Item Discount</span><span>- Rp {cart.discount_total.toLocaleString("id-ID")}</span></div>}
                </div>
 
                <div className="border-t border-gray-200 pt-4 mb-6">
-                  <div className="flex justify-between items-center">
-                    <span className="text-[14px] md:text-[16px] font-bold text-gray-900">Grand Total</span>
-                    <span className="text-[16px] md:text-[20px] font-extrabold text-[#EF7044]">
-                      Rp {(cart.total || 0).toLocaleString("id-ID")}
-                    </span>
-                  </div>
+                  <div className="flex justify-between items-center"><span className="text-[14px] md:text-[16px] font-bold text-gray-900">Grand Total</span><span className="text-[16px] md:text-[20px] font-extrabold text-[#EF7044]">Rp {(cart.total || 0).toLocaleString("id-ID")}</span></div>
                </div>
 
-               <button 
-                  onClick={handlePayNow}
-                  disabled={isPaying || isLoadingShipping}
-                  className="w-full bg-[#ef7044] text-white py-3.5 rounded-xl font-bold text-sm md:text-[15px] hover:bg-[#d65f36] transition-colors flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
-               >
+               <button onClick={handlePayNow} disabled={isPaying || isLoadingShipping} className="w-full bg-[#ef7044] text-white py-3.5 rounded-xl font-bold text-sm md:text-[15px] hover:bg-[#d65f36] transition-colors flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-md">
                   {isPaying ? <Loader2 className="w-5 h-5 animate-spin" /> : "Proceed to Payment"}
                </button>
 
                <div className="mt-4 flex items-center justify-center gap-2 text-[10px] text-gray-400 font-medium bg-gray-50 py-2 rounded-lg border border-gray-100">
-                  <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                  <span>Secure & Encrypted Transaction by Xendit</span>
+                  <ShieldCheck className="w-4 h-4 text-emerald-500" /><span>Secure & Encrypted Transaction by Xendit</span>
                </div>
             </div>
 
