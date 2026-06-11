@@ -11,7 +11,8 @@ import { useCart } from "@/context/cart-context/cart-context";
 import ProfileContent from "../../components/profile-drawer/ProfileContent";
 import NavDrawer from "../../components/nav-drawer/NavDrawer"; 
 import LocalizedClientLink from "@modules/common/components/localized-client-link";
-import CartTemplate from "@modules/cart/templates";
+
+// 🚫 Hapus import CartTemplate karena sekarang sudah di-handle oleh ProfileContent
 
 const Navbar = () => {
   const [isNavOpen, setIsNavOpen] = useState(false);
@@ -20,7 +21,6 @@ const Navbar = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [profileView, setProfileView] = useState<any>("menu");
   
-  const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
   const [isSearchDrawerOpen, setIsSearchDrawerOpen] = useState(false);
   
   // LOGIC SEARCH PINTAR (LIVE SEARCH)
@@ -40,17 +40,14 @@ const Navbar = () => {
   const closeAllDrawers = () => {
     setIsNavOpen(false);
     setIsProfileOpen(false);
-    setIsCartDrawerOpen(false);
     setIsSearchDrawerOpen(false);
   };
 
+  // 🌟 JURUS BARU: Langsung panggil ProfileContent dan arahkan ke "cart"
   const openCartDrawer = () => {
-    if (window.innerWidth >= 1024) {
-      closeAllDrawers();
-      setIsCartDrawerOpen(true);
-    } else {
-      router.push("/cart");
-    }
+    closeAllDrawers();
+    setProfileView("cart"); 
+    setIsProfileOpen(true);
   };
 
   const openSearchDrawer = () => {
@@ -78,13 +75,13 @@ const Navbar = () => {
 
   // Mencegah scroll body saat laci manapun terbuka
   useEffect(() => {
-    if (isProfileOpen || isCartDrawerOpen || isSearchDrawerOpen || isNavOpen) {
+    if (isProfileOpen || isSearchDrawerOpen || isNavOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
     }
     return () => { document.body.style.overflow = 'unset'; };
-  }, [isProfileOpen, isCartDrawerOpen, isSearchDrawerOpen, isNavOpen]);
+  }, [isProfileOpen, isSearchDrawerOpen, isNavOpen]);
 
   useEffect(() => {
     const authFlag = searchParams?.get("auth");
@@ -149,25 +146,6 @@ const Navbar = () => {
     router.push(`/${countryCode}/store?q=${encodeURIComponent(term)}`);
   };
 
-  const getProductPrice = (p: any) => {
-    const price = p.variants?.[0]?.calculated_price?.calculated_amount || p.variants?.[0]?.prices?.[0]?.amount || 0;
-    const finalPrice = countryCode === "id" ? price : price / 100;
-    return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(finalPrice);
-  };
-
-  if (pathname?.includes("/cart")) {
-    return (
-      <>
-        {isProfileOpen && (
-          <div className="fixed inset-0 bg-black/60 z-[90] transition-opacity" onClick={closeAllDrawers} />
-        )}
-        <div className={`fixed top-0 right-0 h-full w-[90%] max-w-[480px] bg-white z-[100] shadow-[-10px_0_30px_rgba(0,0,0,0.1)] transform transition-transform duration-300 ease-out overflow-hidden ${isProfileOpen ? "translate-x-0" : "translate-x-full"}`}>
-          <ProfileContent view={profileView} setView={setProfileView} onClose={closeAllDrawers} />
-        </div>
-      </>
-    );
-  }
-
   const isOrangeNav = pathname?.includes("/store") || pathname?.includes("/products") || pathname?.includes("/collections");
   const navBgClass = isOrangeNav ? "bg-[#EF7044]/95 backdrop-blur-sm border-[#EF7044]/10" : "bg-white/95 backdrop-blur-sm border-gray-100/50";     
   const iconColorClass = isOrangeNav ? "text-white" : "text-gray-800";
@@ -188,7 +166,6 @@ const Navbar = () => {
           <button onClick={openNavDrawer} className="p-1 hover:opacity-70 transition-opacity">
             <Menu className={`w-5 h-5 transition-colors duration-300 ${iconColorClass}`} />
           </button>
-          {/* Ikon Search Mobile Kiri */}
           <button onClick={openMobileSearch} className="p-1 hover:opacity-70 transition-opacity">
             <Search className={`w-5 h-5 transition-colors duration-300 ${iconColorClass}`} />
           </button>
@@ -198,7 +175,7 @@ const Navbar = () => {
         <Link href="/" className="hidden lg:flex relative items-center justify-center w-32 h-8 xl:w-36 xl:h-10 hover:scale-105 transition-transform shrink-0">
           <Image src={logoSrc} alt="Niconico Logo" fill className="object-contain" priority sizes="150px" />
         </Link>
-        {/* LOGO MOBILE (Absolute Centered) */}
+        {/* LOGO MOBILE */}
         <Link href="/" className="lg:hidden absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center w-28 h-8 hover:scale-105 transition-transform z-10">
           <Image src={logoSrc} alt="Niconico Logo" fill className="object-contain" priority sizes="150px" />
         </Link>
@@ -239,7 +216,6 @@ const Navbar = () => {
         {/* KANAN: Search, Cart, Profile */}
         <div className="flex gap-3 md:gap-4 items-center -mr-1 shrink-0 relative z-10">
           
-          {/* Ikon Search Desktop (Sembunyi di Mobile) */}
           <button onClick={openSearchDrawer} className="hidden lg:flex p-1 hover:opacity-70 transition-opacity">
             <Search className={`w-5 h-5 transition-colors duration-300 ${iconColorClass}`} />
           </button>
@@ -255,7 +231,7 @@ const Navbar = () => {
               </span>
             )}
 
-            {showPreview && cartCount > 0 && cart && !isCartDrawerOpen && (
+            {showPreview && cartCount > 0 && cart && !isProfileOpen && (
               <div className="hidden lg:block absolute top-12 -right-2 z-50 w-[400px] animate-in fade-in slide-in-from-top-3 duration-300">
                 <div className="bg-white shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-[24px] border border-gray-100 overflow-hidden">
                   <CartPreview cart={cart} />
@@ -323,7 +299,6 @@ const Navbar = () => {
                         </div>
                         <div className="flex flex-col">
                           <h4 className="text-[13px] font-bold text-gray-900 group-hover:text-[#EF7044] transition-colors">{product.title}</h4>
-                          
                         </div>
                       </Link>
                     ))
@@ -355,26 +330,17 @@ const Navbar = () => {
       </div>
 
       {/* ======================================================= */}
-      {/* 🌟 LACI PROFILE */}
+      {/* 🌟 LACI UNIFIED (Profile & Cart) MUNCUL DI SINI */}
       {/* ======================================================= */}
       {isProfileOpen && (
         <div className="fixed inset-0 bg-black/60 z-[60] transition-opacity" onClick={closeAllDrawers} />
       )}
       <div className={`fixed top-0 right-0 h-full w-[90%] max-w-[480px] bg-white z-[70] shadow-[-10px_0_30px_rgba(0,0,0,0.1)] transform transition-transform duration-300 ease-out overflow-hidden ${isProfileOpen ? "translate-x-0" : "translate-x-full"}`}>
+        {/* ProfileContent yang mengendalikan semua (termasuk CartView) */}
         <ProfileContent view={profileView} setView={setProfileView} onClose={closeAllDrawers} />
       </div>
 
-      {/* ======================================================= */}
-      {/* 🌟 LACI CART KHUSUS DESKTOP */}
-      {/* ======================================================= */}
-      {isCartDrawerOpen && (
-        <div className="hidden lg:block fixed inset-0 bg-black/60 z-[80] transition-opacity" onClick={closeAllDrawers} />
-      )}
-      <div className={`hidden lg:block fixed top-0 right-0 h-full w-[480px] bg-white z-[90] shadow-[-10px_0_30px_rgba(0,0,0,0.1)] transform transition-transform duration-300 ease-out overflow-y-auto scrollbar-hide ${isCartDrawerOpen ? "translate-x-0" : "translate-x-full"}`}>
-         <CartTemplate cart={cart} />
-      </div>
-
-      {/* DRAWER UNTUK MENU DAN PENCARIAN MOBILE */}
+      {/* DRAWER UNTUK MENU DAN PENCARIAN MOBILE KIRI */}
       <NavDrawer isOpen={isNavOpen} onClose={closeAllDrawers} view={navView} setView={setNavView} />
     </>
   );

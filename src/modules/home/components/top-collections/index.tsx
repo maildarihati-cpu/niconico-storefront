@@ -544,9 +544,6 @@ export default function TopCollections() {
 
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
 
-  // ==========================================
-  // 🌟 TEKNIK OPTIMASI (Tarik Sekali Jaring Super Besar: 150 Produk)
-  // ==========================================
   useEffect(() => {
     const fetchAllCollections = async () => {
       setGlobalLoading(true);
@@ -582,9 +579,8 @@ export default function TopCollections() {
     };
     
     fetchAllCollections();
-  }, [countryCode]); // 👈 HANYA DIPANGGIL 1 KALI SAAT HALAMAN DIBUKA
+  }, [countryCode]); 
 
-  // SCROLL LOCK KETIKA POPUP TERBUKA
   useEffect(() => {
     if (selectedProduct) {
       document.body.style.overflow = "hidden";
@@ -594,33 +590,59 @@ export default function TopCollections() {
     return () => { document.body.style.overflow = "unset"; };
   }, [selectedProduct]);
 
-  // Tampilkan data langsung dari gudang (Instan pas pindah tab!)
   const currentProducts = collectionsData[activeTab] || [];
   const activeConfig = collectionsConfig[activeTab as keyof typeof collectionsConfig];
   const dynamicHeroImage = currentProducts.length > 0 ? currentProducts[0].thumbnail : null;
 
+  // 🌟 PERBAIKAN: FORMAT HARGA MENGENALI SET BUNDLE DARI DAFTAR VARIAN
   const formatMedusaPrice = (product: any) => {
     const variants = product.variants || [];
     if (variants.length === 0) return "N/A";
-    const variant = variants[0];
+    
     const targetCurrency = countryCode === "id" ? "idr" : "usd";
-    const priceObject = variant.calculated_price || variant.prices?.find((p: any) => p.currency_code?.toLowerCase() === targetCurrency) || variant.prices?.[0];
-    if (!priceObject) return "N/A";
-    let amount = priceObject.calculated_amount || priceObject.amount;
-    const currency = (priceObject.currency_code || targetCurrency).toLowerCase();
-    const finalAmount = currency === "idr" ? amount : amount / 100;
-    return new Intl.NumberFormat(currency === "idr" ? "id-ID" : "en-US", {
+
+    // 1. Cek apakah produk ini punya TOP dan BOTTOM
+    const topVars = variants.filter((v: any) => v.options?.some((opt: any) => opt.value?.toLowerCase().trim() === "top"));
+    const bottomVars = variants.filter((v: any) => v.options?.some((opt: any) => opt.value?.toLowerCase().trim() === "bottom"));
+
+    let finalAmount = 0;
+
+    // 2. Jika punya keduanya, jumlahkan harga termurah dari Top + Bottom
+    if (topVars.length > 0 && bottomVars.length > 0) {
+      const getMinPrice = (vars: any[]) => {
+        const prices = vars.map((v) => {
+          const pObj = v.calculated_price || v.prices?.find((p: any) => p.currency_code?.toLowerCase() === targetCurrency) || v.prices?.[0];
+          if (!pObj) return 0;
+          let amt = pObj.calculated_amount || pObj.amount;
+          return (pObj.currency_code || targetCurrency).toLowerCase() === "idr" ? amt : amt / 100;
+        });
+        return Math.min(...prices.filter(p => p > 0));
+      };
+
+      const minTopPrice = getMinPrice(topVars);
+      const minBottomPrice = getMinPrice(bottomVars);
+      finalAmount = minTopPrice + minBottomPrice;
+      
+    } else {
+      // 3. Kalau bukan Set (hanya reguler), ambil harga biasa
+      const variant = variants[0];
+      const priceObject = variant.calculated_price || variant.prices?.find((p: any) => p.currency_code?.toLowerCase() === targetCurrency) || variant.prices?.[0];
+      if (!priceObject) return "N/A";
+      let amount = priceObject.calculated_amount || priceObject.amount;
+      const currency = (priceObject.currency_code || targetCurrency).toLowerCase();
+      finalAmount = currency === "idr" ? amount : amount / 100;
+    }
+
+    return new Intl.NumberFormat(targetCurrency === "idr" ? "id-ID" : "en-US", {
       style: "currency",
-      currency: currency.toUpperCase(),
+      currency: targetCurrency.toUpperCase(),
       minimumFractionDigits: 0,
     }).format(finalAmount);
   };
 
   return (
-    /* 🌟 PERUBAHAN: Dipastikan mt-12 (48px) dan tanpa padding pt/pb/py */
     <section className="mt-12 bg-white max-w-[1200px] mx-auto md:max-w-6xl relative">
       
-      {/* 🌟 HEADER JUDUL & TAB */}
       <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-0 md:mb-10 px-0 md:px-4 z-10 relative">
         <h2 className="text-3xl font-heavy text-[25px] text-center md:text-left text-gray-900 mb-2 md:mb-0 tracking-tight">
           Top Collections
@@ -645,7 +667,6 @@ export default function TopCollections() {
       </div>
 
       <div className="px-4">
-        {/* HERO IMAGE MOBILE */}
         <div className="mb-10 flex justify-center md:hidden">
           <LocalizedClientLink href={activeConfig.link} className="w-full max-w-2xl aspect-[3/4] rounded-[32px] overflow-hidden block relative group shadow-xl bg-gray-50 border border-gray-100">
             {globalLoading ? (
@@ -665,7 +686,6 @@ export default function TopCollections() {
           </LocalizedClientLink>
         </div>
 
-        {/* 🌟 LOADING STATE UTAMA SKELETON */}
         {globalLoading ? (
           <div className="flex overflow-x-auto md:grid md:grid-cols-4 gap-4 md:gap-6 pb-8 md:pb-0 scrollbar-hide md:overflow-visible flex-nowrap md:flex-wrap items-start">
             {[1, 2, 3, 4].map((i) => (
@@ -681,27 +701,21 @@ export default function TopCollections() {
             ))}
           </div>
         ) : currentProducts.length > 0 ? (
-          /* 🌟 RENDER PRODUK DARI GUDANG (PINDAH TAB INSTAN) */
           <div className="flex overflow-x-auto md:grid md:grid-cols-4 gap-4 md:gap-6 pb-8 md:pb-0 scrollbar-hide md:overflow-visible flex-nowrap items-start">
             {currentProducts.map((product) => (
               <div key={product.id} className="min-w-[170px] max-w-[170px] md:min-w-0 md:max-w-none md:w-full flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500 relative group cursor-pointer z-0">
                 
-                {/* 🔗 LINK UTAMA (Z-0) Berada paling bawah menutupi seluruh card */}
                 <LocalizedClientLink href={`/products/${product.handle}`} className="absolute inset-0 z-0" />
                 
-                {/* 🌟 WADAH GAMBAR */}
                 <div className="w-full aspect-[3/4] bg-gray-50 md:bg-white rounded-[24px] md:rounded-[20px] overflow-hidden relative mb-4 border border-gray-100 md:border-none shadow-sm md:shadow-[0_4px_20px_rgb(0,0,0,0.05)] md:p-2 pointer-events-none">
                   <img src={product.thumbnail || "/placeholder.png"} alt={product.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 md:rounded-[16px]" />
                   
-                  {/* 🌟 TOMBOL + */}
                   <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedProduct(product); }} className="absolute bottom-3 right-3 md:bottom-5 md:right-5 w-10 h-10 bg-[#EF7044] text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 active:scale-95 transition-all z-20 border-2 border-white pointer-events-auto">
                     +
                   </button>
                 </div>
                 
-                {/* 🌟 WADAH TEKS */}
                 <div className="flex flex-col items-center text-center px-2 md:px-0 relative pointer-events-none w-full">
-                {/* 🌟 PERUBAHAN: Class box rounded, border, dan warna orange sekarang langsung aktif di mobile (tanpa md:) */}
                 <h3 className="text-sm md:text-base text-[#EF7044] font-black truncate w-full block mx-auto border border-[#EF7044] rounded-full px-4 py-1.5 bg-white max-w-[160px] md:max-w-[200px] mb-2 transition-colors duration-300 md:group-hover:bg-[#EF7044] md:group-hover:text-white">
                   {product.title}
                 </h3>
@@ -712,7 +726,6 @@ export default function TopCollections() {
               </div>
             ))}
             
-            {/* VIEW ALL CARD (MOBILE) */}
             <LocalizedClientLink href={activeConfig.link} className="md:hidden min-w-[170px] aspect-[3/4] flex flex-col items-center justify-center bg-gray-50 rounded-[24px] border-2 border-dashed border-gray-200 hover:border-[#EF7044] hover:bg-orange-50 transition-all group flex-shrink-0">
                 <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center mb-3 group-hover:bg-[#EF7044] group-hover:text-white text-gray-400 transition-all shadow-sm">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
@@ -726,7 +739,6 @@ export default function TopCollections() {
           </div>
         )}
 
-        {/* 🌟 CHECK MORE BUTTON */}
         {!globalLoading && currentProducts.length > 0 && (
           <div className="hidden md:flex justify-center mt-12 z-0 relative">
             <LocalizedClientLink href={activeConfig.link}>

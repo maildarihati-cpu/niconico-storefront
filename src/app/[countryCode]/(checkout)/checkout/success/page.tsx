@@ -5,18 +5,23 @@ import { useRouter } from "next/navigation"
 import { ChevronLeft, ShoppingBag, CheckCircle2 } from "lucide-react"
 
 // 🌟 IMPORT ROBOT PEMBANGKIT
-import { restoreSavedCartAction } from "@lib/util/checkout-util" 
+import { restoreSavedCartAction } from "@lib/util/checkout-util"
 
 export default function OrderSuccessPage() {
   const router = useRouter()
 
   useEffect(() => {
     const restoreCart = async () => {
-      // Robot akan mengecek apakah ada barang sisa di brankas. 
-      // Kalau ada, dia otomatis masukin ke keranjang baru kustomer!
-      await restoreSavedCartAction();
+      try {
+        // Robot akan mengecek apakah ada barang sisa di brankas. 
+        // Kalau ada, dia otomatis masukin ke keranjang baru kustomer!
+        await restoreSavedCartAction()
+      } catch (error) {
+        console.error("Gagal merestore keranjang:", error)
+      }
     }
-    restoreCart();
+    
+    restoreCart()
   }, [])
 
   return (
@@ -65,4 +70,3 @@ export default function OrderSuccessPage() {
     </div>
   )
 }
-

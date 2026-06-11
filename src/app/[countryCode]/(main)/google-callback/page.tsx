@@ -86,27 +86,33 @@ function AuthCallbackHandler() {
             console.error("Gagal sinkronisasi data customer:", err)
           }
 
-          // 🌟 4. LOGIKA BACA MEMO (URL ASAL SEBELUM LOGIN)
-          let returnUrl = "/";
-          if (typeof window !== "undefined") {
+          // 🌟 4. FINISH: Bangunkan Server Next.js untuk pasang Cookie
+          console.log("Memproses sesi login di Server...");
+          const serverAction = await finalizeGoogleLogin(data.token);
+
+          // 🌟 5. LOGIKA PENENTUAN ARAH PULANG (Return URL)
+          let finalUrl = serverAction.returnUrl !== "/" ? serverAction.returnUrl : "/";
+
+          // Fallback ke LocalStorage jika Server tidak punya Cookie
+          if (finalUrl === "/" && typeof window !== "undefined") {
             const savedUrl = localStorage.getItem("redirect_after_login");
             if (savedUrl) {
-              returnUrl = savedUrl;
-              // Hapus setelah dibaca
+              finalUrl = savedUrl;
               localStorage.removeItem("redirect_after_login"); 
             }
           }
 
-          // 🌟 5. FINISH: Bangunkan Server Next.js untuk pasang Cookie
-          console.log("Memproses sesi login di Server...");
-          await finalizeGoogleLogin(data.token);
+          // 🌟 CLEANER: Hapus trigger '?auth=login' dari URL supaya drawer tidak terbuka otomatis
+          finalUrl = finalUrl.replace("?auth=login", "").replace("&auth=login", "");
+          
+          // Kalau setelah dihapus ternyata URL jadi kosong atau aneh, kembalikan ke format aman
+          if (finalUrl === "" || finalUrl === "?") finalUrl = "/";
 
           // 🌟 6. REDIRECT LALU HARD REFRESH SETELAH LOADING SELESAI
-          // Langkah 1: Lempar user secara soft-navigation agar tidak hilang sesi Dev-nya
-          router.push(returnUrl);
+          // Langkah 1: Lempar user ke halaman asal secara soft-navigation
+          router.push(finalUrl);
           
-          // Langkah 2: Beri jeda 800ms (0.8 detik) sampai animasi/transisi halaman selesai, 
-          // lalu paksa browser melakukan Hard Refresh agar UI (Navbar, Profil, dll) langsung terupdate.
+          // Langkah 2: Hard Refresh agar state Header & Cart langsung terupdate
           setTimeout(() => {
             window.location.reload();
           }, 800);

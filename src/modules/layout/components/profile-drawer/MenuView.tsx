@@ -7,8 +7,8 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 
 interface Props {
   onClose: () => void;
-  // 🌟 Tambahkan "orders" ke dalam tipe setView
-  setView: (view: "menu" | "login" | "signup" | "profile" | "orders") => void;
+  // 🌟 PERBAIKAN: Tambahkan "cart" ke dalam tipe setView
+  setView: (view: "menu" | "login" | "signup" | "profile" | "orders" | "cart") => void;
   customer: any;
 }
 
@@ -23,13 +23,18 @@ export default function MenuView({ onClose, setView, customer }: Props) {
     }
   };
 
-  // 🌟 Logic Pintu Masuk Order (Wajib Login)
+  // Logic Pintu Masuk Order (Wajib Login)
   const handleOrderClick = () => {
     if (customer) {
       setView("orders");
     } else {
       setView("login");
     }
+  };
+
+  // 🌟 Logic Pintu Masuk Cart (Tidak Wajib Login untuk lihat keranjang)
+  const handleCartClick = () => {
+    setView("cart");
   };
 
   return (
@@ -64,7 +69,7 @@ export default function MenuView({ onClose, setView, customer }: Props) {
             <ChevronRight className="w-5 h-5 text-[#EF7044]" />
           </button>
 
-          {/* 🌟 Menu Order (Sudah Diubah Jadi Button & Panggil OrderHistory) */}
+          {/* Menu Order */}
           <button 
             onClick={handleOrderClick}
             className="flex justify-between items-center w-full group transition-all"
@@ -75,17 +80,16 @@ export default function MenuView({ onClose, setView, customer }: Props) {
             <ChevronRight className="w-5 h-5 text-[#EF7044]" />
           </button>
 
-          {/* Menu Cart */}
-          <LocalizedClientLink 
-            href="/cart" 
-            onClick={onClose}
+          {/* 🌟 Menu Cart (SUDAH DIUBAH JADI DRAWER TRIGGER) */}
+          <button 
+            onClick={handleCartClick}
             className="flex justify-between items-center w-full group transition-all"
           >
             <span className="text-[#EF7044] text-lg font-medium tracking-tight group-hover:translate-x-1 transition-transform">
               Cart
             </span>
             <ChevronRight className="w-5 h-5 text-[#EF7044]" />
-          </LocalizedClientLink>
+          </button>
 
           {/* Menu Wishlist */}
           <LocalizedClientLink 

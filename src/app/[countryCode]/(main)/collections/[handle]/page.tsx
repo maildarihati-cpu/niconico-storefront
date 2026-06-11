@@ -527,7 +527,7 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
                 <div className="w-full border border-gray-200 rounded-lg overflow-hidden">
                   <table className="w-full text-[11px] text-center">
                     <thead className="font-bold text-gray-900">
-                      <tr><th className="py-3 border-b border-r border-gray-200 w-1/4">Size</th><th className="py-3 border-b border-r border-gray-200 w-1/4">Bust</th><th className="py-3 border-b border-r border-gray-200 w-1/4">Waist</th><th className="py-3 border-b border-gray-200 w-1/4">Hip</th></tr>
+                      <tr><th className="py-3 border-b border-r border-gray-200 w-1/4">Size</th><th className="py-3 border-b border-r border-gray-200 w-1/4">Bust</th><th className="py-3 border-b border-r border-gray-200 w-1/4">Waist</th><th className="py-3 border-b border-r border-gray-200 w-1/4">Hip</th></tr>
                     </thead>
                     <tbody className="text-gray-600 font-medium">
                       <tr><td className="py-3 border-b border-r border-gray-200 text-gray-900">S</td><td className="py-3 border-b border-r border-gray-200">80-86</td><td className="py-3 border-b border-r border-gray-200">62-68</td><td className="py-3 border-b border-gray-200">86-92</td></tr>
@@ -645,9 +645,42 @@ export default function CollectionDetailPage() {
     }).format(amount);
   };
 
+  // 🌟 PERBAIKAN: FORMAT HARGA MENGENALI SET BUNDLE (TOP + BOTTOM)
   const getProductPrice = (product: any) => {
-    const price = product.variants?.[0]?.prices?.[0]?.amount || 0;
-    return countryCode === "id" ? price : price / 100;
+    const variants = product.variants || [];
+    if (variants.length === 0) return 0;
+
+    const targetCurrency = countryCode === "id" ? "idr" : "usd";
+
+    // 1. Cek apakah produk ini punya varian TOP dan BOTTOM
+    const topVars = variants.filter((v: any) => v.options?.some((opt: any) => opt.value?.toLowerCase().trim() === "top"));
+    const bottomVars = variants.filter((v: any) => v.options?.some((opt: any) => opt.value?.toLowerCase().trim() === "bottom"));
+
+    if (topVars.length > 0 && bottomVars.length > 0) {
+      // 2. Jika punya keduanya, jumlahkan harga gabungan dari Top + Bottom termurah
+      const getMinPrice = (vars: any[]) => {
+        const prices = vars.map((v) => {
+          const pObj = v.calculated_price || v.prices?.find((p: any) => p.currency_code?.toLowerCase() === targetCurrency) || v.prices?.[0];
+          if (!pObj) return 0;
+          let amt = pObj.calculated_amount || pObj.amount;
+          return (pObj.currency_code || targetCurrency).toLowerCase() === "idr" ? amt : amt / 100;
+        });
+        const validPrices = prices.filter(p => p > 0);
+        return validPrices.length > 0 ? Math.min(...validPrices) : 0;
+      };
+
+      return getMinPrice(topVars) + getMinPrice(bottomVars);
+    }
+
+    // 3. Kalau produk reguler, ambil harga biasa
+    const variant = variants[0];
+    const priceObject = variant.calculated_price || variant.prices?.find((p: any) => p.currency_code?.toLowerCase() === targetCurrency) || variant.prices?.[0];
+    if (!priceObject) return 0;
+    
+    let amount = priceObject.calculated_amount || priceObject.amount;
+    const currency = (priceObject.currency_code || targetCurrency).toLowerCase();
+    
+    return currency === "idr" ? amount : amount / 100;
   };
 
   const toggleWishlist = (e: React.MouseEvent, productId: string) => {
@@ -719,7 +752,7 @@ export default function CollectionDetailPage() {
       <section className="px-4 mb-16 mt-4">
         <div className="grid grid-cols-2 md:grid-cols-3 gap-x-3 gap-y-6">
           {products.map((product) => (
-            <LocalizedClientLink key={product.id} href={`/products/${product.handle}`} className="flex flex-col group animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <LocalizedClientLink key={product.id} href={`/products/${product.handle}`} className="flex flex-col group block animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="relative aspect-[3/4] bg-gray-50 rounded-[20px] overflow-hidden mb-3 border border-gray-100 shadow-sm">
                 <img src={product.thumbnail || "/placeholder.png"} alt={product.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 

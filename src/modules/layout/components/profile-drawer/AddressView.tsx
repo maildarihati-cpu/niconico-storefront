@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { ChevronLeft, MapPin, Search, Crosshair, AlertCircle, Loader2 } from "lucide-react";
+import { ChevronLeft, MapPin, Search, Crosshair, AlertCircle, Loader2, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { saveAddressServerAction, setDefaultAddressServerAction } from "@/lib/address-actions";
+import { saveAddressServerAction, setDefaultAddressServerAction, deleteAddressServerAction } from "@/lib/address-actions";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL?.includes("railway.app") 
   ? "https://api.niconicoresort.com" 
@@ -32,8 +32,7 @@ export default function AddressView({ onClose, setView, customer, onSuccess }: P
   const [isMapLoading, setIsMapLoading] = useState(false);
   const [leafletLoaded, setLeafletLoaded] = useState(false);
 
-  // 🌟 PERBAIKAN FATAL: STATE LOKAL MURNI 
-  // Kita jadikan localAddresses state tunggal. Tidak ada useEffect yang meniban ulang data ini!
+  // 🌟 STATE LOKAL MURNI 
   const [localAddresses, setLocalAddresses] = useState<any[]>(customer?.addresses || []);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(localAddresses[0]?.id || null);
 
@@ -152,7 +151,7 @@ export default function AddressView({ onClose, setView, customer, onSuccess }: P
         setEditingId(addr.id);
         setFormData({
           label: addr.address_name || "Home",
-          first_name: addr.first_name || "",
+          first_name: `${addr.first_name || ""} ${addr.last_name || ""}`.trim(),
           last_name: addr.last_name || "",
           phone: addr.phone || "",
           address_1: addr.address_1 || "",
@@ -203,7 +202,6 @@ export default function AddressView({ onClose, setView, customer, onSuccess }: P
 
       await saveAddressServerAction(payload, editingId);
 
-      // 🌟 INJEKSI OPTIMISTIS (Data disuntik ke layar detik ini juga tanpa peduli Induk!)
       const newAddressFake = {
         id: editingId || `temp_${Date.now()}`,
         ...payload
@@ -217,7 +215,7 @@ export default function AddressView({ onClose, setView, customer, onSuccess }: P
       }
 
       if (onSuccess) {
-        onSuccess(); // Panggil fungsi induk tanpa perlu di-await agar layar tidak freeze
+        onSuccess(); 
       }
       
       router.refresh();
@@ -242,7 +240,51 @@ export default function AddressView({ onClose, setView, customer, onSuccess }: P
     return "translate-x-full";
   };
 
-const [isSettingDefault, setIsSettingDefault] = useState(false);
+  const [isSettingDefault, setIsSettingDefault] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // 🌟 FUNGSI BARU: HANDLE EDIT DIRECTLY TO FORM (Bypass Map bug agar text tidak keriset)
+  const handleEditClick = (addressId: string) => {
+    const addr = localAddresses.find((a: any) => a.id === addressId);
+    if (addr) {
+      setEditingId(addr.id);
+      setFormData({
+        label: addr.address_name || "Home",
+        first_name: `${addr.first_name || ""} ${addr.last_name || ""}`.trim(),
+        last_name: addr.last_name || "",
+        phone: addr.phone || "",
+        address_1: addr.address_1 || "",
+        notes: addr.metadata?.notes || "",
+        city: addr.city || "Denpasar",
+        province: addr.province || "Bali",
+        country_code: addr.country_code || "id",
+        postal_code: addr.postal_code || ""
+      });
+      setStep("form"); 
+    }
+  };
+
+  // 🌟 FUNGSI BARU: HANDLE DELETE ADDRESS
+  const handleDeleteAddress = async (e: React.MouseEvent, addressId: string) => {
+    e.stopPropagation(); 
+    if (!window.confirm("Are you sure you want to delete this address?")) return;
+    
+    setDeletingId(addressId);
+    try {
+      await deleteAddressServerAction(addressId);
+      setLocalAddresses(prev => prev.filter(a => a.id !== addressId));
+      if (selectedAddressId === addressId) {
+        setSelectedAddressId(null);
+      }
+      if (onSuccess) await onSuccess();
+      router.refresh();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete address. Please try again.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const handleChooseAddress = async () => {
     if (!selectedAddressId) return;
@@ -251,7 +293,7 @@ const [isSettingDefault, setIsSettingDefault] = useState(false);
       await setDefaultAddressServerAction(selectedAddressId);
       if (onSuccess) await onSuccess();
       router.refresh();
-      setView("profile"); // Sukses simpan, baru tutup laci!
+      setView("profile"); 
     } catch (err) {
       console.error(err);
       alert("Failed to select default address. Please try again.");
@@ -300,12 +342,22 @@ const [isSettingDefault, setIsSettingDefault] = useState(false);
                     <MapPin className="w-3 h-3" /> Pin Point Active
                   </div>
 
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); goToMap(addr.id); }}
-                    className="w-full py-2.5 rounded-lg border border-gray-200 text-xs font-bold text-gray-700 hover:border-[#ef7044] hover:text-[#ef7044] transition-colors"
-                  >
-                    Change Address / Re-Pin
-                  </button>
+                  {/* 🌟 PERBAIKAN TOMBOL: DIBAGI DUA (EDIT & DELETE) */}
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); handleEditClick(addr.id); }}
+                      className="flex-1 py-2.5 rounded-lg border border-gray-200 text-xs font-bold text-gray-700 hover:border-[#ef7044] hover:text-[#ef7044] transition-colors"
+                    >
+                      Change / Edit Details
+                    </button>
+                    <button 
+                      onClick={(e) => handleDeleteAddress(e, addr.id)}
+                      disabled={deletingId === addr.id}
+                      className="py-2.5 px-3 rounded-lg border border-red-200 text-xs font-bold text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors flex items-center justify-center disabled:opacity-50 shrink-0"
+                    >
+                      {deletingId === addr.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </div>
               );
             })
@@ -314,12 +366,12 @@ const [isSettingDefault, setIsSettingDefault] = useState(false);
 
         <div className="bg-white p-5 border-t border-gray-100">
           <button 
-          onClick={handleChooseAddress}
-          disabled={!selectedAddressId || isSettingDefault}
-          className="w-full bg-[#ef7044] text-white py-3.5 rounded-xl font-bold border border-[#ef7044] hover:bg-white hover:text-[#ef7044] transition-all text-xs tracking-widest uppercase disabled:opacity-50 flex items-center justify-center gap-2"
-        >
-          {isSettingDefault ? <Loader2 className="w-4 h-4 animate-spin" /> : "Choose Address"}
-        </button>
+            onClick={handleChooseAddress}
+            disabled={!selectedAddressId || isSettingDefault}
+            className="w-full bg-[#ef7044] text-white py-3.5 rounded-xl font-bold border border-[#ef7044] hover:bg-white hover:text-[#ef7044] transition-all text-xs tracking-widest uppercase disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {isSettingDefault ? <Loader2 className="w-4 h-4 animate-spin" /> : "Choose Address"}
+          </button>
         </div>
       </div>
 
@@ -333,7 +385,6 @@ const [isSettingDefault, setIsSettingDefault] = useState(false);
           <div className="w-8"></div>
         </div>
 
-        {/* Search Input Box */}
         <form onSubmit={handleSearchLocation} className="absolute top-24 w-full px-6 z-20">
           <div className="bg-white rounded-full shadow-xl flex items-center px-4 py-1.5 border border-gray-100">
             <Search className="w-4 h-4 text-gray-400 mr-3" />
@@ -350,11 +401,9 @@ const [isSettingDefault, setIsSettingDefault] = useState(false);
           </div>
         </form>
 
-        {/* Real Interactive Map Sheet */}
         <div className="flex-1 bg-gray-100 relative">
           <div ref={mapRef} className="w-full h-full z-10" />
           
-          {/* FIXED CENTER PIN OVERLAY (UX GOJEK STYLE) */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
             <div className="relative bottom-5 flex flex-col items-center">
               <MapPin className="w-10 h-10 text-[#ef7044] fill-white drop-shadow-2xl" />
@@ -365,13 +414,12 @@ const [isSettingDefault, setIsSettingDefault] = useState(false);
           <button 
             type="button"
             onClick={handleUseCurrentLocation}
-            className="absolute bottom-6 right-6 bg-white text-[#ef7044] text-[10px] font-bold px-4 py-2.5 rounded-full shadow-xl flex items-center gap-2 hover:bg-gray-50 border border-gray-100 z-20 animate-in fade-in duration-300"
+            className="absolute bottom-6 right-6 bg-white text-[#ef7044] text-[10px] font-bold px-4 py-2.5 rounded-full shadow-xl flex items-center gap-2 hover:bg-gray-50 border border-gray-100 z-20"
           >
-            <Crosshair className="w-3 h-3 animate-spin-slow" /> Current GPS
+            <Crosshair className="w-3 h-3" /> Current GPS
           </button>
         </div>
 
-        {/* Bottom Text Description Sheet */}
         <div className="bg-white rounded-t-3xl shadow-[0_-10px_30px_rgba(0,0,0,0.08)] p-6 z-20 relative border-t border-gray-50">
           <div className="flex items-start gap-3 mb-6 min-h-[40px]">
             <MapPin className="w-4 h-4 text-[#ef7044] shrink-0 mt-0.5 animate-bounce" />
@@ -506,7 +554,7 @@ const [isSettingDefault, setIsSettingDefault] = useState(false);
           <button 
             type="submit"
             disabled={isSaving}
-            className="mt-6 w-full bg-[#ef7044] text-white py-4 rounded-xl font-bold border border-[#ef7044] hover:bg-white hover:text-[#ef7044] transition-all text-xs tracking-widest uppercase flex justify-center items-center gap-2 shadow-md hover:shadow-lg"
+            className="mt-6 w-full bg-[#ef7044] text-white py-4 rounded-xl font-bold border border-[#ef7044] hover:bg-white hover:text-[#ef7044] transition-all text-xs tracking-widest uppercase flex justify-center items-center gap-2 shadow-md"
           >
             {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save & Verify Address"}
           </button>

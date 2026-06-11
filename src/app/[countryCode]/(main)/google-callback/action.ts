@@ -15,16 +15,20 @@ export async function finalizeGoogleLogin(token: string) {
     secure: process.env.NODE_ENV === "production"
   })
 
-  // Bersihkan jejak cookie return_to jika ada biar bersih
-  if (cookieStore.get("return_to")) {
-    cookieStore.delete("return_to")
+  // 2. BACA DAN BERSIHKAN COOKIE RETURN_TO
+  let returnUrl = "/";
+  const returnToCookie = cookieStore.get("return_to");
+  
+  if (returnToCookie && returnToCookie.value) {
+    returnUrl = returnToCookie.value; // Simpan URL-nya sebelum dihapus!
+    cookieStore.delete("return_to");
   }
 
-  // 2. SAPU BERSIH CACHE (Server Side)
+  // 3. SAPU BERSIH CACHE (Server Side)
   revalidateTag("customer")
   revalidateTag("customers")
   revalidatePath('/', 'layout') 
 
-  // 3. KEMBALIKAN STATUS SUKSES (Jangan pakai redirect di sini!)
-  return { success: true }
+  // 4. KEMBALIKAN STATUS SUKSES BESERTA URL ASAL
+  return { success: true, returnUrl }
 }

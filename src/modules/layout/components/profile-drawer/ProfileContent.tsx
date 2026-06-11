@@ -8,6 +8,7 @@ import ProfileView from "./ProfileView";
 import AddressView from "./AddressView";
 import ResetPasswordView from "./ResetPasswordView";
 import OrderHistory from "./OrderHistory"; 
+import CartView from "./CartView"; // 🌟 TAMBAHAN: Import CartView yang baru
 
 import { retrieveCustomer } from "@lib/data/customer"; 
 import { listOrders } from "@lib/data/orders";
@@ -81,6 +82,17 @@ export default function ProfileContent({ onClose, view, setView }: ProfileConten
       orders={customerData?.orders || []} 
       setView={setView} 
       onClose={onClose} 
+    />
+  );
+
+  // 🌟 TAMBAHAN: Rute untuk memunculkan Keranjang (Cart)
+  if (view === "cart") return (
+    <CartView 
+      cart={null} 
+      customer={customerData} 
+      isOpen={true} 
+      onClose={onClose} 
+      setView={setView} // 🌟 INI OBATNYA BOS! Agar CartView bisa manggil LoginView
     />
   );
   

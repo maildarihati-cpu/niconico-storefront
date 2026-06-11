@@ -9,12 +9,16 @@ import { updateLineItem, deleteLineItem } from "@lib/data/cart";
 import { StoreCart, StoreCustomer } from "@medusajs/types";
 import { prepareCheckoutCart } from "@lib/util/checkout-util"; 
 
+// 🌟 PERBAIKAN: Tambahkan setView ke dalam Props
 interface CartTemplateProps {
   cart: StoreCart | any;
   customer?: StoreCustomer | null;
+  isOpen?: boolean;
+  onClose?: () => void;
+  setView?: (view: string) => void; // 👈 Wajib ada untuk memanggil laci Login
 }
 
-export default function CartTemplate({ cart: initialCart, customer }: CartTemplateProps) {
+export default function CartTemplate({ cart: initialCart, customer, isOpen = true, onClose, setView }: CartTemplateProps) {
   const router = useRouter();
   const { countryCode } = useParams();
   
@@ -47,15 +51,18 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
       const bottomItem = items.find((i: any) => i.metadata?.bundle_type === "BOTTOM") || items[1];
 
       if (topItem && bottomItem) {
+        const bundleColor = topItem.metadata?.color || bottomItem.metadata?.color;
+        const colorText = bundleColor ? `Color: ${bundleColor} • ` : "";
+
         groups.push({
           isBundle: true,
           id: bId,
           items: items,
-          title: `${topItem.title} (SET)`,
+          title: `${topItem.title || "Bundle Product"} (SET)`,
           thumbnail: topItem.thumbnail,
-          unit_price: items.reduce((sum: number, i: any) => sum + i.unit_price, 0),
-          quantity: topItem.quantity,
-          variant_title: `Top: ${topItem.metadata?.size || 'M'} / Bottom: ${bottomItem.metadata?.size || 'M'}`
+          unit_price: items.reduce((sum: number, i: any) => sum + (i.unit_price || 0), 0),
+          quantity: topItem.quantity || 1,
+          variant_title: `${colorText}Top: ${topItem.metadata?.size || '-'} / Bottom: ${bottomItem.metadata?.size || '-'}`
         });
       } else {
          items.forEach((i: any) => groups.push({ isBundle: false, id: i.id, item: i }));
@@ -84,7 +91,9 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
     setIsLoadingItem(group.id);
     try {
       if (group.isBundle) {
-        await Promise.all(group.items.map((i: any) => updateLineItem({ lineId: i.id, quantity: newQuantity })));
+        for (const i of group.items) {
+          await updateLineItem({ lineId: i.id, quantity: newQuantity });
+        }
       } else {
         await updateLineItem({ lineId: group.item.id, quantity: newQuantity });
       }
@@ -100,7 +109,9 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
     setIsLoadingItem(group.id);
     try {
       if (group.isBundle) {
-        await Promise.all(group.items.map((i: any) => deleteLineItem(i.id)));
+        for (const i of group.items) {
+          await deleteLineItem(i.id);
+        }
       } else {
         await deleteLineItem(group.item.id);
       }
@@ -129,7 +140,7 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
   const calculateTotals = () => {
     if (!cart?.items) return { subtotal: 0, tax: 0, shipping: 0, total: 0 };
     const selectedCartItems = cart.items.filter((item: any) => selectedItems.includes(item.id));
-    const subtotal = selectedCartItems.reduce((acc: number, item: any) => acc + (item.unit_price * item.quantity), 0);
+    const subtotal = selectedCartItems.reduce((acc: number, item: any) => acc + ((item.unit_price || 0) * (item.quantity || 1)), 0);
     const tax = subtotal * 0; 
     return { subtotal: getPrice(subtotal), tax: getPrice(tax), total: getPrice(subtotal + tax) };
   };
@@ -139,24 +150,37 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
   const handleCheckout = async () => {
     if (selectedItems.length === 0) return;
     
+    // 🌟 PERBAIKAN LOGIC CHECKOUT:
     if (!customer || !customer.id) {
-      document.cookie = "return_to=/" + countryCode + "/cart; path=/; max-age=3600";
-      router.push(`/${countryCode}/cart?auth=login`, { scroll: false });
+      // 1. Simpan cookie agar setelah login kustomer dilempar kembali ke checkout (atau keranjang)
+      document.cookie = "return_to=/" + countryCode + "/checkout; path=/; max-age=3600";
+      
+      // 2. Transisi mulus: Ganti wujud laci dari Cart menjadi Login
+      if (setView) {
+        setView("login");
+      } else {
+         // Fallback kalau setView tidak ada (misal diakses langsung dari URL lama)
+        if (onClose) onClose();
+        router.push(`/${countryCode}/cart?auth=login`, { scroll: false });
+      }
       return; 
     }
 
+    // 🌟 Jika Kustomer Sudah Login, Lanjut Proses Checkout:
     setIsCheckoutLoading(true);
 
     try {
       const isAllSelected = cart?.items?.length === selectedItems.length;
 
       if (isAllSelected) {
+        if (onClose) onClose(); // Tutup laci sebelum pindah ke full page checkout
         router.push(`/${countryCode}/checkout`);
       } else {
         const itemsToCheckout = cart.items.filter((item: any) => selectedItems.includes(item.id));
         const checkoutCartId = await prepareCheckoutCart(cart, itemsToCheckout);
 
         if (checkoutCartId) {
+          if (onClose) onClose(); // Tutup laci sebelum pindah ke full page checkout
           router.push(`/${countryCode}/checkout?cart_id=${checkoutCartId}`);
         } else {
           console.error("Error creating checkout cart");
@@ -169,36 +193,37 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
     }
   };
 
+  const handleSafeClose = (e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    setTimeout(() => {
+      if (onClose) {
+        onClose();
+      } else {
+        router.back(); 
+      }
+    }, 100);
+  };
+
+  if (!isOpen) return null;
+
   return (
     <>
-      {/* ==================================================== */}
-      {/* 🌟 BACKGROUND OVERLAY BLUR */}
-      {/* ==================================================== */}
       <div 
-        className="hidden md:block fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm animate-in fade-in duration-300 cursor-pointer"
-        onClick={() => router.back()}
+        className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm animate-in fade-in duration-300 cursor-pointer"
+        onClick={handleSafeClose}
         title="Klik di luar laci untuk menutup"
       />
 
-      {/* ==================================================== */}
-      {/* 🌟 KONTENER UTAMA CART */}
-      {/* ==================================================== */}
-      <div className="bg-white min-h-screen relative max-w-full md:fixed md:top-0 md:right-0 md:h-full md:w-[480px] md:z-[101] md:shadow-[0_0_50px_rgba(0,0,0,0.3)] md:animate-in md:slide-in-from-right-full md:duration-500 overflow-y-auto scrollbar-hide font-sans flex flex-col">
+      <div className="bg-white fixed top-0 right-0 h-full w-full sm:w-[480px] z-[101] shadow-[0_0_50px_rgba(0,0,0,0.3)] animate-in slide-in-from-right duration-300 overflow-y-auto scrollbar-hide font-sans flex flex-col">
         
         <div className="pt-12 pb-6 px-6 relative flex flex-col items-center flex-shrink-0">
-          {/* 🌟 TOMBOL BACK HANYA MUNCUL DI MOBILE (md:hidden) */}
           <button 
             type="button" 
-            onClick={() => {
-              // 1. Paksa semua elemen yang sedang aktif di layar (termasuk keyboard) untuk BLUR/KELUAR
-              if (document.activeElement instanceof HTMLElement) {
-                document.activeElement.blur();
-              }
-              
-              // 2. Baru lakukan navigasi back
-              router.back();
-            }} 
-            className="md:hidden absolute left-6 top-14 p-2 bg-white rounded-full shadow-sm border border-gray-100 hover:bg-gray-50 transition-colors"
+            onClick={handleSafeClose}
+            className="absolute left-6 top-14 p-2 bg-white rounded-full shadow-sm border border-gray-100 hover:bg-gray-50 transition-colors"
           >
             <ChevronLeft className="w-5 h-5 text-gray-800" />
           </button>
@@ -217,11 +242,20 @@ export default function CartTemplate({ cart: initialCart, customer }: CartTempla
                 : selectedItems.includes(group.item.id);
               const isUpdating = isLoadingItem === group.id;
 
-              const displayTitle = group.isBundle ? group.title : group.item.title;
-              const displayPrice = group.isBundle ? group.unit_price : group.item.unit_price;
-              const displayThumb = group.isBundle ? group.thumbnail : group.item.thumbnail;
-              const displayVariant = group.isBundle ? group.variant_title : group.item.variant.title;
-              const displayQty = group.isBundle ? group.quantity : group.item.quantity;
+              const displayTitle = group.isBundle ? group.title : (group.item.title || "Product");
+              const displayPrice = group.isBundle ? group.unit_price : (group.item.unit_price || 0);
+              const displayThumb = (group.isBundle ? group.thumbnail : group.item.thumbnail) || "/placeholder.png";
+              
+              let displayVariant = "";
+              if (group.isBundle) {
+                displayVariant = group.variant_title;
+              } else {
+                const regColor = group.item.metadata?.color;
+                const regVariant = group.item.variant?.title || group.item.variant_title || "Regular";
+                displayVariant = regColor ? `Color: ${regColor} • Size: ${regVariant}` : regVariant;
+              }
+                
+              const displayQty = group.isBundle ? group.quantity : (group.item.quantity || 1);
 
               return (
                 <div key={group.id} className={`bg-white rounded-[24px] p-3 flex gap-4 shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-50 transition-opacity ${isUpdating ? "opacity-50 pointer-events-none" : ""}`}>

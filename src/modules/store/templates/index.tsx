@@ -308,14 +308,14 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
         <div className="flex gap-4 mb-6 pb-6 border-b border-gray-100">
           <img src={mainImage} alt={product.title} className="w-20 h-24 object-cover rounded-xl shadow-sm flex-shrink-0" />
           <div className="flex flex-col justify-center pr-6">
-            <h3 className="font-bold text-gray-900 text-lg leading-tight mb-1">{product.title}</h3>
+            <h3 className="font-heavy text-gray-900 text-lg leading-tight mb-1">{product.title}</h3>
             <h2 className="text-xl font-black text-[#EF7044]">{mainDisplayPrice}</h2>
           </div>
         </div>
 
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-3">
-            <p className="text-[13px] text-gray-500 font-medium">Color : {colorName}</p>
+            <p className="text-[13px] text-gray-500 font-regular">Color : {colorName}</p>
             <div className="w-6 h-6 rounded-full border border-gray-300 p-[2px] shadow-sm">
               <div className="w-full h-full rounded-full border border-gray-100" style={{ backgroundColor: colorId }}></div>
             </div>
@@ -332,18 +332,18 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
             {selectedType === "SET" ? (
               <div className="flex flex-col h-full justify-center">
                 <p className="text-[12px] text-gray-500 italic mb-2">Choose your sizes!</p>
-                <button onClick={() => setIsSetModalOpen(true)} className="w-max bg-gray-900 text-white text-[11px] font-bold px-4 py-2 rounded-full hover:bg-[#EF7044] transition-colors">
+                <button onClick={() => setIsSetModalOpen(true)} className="w-max bg-gray-900 text-white text-[11px] font-heavy px-4 py-2 rounded-full hover:bg-[#EF7044] transition-colors">
                   Select Sizes
                 </button>
               </div>
             ) : (
               <>
                 <div className="flex justify-between items-center mb-3">
-                  <p className="text-[13px] text-gray-500 font-medium">Size <span className="ml-2">: {selectedSize || "Select"}</span></p>
+                  <p className="text-[13px] text-gray-500 font-black">Size <span className="ml-2">: {selectedSize || "Select"}</span></p>
                   {(() => {
                     const currentSize = sizesForType.find((s: SizeData) => s.label === selectedSize);
                     if (currentSize?.variant?.manage_inventory) {
-                      return <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${currentSize.qty <= 3 ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-600'}`}>Stock: {currentSize.qty}</span>
+                      return <span className={`text-[10px] font-heavy px-2 py-0.5 rounded-full ${currentSize.qty <= 3 ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-600'}`}>Stock: {currentSize.qty}</span>
                     }
                     return null;
                   })()}
@@ -352,7 +352,7 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
                 <div className="flex flex-row flex-wrap gap-1.5 mb-4">
                   {sizesForType.map((size: SizeData) => (
                     <button key={size.label} disabled={!size.inStock} onClick={() => setSelectedSize(size.label)}
-                      className={`relative h-8 shrink-0 rounded-full border flex items-center justify-center text-[10px] font-bold transition-all
+                      className={`relative h-8 shrink-0 rounded-full border flex items-center justify-center text-[10px] font-heavy transition-all
                         ${size.label.length > 3 ? "w-max px-3" : "w-8"}
                         ${!size.inStock ? 'border-gray-200 text-gray-300 cursor-not-allowed' : selectedSize === size.label ? 'bg-[#EF7044] border-[#EF7044] text-white shadow-md' : 'border-gray-300 text-gray-700 hover:border-[#EF7044]'}`}>
                       {size.label}
@@ -363,7 +363,7 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
               </>
             )}
 
-            <button onClick={() => setIsSizeGuideOpen(true)} className="flex items-center gap-1.5 text-[11px] font-bold text-black hover:text-[#EF7044] transition-colors w-max mt-auto">
+            <button onClick={() => setIsSizeGuideOpen(true)} className="flex items-center gap-1.5 text-[11px] font-heavy text-black hover:text-[#EF7044] transition-colors w-max mt-auto">
               <Ruler className="w-3 h-3" /> Size Guide <span className="ml-1">›</span>
             </button>
           </div>
@@ -374,27 +374,27 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
                 <button onClick={() => { setSelectedType("SET"); setIsSetModalOpen(true); }} className="flex-1 flex flex-col gap-1.5 group">
                   <div className={`relative aspect-[3/4] w-full rounded-[5pt] overflow-hidden border-2 transition-all ${selectedType === "SET" ? "border-[#EF7044]" : "border-transparent"}`}>
                     <img src={mainImage} className="w-full h-full object-cover object-center" alt="Set" />
-                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40"><span className="text-white text-[8px] font-bold tracking-widest">SET</span></div>
+                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40"><span className="text-white text-[8px] font-heavy tracking-widest">SET</span></div>
                   </div>
-                  <p className="text-[8px] text-center font-medium text-gray-500 truncate">{formatPrice(setPrice)}</p>
+                  <p className="text-[8px] text-center font-regular text-gray-500 truncate">{formatPrice(setPrice)}</p>
                 </button>
               )}
               {availableTypes.includes("TOP") && (
                 <button onClick={() => setSelectedType("TOP")} className="flex-1 flex flex-col gap-1.5 group">
                   <div className={`relative aspect-[3/4] w-full rounded-[5pt] overflow-hidden border-2 transition-all ${selectedType === "TOP" ? "border-[#EF7044]" : "border-transparent"}`}>
                     <img src={mainImage} className="w-full h-full object-cover object-top scale-[1.3] origin-top" alt="Top" />
-                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40"><span className="text-white text-[8px] font-bold tracking-widest">TOP</span></div>
+                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40"><span className="text-white text-[8px] font-heavy tracking-widest">TOP</span></div>
                   </div>
-                  <p className="text-[8px] text-center font-medium text-gray-500 truncate">{formatPrice(getVariantPrice(topVariants[0]) || 0)}</p>
+                  <p className="text-[8px] text-center font-regular text-gray-500 truncate">{formatPrice(getVariantPrice(topVariants[0]) || 0)}</p>
                 </button>
               )}
               {availableTypes.includes("BOTTOM") && (
                 <button onClick={() => setSelectedType("BOTTOM")} className="flex-1 flex flex-col gap-1.5 group">
                   <div className={`relative aspect-[3/4] w-full rounded-[5pt] overflow-hidden border-2 transition-all ${selectedType === "BOTTOM" ? "border-[#EF7044]" : "border-transparent"}`}>
                     <img src={mainImage} className="w-full h-full object-cover object-bottom scale-[1.3] origin-bottom" alt="Bottom" />
-                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40"><span className="text-white text-[8px] font-bold tracking-widest">BOTTOM</span></div>
+                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/40"><span className="text-white text-[8px] font-heavy tracking-widest">BOTTOM</span></div>
                   </div>
-                  <p className="text-[8px] text-center font-medium text-gray-500 truncate">{formatPrice(getVariantPrice(bottomVariants[0]) || 0)}</p>
+                  <p className="text-[8px] text-center font-regular text-gray-500 truncate">{formatPrice(getVariantPrice(bottomVariants[0]) || 0)}</p>
                 </button>
               )}
             </div>
@@ -405,7 +405,7 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
           <button 
             onClick={() => selectedType === "SET" ? setIsSetModalOpen(true) : handleAddToCart(false)} 
             disabled={isAdding || (selectedType !== "SET" && !selectedRegulerVariant)} 
-            className="w-full flex items-center justify-center gap-2 bg-[#EF7044] text-white py-4 rounded-full font-bold text-lg tracking-wide hover:bg-[#d65f36] active:scale-95 transition-all shadow-lg disabled:bg-gray-300"
+            className="w-full flex items-center justify-center gap-2 bg-[#EF7044] text-white py-4 rounded-full font-heavy text-lg tracking-wide hover:bg-[#d65f36] active:scale-95 transition-all shadow-lg disabled:bg-gray-300"
           >
             <ShoppingCart className="w-5 h-5" />
             {isAdding ? "ADDING..." : "ADD TO CART"}
@@ -420,7 +420,7 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
                 <button onClick={() => setIsSetModalOpen(false)} className="absolute left-4 p-1 text-gray-500 hover:text-black">
                   <X className="w-6 h-6" />
                 </button>
-                <h3 className="font-bold text-lg">Mix & Match Set</h3>
+                <h3 className="font-heavy text-lg">Mix & Match Set</h3>
               </div>
               <div className="p-5 flex-1 overflow-y-auto pb-32">
                 <div className="flex gap-4 mb-6">
@@ -429,22 +429,22 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
                   </div>
                   <div className="flex flex-col pt-1">
                     <h4 className="text-[#EF7044] font-black text-sm uppercase leading-tight mb-1">{product.title}</h4>
-                    <p className="text-[#EF7044] font-bold text-base mb-3">{formatPrice(setPrice * setQuantity)}</p>
+                    <p className="text-[#EF7044] font-heavy text-base mb-3">{formatPrice(setPrice * setQuantity)}</p>
                     <div className="flex flex-col gap-1.5">
-                      <span className="bg-gray-200 text-gray-700 text-[10px] font-bold px-3 py-1 rounded w-max">Set</span>
-                      <span className="bg-gray-200 text-gray-700 text-[10px] font-bold px-3 py-1 rounded w-max">{colorName}</span>
+                      <span className="bg-gray-200 text-gray-700 text-[10px] font-heavy px-3 py-1 rounded w-max">Set</span>
+                      <span className="bg-gray-200 text-gray-700 text-[10px] font-heavy px-3 py-1 rounded w-max">{colorName}</span>
                       {(topSize || bottomSize) && (
-                        <span className="bg-gray-200 text-gray-700 text-[10px] font-bold px-3 py-1 rounded w-max">
+                        <span className="bg-gray-200 text-gray-700 text-[10px] font-heavy px-3 py-1 rounded w-max">
                           {topSize && bottomSize ? `${topSize} / ${bottomSize}` : (topSize || bottomSize)}
                         </span>
                       )}
-                      <span className="text-[11px] font-bold text-gray-800 mt-1">Qty : {setQuantity}</span>
+                      <span className="text-[11px] font-heavy text-gray-800 mt-1">Qty : {setQuantity}</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3 mb-6">
-                  <span className="text-[13px] text-gray-500 font-medium">Color : {colorName}</span>
+                  <span className="text-[13px] text-gray-500 font-regular">Color : {colorName}</span>
                   <div className="w-8 h-8 rounded-full border-2 border-[#EF7044] p-[2px]">
                     <div className="w-full h-full rounded-full bg-white border border-gray-200 shadow-sm" style={{ backgroundColor: colorId }}></div>
                   </div>
@@ -452,17 +452,17 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
 
                 <div className="mb-5">
                   <div className="flex items-center gap-2 mb-3">
-                    <p className="text-[13px] text-gray-500 font-medium">Top Size <span className="ml-2">: {topSize || "Select"}</span></p>
+                    <p className="text-[13px] text-gray-500 font-regular">Top Size <span className="ml-2">: {topSize || "Select"}</span></p>
                     {(() => {
                         const cTop = modalTopSizes.find((s: SizeData) => s.label === topSize);
-                        if (cTop?.variant?.manage_inventory) return <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${cTop.qty <= 3 ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-600'}`}>Stock: {cTop.qty}</span>
+                        if (cTop?.variant?.manage_inventory) return <span className={`text-[10px] font-heavy px-1.5 py-0.5 rounded-full ${cTop.qty <= 3 ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-600'}`}>Stock: {cTop.qty}</span>
                         return null;
                       })()}
                   </div>
                   <div className="flex gap-2">
                     {modalTopSizes.map((size: SizeData) => (
                       <button key={size.label} disabled={!size.inStock} onClick={() => setTopSize(size.label)}
-                        className={`relative h-10 shrink-0 rounded-full border flex items-center justify-center text-xs font-bold transition-all 
+                        className={`relative h-10 shrink-0 rounded-full border flex items-center justify-center text-xs font-heavy transition-all 
                           ${size.label.length > 3 ? "w-max px-4" : "w-10"}
                           ${!size.inStock ? 'border-gray-200 text-gray-300 cursor-not-allowed' : topSize === size.label ? 'bg-[#EF7044] border-[#EF7044] text-white shadow-md' : 'border-gray-300 text-gray-700'}`}>
                         {size.label} {!size.inStock && <div className="absolute w-full h-[1px] bg-gray-300 rotate-45"></div>}
@@ -473,17 +473,17 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
 
                 <div className="mb-6">
                   <div className="flex items-center gap-2 mb-3">
-                    <p className="text-[13px] text-gray-500 font-medium">Bottom Size <span className="ml-2">: {bottomSize || "Select"}</span></p>
+                    <p className="text-[13px] text-gray-500 font-regular">Bottom Size <span className="ml-2">: {bottomSize || "Select"}</span></p>
                     {(() => {
                       const cBot = modalBottomSizes.find((s: SizeData) => s.label === bottomSize);
-                      if (cBot?.variant?.manage_inventory) return <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${cBot.qty <= 3 ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-600'}`}>Stock: {cBot.qty}</span>
+                      if (cBot?.variant?.manage_inventory) return <span className={`text-[10px] font-heavy px-1.5 py-0.5 rounded-full ${cBot.qty <= 3 ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-600'}`}>Stock: {cBot.qty}</span>
                       return null;
                     })()}
                   </div>
                   <div className="flex gap-2">
                     {modalBottomSizes.map((size: SizeData) => (
                       <button key={size.label} disabled={!size.inStock} onClick={() => setBottomSize(size.label)}
-                        className={`relative h-10 shrink-0 rounded-full border flex items-center justify-center text-xs font-bold transition-all 
+                        className={`relative h-10 shrink-0 rounded-full border flex items-center justify-center text-xs font-heavy transition-all 
                           ${size.label.length > 3 ? "w-max px-4" : "w-10"}
                           ${!size.inStock ? 'border-gray-200 text-gray-300 cursor-not-allowed' : bottomSize === size.label ? 'bg-[#EF7044] border-[#EF7044] text-white shadow-md' : 'border-gray-300 text-gray-700'}`}>
                         {size.label} {!size.inStock && <div className="absolute w-full h-[1px] bg-gray-300 rotate-45"></div>}
@@ -494,15 +494,15 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
 
                 <div className="flex items-center justify-between py-4 border-t border-gray-100">
                   <div className="flex items-center gap-2">
-                    <span className="text-[13px] text-gray-500 font-medium">Quantity :</span>
+                    <span className="text-[13px] text-gray-500 font-regular">Quantity :</span>
                     {topSize && bottomSize && (
-                      <span className={`text-xs font-medium ${maxAvailableSet <= 3 ? 'text-red-500' : 'text-[#EF7044]'}`}>Sisa: {maxAvailableSet}</span>
+                      <span className={`text-xs font-regular ${maxAvailableSet <= 3 ? 'text-red-500' : 'text-[#EF7044]'}`}>Sisa: {maxAvailableSet}</span>
                     )}
                   </div>
                   <div className="flex items-center border border-gray-300 rounded-full px-3 py-1.5 gap-4">
-                    <button onClick={() => setSetQuantity(Math.max(1, setQuantity - 1))} className="text-gray-500 font-bold text-lg disabled:opacity-30" disabled={setQuantity <= 1}>−</button>
-                    <span className="text-sm font-bold w-4 text-center">{setQuantity}</span>
-                    <button onClick={() => setSetQuantity(Math.min(maxAvailableSet, setQuantity + 1))} className="text-gray-500 font-bold text-lg disabled:opacity-30" disabled={setQuantity >= maxAvailableSet || !topSize || !bottomSize}>+</button>
+                    <button onClick={() => setSetQuantity(Math.max(1, setQuantity - 1))} className="text-gray-500 font-heavy text-lg disabled:opacity-30" disabled={setQuantity <= 1}>−</button>
+                    <span className="text-sm font-heavy w-4 text-center">{setQuantity}</span>
+                    <button onClick={() => setSetQuantity(Math.min(maxAvailableSet, setQuantity + 1))} className="text-gray-500 font-heavy text-lg disabled:opacity-30" disabled={setQuantity >= maxAvailableSet || !topSize || !bottomSize}>+</button>
                   </div>
                 </div>
               </div>
@@ -511,7 +511,7 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
                 <button 
                   onClick={() => handleAddToCart(true)} 
                   disabled={isAdding || !topSize || !bottomSize} 
-                  className="w-full flex items-center justify-center gap-2 bg-[#EF7044] text-white py-3.5 rounded-full font-bold text-sm tracking-wide shadow-lg hover:bg-[#d65f36] transition-colors disabled:opacity-50 disabled:bg-gray-300"
+                  className="w-full flex items-center justify-center gap-2 bg-[#EF7044] text-white py-3.5 rounded-full font-heavy text-sm tracking-wide shadow-lg hover:bg-[#d65f36] transition-colors disabled:opacity-50 disabled:bg-gray-300"
                 >
                   <ShoppingCart className="w-5 h-5" />
                   {isAdding ? "ADDING..." : "ADD TO CART"}
@@ -526,21 +526,21 @@ const QuickShopModal = ({ product, onClose }: { product: any; onClose: () => voi
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsSizeGuideOpen(false)} />
             <div className="relative bg-white w-full max-w-[500px] max-h-[90vh] overflow-y-auto rounded-[20px] p-6 shadow-2xl animate-in zoom-in-95 scrollbar-hide">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-[18px] font-medium text-gray-900">Size Guide</h2>
+                <h2 className="text-[18px] font-regular text-gray-900">Size Guide</h2>
                 <button onClick={() => setIsSizeGuideOpen(false)} className="text-gray-900 hover:text-gray-500 transition-colors"><X className="w-6 h-6"/></button>
               </div>
               <div className="mb-8 px-2">
-                <h3 className="font-bold text-[14px] text-center mb-3">How to measure</h3>
+                <h3 className="font-heavy text-[14px] text-center mb-3">How to measure</h3>
                 <p className="text-[12px] text-gray-800 text-center leading-relaxed">Every body is different, and we at Niconico celebrate that fact with swimsuits and bikinis catered to all shapes and sizes. When measuring your body, the measuring tape should be as close to your skin as possible.</p>
               </div>
               <div className="mb-8">
-                <h3 className="font-bold text-[14px] text-center mb-3">Swimwear</h3>
+                <h3 className="font-heavy text-[14px] text-center mb-3">Swimwear</h3>
                 <div className="w-full border border-gray-200 rounded-lg overflow-hidden">
                   <table className="w-full text-[11px] text-center">
-                    <thead className="font-bold text-gray-900">
+                    <thead className="font-heavy text-gray-900">
                       <tr><th className="py-3 border-b border-r border-gray-200 w-1/4">Size</th><th className="py-3 border-b border-r border-gray-200 w-1/4">Bust</th><th className="py-3 border-b border-r border-gray-200 w-1/4">Waist</th><th className="py-3 border-b border-gray-200 w-1/4">Hip</th></tr>
                     </thead>
-                    <tbody className="text-gray-600 font-medium">
+                    <tbody className="text-gray-600 font-regular">
                       <tr><td className="py-3 border-b border-r border-gray-200 text-gray-900">S</td><td className="py-3 border-b border-r border-gray-200">80-86</td><td className="py-3 border-b border-r border-gray-200">62-68</td><td className="py-3 border-b border-gray-200">86-92</td></tr>
                       <tr><td className="py-3 border-b border-r border-gray-200 text-gray-900">M</td><td className="py-3 border-b border-r border-gray-200">86-92</td><td className="py-3 border-b border-r border-gray-200">68-74</td><td className="py-3 border-b border-gray-200">92-98</td></tr>
                       <tr><td className="py-3 border-b border-r border-gray-200 text-gray-900">L</td><td className="py-3 border-b border-r border-gray-200">92-98</td><td className="py-3 border-b border-r border-gray-200">74-80</td><td className="py-3 border-b border-gray-200">98-104</td></tr>
@@ -649,9 +649,42 @@ export default function StoreTemplate({ initialProducts = [] }: { initialProduct
     }).format(amount);
   };
 
+  // 🌟 PERBAIKAN: FORMAT HARGA MENGENALI SET BUNDLE (TOP + BOTTOM)
   const getProductPrice = (product: any) => {
-    const price = product.variants?.[0]?.prices?.[0]?.amount || 0;
-    return countryCode === "id" ? price : price / 100;
+    const variants = product.variants || [];
+    if (variants.length === 0) return 0;
+
+    const targetCurrency = countryCode === "id" ? "idr" : "usd";
+
+    // 1. Cek apakah produk ini punya TOP dan BOTTOM
+    const topVars = variants.filter((v: any) => v.options?.some((opt: any) => opt.value?.toLowerCase().trim() === "top"));
+    const bottomVars = variants.filter((v: any) => v.options?.some((opt: any) => opt.value?.toLowerCase().trim() === "bottom"));
+
+    if (topVars.length > 0 && bottomVars.length > 0) {
+      // 2. Jika punya keduanya, jumlahkan harga termurah dari Top + Bottom
+      const getMinPrice = (vars: any[]) => {
+        const prices = vars.map((v) => {
+          const pObj = v.calculated_price || v.prices?.find((p: any) => p.currency_code?.toLowerCase() === targetCurrency) || v.prices?.[0];
+          if (!pObj) return 0;
+          let amt = pObj.calculated_amount || pObj.amount;
+          return (pObj.currency_code || targetCurrency).toLowerCase() === "idr" ? amt : amt / 100;
+        });
+        const validPrices = prices.filter(p => p > 0);
+        return validPrices.length > 0 ? Math.min(...validPrices) : 0;
+      };
+
+      return getMinPrice(topVars) + getMinPrice(bottomVars);
+    }
+
+    // 3. Kalau bukan Set (hanya reguler), ambil harga biasa
+    const variant = variants[0];
+    const priceObject = variant.calculated_price || variant.prices?.find((p: any) => p.currency_code?.toLowerCase() === targetCurrency) || variant.prices?.[0];
+    if (!priceObject) return 0;
+    
+    let amount = priceObject.calculated_amount || priceObject.amount;
+    const currency = (priceObject.currency_code || targetCurrency).toLowerCase();
+    
+    return currency === "idr" ? amount : amount / 100;
   };
 
   // 🌟 LOGIC PENGGUGUR (Mutually Exclusive)
@@ -889,7 +922,7 @@ export default function StoreTemplate({ initialProducts = [] }: { initialProduct
             placeholder="Search keyword..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-gray-50 border border-gray-200 rounded-full py-2.5 pl-10 pr-8 text-[12px] font-medium focus:outline-none focus:border-[#EF7044] transition-colors"
+            className="w-full bg-gray-50 border border-gray-200 rounded-full py-2.5 pl-10 pr-8 text-[12px] font-regular focus:outline-none focus:border-[#EF7044] transition-colors"
           />
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           {searchQuery && (
@@ -902,10 +935,10 @@ export default function StoreTemplate({ initialProducts = [] }: { initialProduct
         <div className="flex-1 space-y-5">
           {/* Price */}
           <div>
-            <p className="text-[13px] font-bold text-gray-900 mb-1.5">Price</p>
+            <p className="text-[13px] font-heavy text-gray-900 mb-1.5">Price</p>
             <div className="px-1">
               <input type="range" min="0" max="5000000" step="50000" value={maxPrice} onChange={(e) => handlePriceChange(Number(e.target.value))} className="w-full accent-[#EF7044]" />
-              <div className="flex justify-between mt-1 text-[11px] font-medium text-gray-600">
+              <div className="flex justify-between mt-1 text-[11px] font-regular text-gray-600">
                 <span>Rp 0</span>
                 <span>{formatPrice(maxPrice)}</span>
               </div>
@@ -914,22 +947,22 @@ export default function StoreTemplate({ initialProducts = [] }: { initialProduct
 
           {/* Size */}
           <div>
-            <p className="text-[13px] font-bold text-gray-900 mb-1.5">Size</p>
+            <p className="text-[13px] font-heavy text-gray-900 mb-1.5">Size</p>
             <div className="flex flex-wrap gap-2">
               {["S", "M", "L", "XL"].map(size => (
-                <button key={size} onClick={() => handleSizeClick(size)} className={`px-5 py-1.5 rounded-full border transition-colors text-xs font-medium ${selectedSize === size ? "border-[#EF7044] bg-orange-50/50 text-[#EF7044]" : "border-gray-200 text-gray-700 bg-white hover:border-[#EF7044]"}`}>{size}</button>
+                <button key={size} onClick={() => handleSizeClick(size)} className={`px-5 py-1.5 rounded-full border transition-colors text-xs font-regular ${selectedSize === size ? "border-[#EF7044] bg-orange-50/50 text-[#EF7044]" : "border-gray-200 text-gray-700 bg-white hover:border-[#EF7044]"}`}>{size}</button>
               ))}
             </div>
           </div>
 
           {/* Color */}
           <div>
-            <p className="text-[13px] font-bold text-gray-900 mb-2">Color</p>
+            <p className="text-[13px] font-heavy text-gray-900 mb-2">Color</p>
             <div className="flex flex-wrap gap-3">
               {Object.entries(COLOR_IDENTITY).map(([colorName, colorHex]) => (
                 <button key={colorName} onClick={() => handleColorClick(colorName)} className="flex flex-col items-center gap-1 group">
                   <div className={`w-6 h-6 rounded-full transition-all ${selectedColor === colorName ? "ring-2 ring-offset-2 ring-gray-900 scale-110" : "border border-gray-200 group-hover:scale-110"}`} style={{ backgroundColor: colorHex }} />
-                  <span className={`text-[8px] uppercase tracking-wider transition-all ${selectedColor === colorName ? "font-bold text-gray-900" : "font-medium text-gray-400"}`}>{colorName}</span>
+                  <span className={`text-[8px] uppercase tracking-wider transition-all ${selectedColor === colorName ? "font-heavy text-gray-900" : "font-regular text-gray-400"}`}>{colorName}</span>
                 </button>
               ))}
             </div>
@@ -937,28 +970,28 @@ export default function StoreTemplate({ initialProducts = [] }: { initialProduct
 
           {/* Category */}
           <div>
-            <p className="text-[13px] font-bold text-gray-900 mb-1.5">Category</p>
+            <p className="text-[13px] font-heavy text-gray-900 mb-1.5">Category</p>
             <div className="flex flex-wrap gap-2">
               {topCategories.map(cat => (
-                <button key={cat.handle} onClick={() => handleCategoryClick(cat.handle === activeCategory ? "all" : cat.handle)} className={`px-4 py-1.5 rounded-full border transition-colors text-xs font-medium ${activeCategory === cat.handle ? "border-[#EF7044] bg-orange-50/50 text-[#EF7044]" : "border-gray-200 text-gray-700 bg-white hover:border-[#EF7044]"}`}>{cat.name}</button>
+                <button key={cat.handle} onClick={() => handleCategoryClick(cat.handle === activeCategory ? "all" : cat.handle)} className={`px-4 py-1.5 rounded-full border transition-colors text-xs font-regular ${activeCategory === cat.handle ? "border-[#EF7044] bg-orange-50/50 text-[#EF7044]" : "border-gray-200 text-gray-700 bg-white hover:border-[#EF7044]"}`}>{cat.name}</button>
               ))}
             </div>
           </div>
 
           {/* Collections */}
           <div>
-            <p className="text-[13px] font-bold text-gray-900 mb-1.5">Collections</p>
+            <p className="text-[13px] font-heavy text-gray-900 mb-1.5">Collections</p>
             <div className="flex flex-wrap gap-2">
               {["Carvico", "New Arrivals", "Signature", "Island Escape", "Discount"].map(col => (
-                <button key={col} onClick={() => handleCollectionClick(col)} className={`px-4 py-1.5 rounded-full border transition-colors text-xs font-medium ${selectedCollection === col ? "border-[#EF7044] bg-orange-50/50 text-[#EF7044]" : "border-gray-200 text-gray-700 bg-white hover:border-[#EF7044]"}`}>{col}</button>
+                <button key={col} onClick={() => handleCollectionClick(col)} className={`px-4 py-1.5 rounded-full border transition-colors text-xs font-regular ${selectedCollection === col ? "border-[#EF7044] bg-orange-50/50 text-[#EF7044]" : "border-gray-200 text-gray-700 bg-white hover:border-[#EF7044]"}`}>{col}</button>
               ))}
             </div>
           </div>
         </div>
 
         <div className="border-t border-gray-100 pt-5 mt-6 pb-4 bg-white flex gap-2 flex-shrink-0 sticky bottom-0 z-30">
-          <button onClick={handleResetFilter} className="flex-1 py-2.5 rounded-full border border-orange-200 text-orange-400 font-bold text-xs hover:bg-orange-50 transition-colors">Reset</button>
-          <button onClick={handleApplyFilter} className="flex-1 py-2.5 rounded-full bg-[#EF7044] text-white font-bold text-xs hover:bg-[#d65f36] shadow-sm transition-colors">Apply</button>
+          <button onClick={handleResetFilter} className="flex-1 py-2.5 rounded-full border border-orange-200 text-orange-400 font-heavy text-xs hover:bg-orange-50 transition-colors">Reset</button>
+          <button onClick={handleApplyFilter} className="flex-1 py-2.5 rounded-full bg-[#EF7044] text-white font-heavy text-xs hover:bg-[#d65f36] shadow-sm transition-colors">Apply</button>
         </div>
       </aside>
 
@@ -975,7 +1008,7 @@ export default function StoreTemplate({ initialProducts = [] }: { initialProduct
               placeholder="Search products..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-gray-50/80 border border-gray-100 rounded-full py-3 pl-12 pr-4 text-sm font-medium focus:outline-none focus:border-[#EF7044] transition-colors shadow-inner"
+              className="w-full bg-gray-50/80 border border-gray-100 rounded-full py-3 pl-12 pr-4 text-sm font-regular focus:outline-none focus:border-[#EF7044] transition-colors shadow-inner"
             />
             <Search className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
             {searchQuery && (
@@ -989,7 +1022,7 @@ export default function StoreTemplate({ initialProducts = [] }: { initialProduct
             <h1 className="text-2xl font-black text-gray-900 tracking-tight w-max">Product Category</h1>
             <button 
               onClick={() => setIsFilterOpen(true)}
-              className="flex items-center gap-2 border border-orange-200 text-[#EF7044] bg-orange-50/70 px-5 py-2 rounded-full text-sm font-bold hover:bg-orange-100 transition-colors ml-auto"
+              className="flex items-center gap-2 border border-orange-200 text-[#EF7044] bg-orange-50/70 px-5 py-2 rounded-full text-sm font-heavy hover:bg-orange-100 transition-colors ml-auto"
             >
               Filter <ChevronDown className="w-4 h-4" />
             </button>
@@ -1039,7 +1072,7 @@ export default function StoreTemplate({ initialProducts = [] }: { initialProduct
                 </div>
                 
                 <div className="border border-[#EF7044] rounded-full text-center py-1.5 px-2 mx-1 mb-1.5 flex items-center justify-center h-8">
-                  <h3 className="text-[11px] font-bold text-[#EF7044] truncate w-full px-1">{product.title}</h3>
+                  <h3 className="text-[11px] font-heavy text-[#EF7044] truncate w-full px-1">{product.title}</h3>
                 </div>
                 <p className="text-[#EF7044] text-xs font-black text-center">
                   {formatPrice(getProductPrice(product))}
@@ -1048,7 +1081,7 @@ export default function StoreTemplate({ initialProducts = [] }: { initialProduct
             ))
           ) : (
             <div className="col-span-2 lg:col-span-5 text-center py-20 bg-gray-50 rounded-[40px] border border-dashed border-gray-200">
-              <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">
+              <p className="text-gray-400 font-heavy uppercase tracking-widest text-xs">
                 {isLoading ? "Searching..." : "No products match your filter"}
               </p>
             </div>
@@ -1067,7 +1100,7 @@ export default function StoreTemplate({ initialProducts = [] }: { initialProduct
           )}
           
           {!hasMore && products.length > 0 && (
-            <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px] mt-6">
+            <p className="text-gray-400 font-heavy uppercase tracking-widest text-[10px] mt-6">
               You have reached the end
             </p>
           )}
@@ -1098,14 +1131,14 @@ export default function StoreTemplate({ initialProducts = [] }: { initialProduct
         <div className={`absolute top-0 right-0 h-full w-[85%] max-w-[400px] bg-white shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col ${isFilterOpen ? "translate-x-0" : "translate-x-full"}`}>
           
           <div className="pt-8 pb-4 px-6 flex justify-between items-center flex-shrink-0">
-            <h2 className="text-xl font-medium text-gray-900">Filter</h2>
+            <h2 className="text-xl font-regular text-gray-900">Filter</h2>
             <button onClick={() => setIsFilterOpen(false)}><X className="w-5 h-5 text-gray-600" /></button>
           </div>
           <div className="border-b border-gray-100 mx-6"></div>
 
           <div className="p-6 overflow-y-auto flex-1 space-y-7">
             <div>
-              <p className="text-[15px] font-medium text-gray-900 mb-4">Price</p>
+              <p className="text-[15px] font-regular text-gray-900 mb-4">Price</p>
               <div className="px-2">
                 <input type="range" min="0" max="5000000" step="50000" value={maxPrice} onChange={(e) => handlePriceChange(Number(e.target.value))} className="w-full accent-[#EF7044]" />
                 <div className="flex justify-between mt-1 text-xs text-gray-600">
@@ -1116,7 +1149,7 @@ export default function StoreTemplate({ initialProducts = [] }: { initialProduct
             </div>
 
             <div>
-              <p className="text-[15px] font-medium text-gray-900 mb-3">Size</p>
+              <p className="text-[15px] font-regular text-gray-900 mb-3">Size</p>
               <div className="flex flex-wrap gap-2.5">
                 {["S", "M", "L", "XL"].map(size => (
                   <button key={size} onClick={() => handleSizeClick(size)} className={`px-6 py-1.5 rounded-full border transition-colors text-sm ${selectedSize === size ? "border-[#EF7044] text-[#EF7044]" : "border-gray-300 text-gray-700 bg-white"}`}>{size}</button>
@@ -1125,7 +1158,7 @@ export default function StoreTemplate({ initialProducts = [] }: { initialProduct
             </div>
 
             <div>
-              <p className="text-[15px] font-medium text-gray-900 mb-4">Color</p>
+              <p className="text-[15px] font-regular text-gray-900 mb-4">Color</p>
               <div className="flex flex-wrap gap-4">
                 {Object.entries(COLOR_IDENTITY).map(([colorName, colorHex]) => (
                   <button 
@@ -1137,7 +1170,7 @@ export default function StoreTemplate({ initialProducts = [] }: { initialProduct
                       className={`w-7 h-7 rounded-full transition-all ${selectedColor === colorName ? "ring-2 ring-offset-2 ring-gray-900 scale-110" : "border border-gray-200 group-hover:scale-110"}`} 
                       style={{ backgroundColor: colorHex }} 
                     />
-                    <span className={`text-[9px] uppercase tracking-tighter transition-all ${selectedColor === colorName ? "font-bold text-gray-900" : "font-medium text-gray-400"}`}>
+                    <span className={`text-[9px] uppercase tracking-tighter transition-all ${selectedColor === colorName ? "font-heavy text-gray-900" : "font-regular text-gray-400"}`}>
                       {colorName}
                     </span>
                   </button>
@@ -1146,7 +1179,7 @@ export default function StoreTemplate({ initialProducts = [] }: { initialProduct
             </div>
 
             <div>
-              <p className="text-[15px] font-medium text-gray-900 mb-3">Category</p>
+              <p className="text-[15px] font-regular text-gray-900 mb-3">Category</p>
               <div className="flex flex-wrap gap-2.5">
                 {topCategories.map(cat => (
                   <button 
@@ -1161,7 +1194,7 @@ export default function StoreTemplate({ initialProducts = [] }: { initialProduct
             </div>
 
             <div>
-              <p className="text-[15px] font-medium text-gray-900 mb-3">Collections</p>
+              <p className="text-[15px] font-regular text-gray-900 mb-3">Collections</p>
               <div className="flex flex-wrap gap-2.5">
                 {["Carvico", "New Arrivals", "Signature", "Island Escape", "Discount"].map(col => (
                   <button 
@@ -1177,8 +1210,8 @@ export default function StoreTemplate({ initialProducts = [] }: { initialProduct
           </div>
 
           <div className="border-t border-gray-100 mx-6 pt-5 pb-8 bg-white flex gap-3 flex-shrink-0">
-            <button onClick={handleResetFilter} className="flex-1 py-3 rounded-full border border-orange-200 text-orange-400/80 font-medium text-sm transition-colors">Reset</button>
-            <button onClick={handleApplyFilter} className="flex-1 py-3 rounded-full bg-[#EF7044] text-white font-medium text-sm hover:opacity-90 transition-opacity">Apply</button>
+            <button onClick={handleResetFilter} className="flex-1 py-3 rounded-full border border-orange-200 text-orange-400/80 font-regular text-sm transition-colors">Reset</button>
+            <button onClick={handleApplyFilter} className="flex-1 py-3 rounded-full bg-[#EF7044] text-white font-regular text-sm hover:opacity-90 transition-opacity">Apply</button>
           </div>
         </div>
       </div>
