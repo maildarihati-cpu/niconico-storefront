@@ -8,9 +8,7 @@ import { useCart } from "@/context/cart-context/cart-context";
 import { updateLineItem, deleteLineItem } from "@lib/data/cart";
 import { StoreCart, StoreCustomer } from "@medusajs/types";
 import { prepareCheckoutCart } from "@lib/util/checkout-util"; 
-
-// 🌟 IMPORT SERVER ACTION TUKANG SAPU YANG BARU DIBUAT
-import { forceClearCartCookie } from "@/lib/clear-cart"; // Sesuaikan path jika ditaruh di tempat lain
+import { forceClearCartCookie } from "@/lib/clear-cart";
 
 interface CartTemplateProps {
   cart: StoreCart | any;
@@ -30,7 +28,7 @@ export default function CartTemplate({ cart: initialCart, customer, isOpen = tru
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [isLoadingItem, setIsLoadingItem] = useState<string | null>(null);
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false); 
-  const [isResetting, setIsResetting] = useState(false); // 🌟 Loading State untuk Reset
+  const [isResetting, setIsResetting] = useState(false);
   
   const [hiddenVariantIds, setHiddenVariantIds] = useState<string[]>([]);
 
@@ -221,19 +219,11 @@ export default function CartTemplate({ cart: initialCart, customer, isOpen = tru
     }
   };
 
-  // ==============================================================
-  // 🌟 SERVER ACTION TRIGGER UNTUK MENGHANCURKAN KERANJANG NYANGKUT
-  // ==============================================================
   const handleForceClearCart = async () => {
     setIsResetting(true);
     try {
-      // Panggil Server Action untuk menghancurkan HttpOnly Cookie
       await forceClearCartCookie();
-      
-      // Bersihkan juga sisa localStorage frontend
       localStorage.removeItem("niconico_purchased_variants");
-      
-      // Refresh halaman secara penuh agar sistem Medusa membuat keranjang baru
       window.location.href = "/";
     } catch (error) {
       console.error("Gagal mereset cart:", error);
@@ -261,9 +251,11 @@ export default function CartTemplate({ cart: initialCart, customer, isOpen = tru
         title="Klik di luar laci untuk menutup"
       />
 
-      <div className="bg-white fixed top-0 right-0 h-full w-full sm:w-[480px] z-[101] shadow-[0_0_50px_rgba(0,0,0,0.3)] animate-in slide-in-from-right duration-300 overflow-y-auto scrollbar-hide font-sans flex flex-col">
+      {/* 🌟 PERBAIKAN: Gunakan h-[100dvh] agar presisi di layar HP dan flex-col agar rapi */}
+      <div className="bg-white fixed top-0 right-0 h-[100dvh] w-full sm:w-[480px] z-[101] shadow-[0_0_50px_rgba(0,0,0,0.3)] animate-in slide-in-from-right duration-300 font-sans flex flex-col">
         
-        <div className="pt-12 pb-6 px-6 relative flex flex-col items-center flex-shrink-0">
+        {/* ================= HEADER ================= */}
+        <div className="pt-12 pb-6 px-6 relative flex flex-col items-center shrink-0 border-b border-gray-50">
           <button 
             type="button" 
             onClick={handleSafeClose}
@@ -278,7 +270,8 @@ export default function CartTemplate({ cart: initialCart, customer, isOpen = tru
           <h1 className="text-2xl font-medium text-gray-900">Your Cart</h1>
         </div>
 
-        <div className="px-5 space-y-4 flex-1">
+        {/* ================= ITEMS LIST (Scrollable area) ================= */}
+        <div className="px-5 py-6 space-y-4 flex-1 overflow-y-auto scrollbar-hide">
           {groupedItems.length > 0 ? (
             groupedItems.map((group: any) => {
               const isSelected = group.isBundle 
@@ -303,13 +296,13 @@ export default function CartTemplate({ cart: initialCart, customer, isOpen = tru
 
               return (
                 <div key={group.id} className={`bg-white rounded-[24px] p-3 flex gap-4 shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-50 transition-opacity ${isUpdating ? "opacity-50 pointer-events-none" : ""}`}>
-                  <div className="w-[100px] h-[120px] rounded-[16px] overflow-hidden bg-gray-100 flex-shrink-0">
+                  <div className="w-[100px] h-[120px] rounded-[16px] overflow-hidden bg-gray-100 shrink-0">
                     <img src={displayThumb} alt={displayTitle} className="w-full h-full object-cover" />
                   </div>
                   <div className="flex-1 py-1 flex flex-col justify-between">
                     <div className="flex justify-between items-start">
                       <h3 className="font-bold text-[15px] text-gray-900 leading-tight pr-2">{displayTitle}</h3>
-                      <button onClick={() => handleToggleSelect(group)} className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 transition-colors ${isSelected ? "bg-[#EF7044] text-white" : "border-2 border-gray-200 bg-white"}`}>
+                      <button onClick={() => handleToggleSelect(group)} className={`w-6 h-6 rounded-md flex items-center justify-center shrink-0 transition-colors ${isSelected ? "bg-[#EF7044] text-white" : "border-2 border-gray-200 bg-white"}`}>
                         {isSelected && <Check className="w-4 h-4 stroke-[3]" />}
                       </button>
                     </div>
@@ -342,53 +335,52 @@ export default function CartTemplate({ cart: initialCart, customer, isOpen = tru
           )}
         </div>
 
-        <div className="mt-10 mx-5 mb-10 bg-[#EF7044] rounded-[15px] p-8 shadow-xl relative overflow-hidden">
-          {/* Efek Loading saat Reset */}
-          {isResetting && (
-            <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center">
-              <Loader2 className="w-8 h-8 animate-spin text-[#EF7044] mb-2" />
-              <p className="text-xs font-bold text-gray-800">Resetting Cart...</p>
-            </div>
-          )}
-
-          <div className="space-y-4 mb-6 text-white">
-            <div className="flex justify-between text-sm border-b border-white/20 pb-3">
-              <span>Total Price</span><span>{formatPrice(totals.subtotal)}</span>
-            </div>
-            <div className="flex justify-between text-sm border-b border-white/20 pb-3">
-              <span>Tax</span><span>{formatPrice(totals.tax)}</span>
-            </div>
-            <div className="flex justify-between text-lg font-bold pt-1">
-              <span>Subtotal</span><span>{formatPrice(totals.total)}</span>
-            </div>
-          </div>
-          <button 
-            onClick={handleCheckout}
-            disabled={selectedItems.length === 0 || isCheckoutLoading} 
-            className={`w-full py-4 rounded-full font-bold text-[15px] transition-all flex items-center justify-center gap-2 ${
-              selectedItems.length > 0 && !isCheckoutLoading
-                ? "bg-white text-[#EF7044] shadow-lg active:scale-95 hover:bg-gray-50" 
-                : "bg-white/50 text-white/50 cursor-not-allowed"
-            }`}
-          >
-            {isCheckoutLoading ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                PREPARING...
-              </>
-            ) : (
-              "CHECKOUT NOW.!"
+        {/* ================= STICKY FOOTER (Selalu di bawah layaknya aplikasi asli!) ================= */}
+        <div className="shrink-0 bg-white border-t border-gray-100 p-5 pb-8 sm:pb-5">
+          <div className="bg-[#EF7044] rounded-[20px] p-6 shadow-xl relative overflow-hidden">
+            {isResetting && (
+              <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-[#EF7044] mb-2" />
+                <p className="text-xs font-bold text-gray-800">Resetting Cart...</p>
+              </div>
             )}
-          </button>
 
-          {/* 🌟 TOMBOL RESET RESMI YANG TERHUBUNG KE SERVER */}
-          <button 
-            onClick={handleForceClearCart}
-            disabled={isResetting}
-            className="w-full mt-4 py-2 text-[11px] font-bold text-white/70 hover:text-white underline transition-colors"
-          >
-            Having cart issues? Reset cart here
-          </button>
+            <div className="space-y-3 mb-5 text-white">
+              <div className="flex justify-between text-sm border-b border-white/20 pb-2">
+                <span>Total Price</span><span>{formatPrice(totals.subtotal)}</span>
+              </div>
+              <div className="flex justify-between text-sm border-b border-white/20 pb-2">
+                <span>Tax</span><span>{formatPrice(totals.tax)}</span>
+              </div>
+              <div className="flex justify-between text-lg font-bold pt-1">
+                <span>Subtotal</span><span>{formatPrice(totals.total)}</span>
+              </div>
+            </div>
+            
+            <button 
+              onClick={handleCheckout}
+              disabled={selectedItems.length === 0 || isCheckoutLoading} 
+              className={`w-full py-4 rounded-[14px] font-bold text-[15px] transition-all flex items-center justify-center gap-2 ${
+                selectedItems.length > 0 && !isCheckoutLoading
+                  ? "bg-white text-[#EF7044] shadow-lg active:scale-95 hover:bg-gray-50" 
+                  : "bg-white/50 text-white/50 cursor-not-allowed"
+              }`}
+            >
+              {isCheckoutLoading ? (
+                <><Loader2 className="w-5 h-5 animate-spin" /> PREPARING...</>
+              ) : (
+                "CHECKOUT NOW"
+              )}
+            </button>
+
+            <button 
+              onClick={handleForceClearCart}
+              disabled={isResetting}
+              className="w-full mt-4 text-[11px] font-bold text-white/70 hover:text-white underline transition-colors text-center"
+            >
+              Having cart issues? Reset cart here
+            </button>
+          </div>
         </div>
       </div>
     </>
