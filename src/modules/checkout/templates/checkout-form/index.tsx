@@ -27,7 +27,6 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   const [isApplyingPromo, setIsApplyingPromo] = useState(false)
   const [isPaying, setIsPaying] = useState(false)
   
-  // 🌟 LOGIC EMAIL MURNI (TANPA DIRUSAK)
   const [email, setEmail] = useState(initialCart?.email || customer?.email || "")
   const [guestPhone, setGuestPhone] = useState(initialCart?.shipping_address?.phone || customer?.phone || "")
   
@@ -41,7 +40,6 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   const [deletingAddressId, setDeletingAddressId] = useState<string | null>(null);
   const [deletedAddressIds, setDeletedAddressIds] = useState<string[]>([]);
 
-  // 🌟 STATE UNTUK DAFTAR NEGARA DINAMIS DARI REGION MEDUSA
   const [countryOptions, setCountryOptions] = useState<any[]>([]);
 
   const [newAddress, setNewAddress] = useState({
@@ -102,7 +100,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   }, [cart?.items]);
 
   // ==========================================
-  // 🌟 FETCH COUNTRIES BERDASARKAN REGION CART (INDONESIA / INTERNATIONAL)
+  // 🌟 FETCH REGION
   // ==========================================
   useEffect(() => {
     const fetchCountries = async () => {
@@ -116,7 +114,6 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
         
         if (res.ok) {
           const data = await res.json();
-          // 🌟 MENDETEKSI OTOMATIS REGION CART SAAT INI
           const activeRegion = data.regions?.find((r: any) => r.id === cart?.region_id) || data.regions?.[0];
           
           if (activeRegion && activeRegion.countries) {
@@ -140,10 +137,10 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   }, [cart?.region_id]);
 
   // ==========================================
-  // 🌟 MAP ENGINE (PIN POINT)
+  // 🌟 MAP ENGINE (SUDAH DISEMBUHKAN DARI GLITCH)
   // ==========================================
   const mapRef = useRef<HTMLDivElement>(null);
-  const [mapInstance, setMapInstance] = useState<any>(null);
+  const mapInstanceRef = useRef<any>(null); // 👈 PERBAIKAN: Gunakan useRef, BUKAN useState!
   const [searchQueryMap, setSearchQueryMap] = useState("");
   const [isSearchingMap, setIsSearchingMap] = useState(false);
   const [isMapLoading, setIsMapLoading] = useState(false);
@@ -165,7 +162,8 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   }, [leafletLoaded]);
 
   useEffect(() => {
-    if (!leafletLoaded || !mapRef.current || !showAddressForm || mapInstance) return;
+    // Cek apakah Leaflet sudah load, wadah ref siap, form tampil, dan map BELUM terbuat.
+    if (!leafletLoaded || !mapRef.current || !showAddressForm || mapInstanceRef.current) return;
     
     const L = (window as any).L;
     const defaultLat = -8.6500;
@@ -174,7 +172,14 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
-    setMapInstance(map);
+    
+    // Simpan instance ke useRef agar aman dari re-render
+    mapInstanceRef.current = map;
+
+    // 🌟 PERBAIKAN: Beri waktu agar komponen stabil sebelum render tile (Mencegah gray map)
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 200);
 
     map.on("moveend", async () => {
       const center = map.getCenter();
@@ -202,12 +207,16 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
         setIsMapLoading(false);
       }
     });
-    return () => { map.remove(); setMapInstance(null); };
-  }, [leafletLoaded, showAddressForm, mapInstance]); 
+
+    return () => { 
+      map.remove(); 
+      mapInstanceRef.current = null; 
+    };
+  }, [leafletLoaded, showAddressForm]); // 👈 Kuncinya di sini, state dihapus dari dependency
 
   const handleSearchLocation = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!searchQueryMap || !mapInstance) return;
+    if (!searchQueryMap || !mapInstanceRef.current) return;
     setIsSearchingMap(true);
     try {
       const response = await fetch(
@@ -217,7 +226,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
       const data = await response.json();
       if (data && data.length > 0) {
         const { lat, lon } = data[0];
-        mapInstance.setView([parseFloat(lat), parseFloat(lon)], 16);
+        mapInstanceRef.current.setView([parseFloat(lat), parseFloat(lon)], 16);
       } else {
         alert("Location not found. Please refine your search and try again.");
       }
@@ -229,14 +238,14 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   };
 
   const handleUseCurrentLocation = () => {
-    if (!mapInstance) return;
+    if (!mapInstanceRef.current) return;
     if (navigator.geolocation) {
       setIsMapLoading(true); 
       
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const { latitude, longitude } = position.coords;
-          mapInstance.setView([latitude, longitude], 16);
+          mapInstanceRef.current.setView([latitude, longitude], 16);
 
           try {
             const response = await fetch(
@@ -357,7 +366,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
         province: address.province || "",
         country_code: address.country_code || "id",
         postal_code: address.postal_code || "",
-        metadata: { is_guest: !customer } // 🌟 INJEKSI STEMPEL GUEST
+        metadata: { is_guest: !customer } 
       };
       
       const updatedCart = await updateCartAddressAction(cart.id, safeCartAddress, targetEmail)
