@@ -9,6 +9,9 @@ import { updateLineItem, deleteLineItem } from "@lib/data/cart";
 import { StoreCart, StoreCustomer } from "@medusajs/types";
 import { prepareCheckoutCart } from "@lib/util/checkout-util"; 
 
+// 🌟 IMPORT SERVER ACTION TUKANG SAPU YANG BARU DIBUAT
+import { forceClearCartCookie } from "@/lib/clear-cart"; // Sesuaikan path jika ditaruh di tempat lain
+
 interface CartTemplateProps {
   cart: StoreCart | any;
   customer?: StoreCustomer | null;
@@ -27,8 +30,8 @@ export default function CartTemplate({ cart: initialCart, customer, isOpen = tru
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [isLoadingItem, setIsLoadingItem] = useState<string | null>(null);
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false); 
+  const [isResetting, setIsResetting] = useState(false); // 🌟 Loading State untuk Reset
   
-  // 🌟 STATE BARU: Untuk menyimpan ID Variant hantu yang harus disembunyikan
   const [hiddenVariantIds, setHiddenVariantIds] = useState<string[]>([]);
 
   // ==============================================================
@@ -47,14 +50,12 @@ export default function CartTemplate({ cart: initialCart, customer, isOpen = tru
             const itemsToRemove = cart.items.filter((item: any) => purchasedIds.includes(item.variant_id));
             
             if (itemsToRemove.length > 0) {
-              setHiddenVariantIds(purchasedIds); // Sembunyikan seketika di layar!
+              setHiddenVariantIds(purchasedIds);
               
-              // Hapus item dari database secara diam-diam
               Promise.all(itemsToRemove.map((item: any) => deleteLineItem(item.id)))
                 .then(() => {
                   localStorage.removeItem("niconico_purchased_variants");
                   refreshCart(false); 
-                  // Lepaskan status hide setelah 2 detik agar tidak kedip saat refresh data
                   setTimeout(() => setHiddenVariantIds([]), 2000);
                 })
                 .catch((e) => {
@@ -62,7 +63,6 @@ export default function CartTemplate({ cart: initialCart, customer, isOpen = tru
                   localStorage.removeItem("niconico_purchased_variants");
                 });
             } else {
-              // Jika item sudah tidak ada di cart, cukup bersihkan memori
               localStorage.removeItem("niconico_purchased_variants");
             }
           }
@@ -73,15 +73,11 @@ export default function CartTemplate({ cart: initialCart, customer, isOpen = tru
     }
   }, [cart?.items, refreshCart]);
 
-  // 🌟 FILTER VISUAL: Hanya tampilkan item yang belum dibeli
   const visibleItems = useMemo(() => {
     if (!cart?.items) return [];
     return cart.items.filter((item: any) => !hiddenVariantIds.includes(item.variant_id));
   }, [cart?.items, hiddenVariantIds]);
 
-  // ==========================================
-  // 🌟 LOGIKA GROUPING MENGGUNAKAN VISIBLE ITEMS
-  // ==========================================
   const groupedItems = useMemo(() => {
     const groups: any[] = [];
     const bundles: Record<string, any[]> = {};
@@ -131,7 +127,7 @@ export default function CartTemplate({ cart: initialCart, customer, isOpen = tru
     } else {
       setSelectedItems([]);
     }
-  }, [visibleItems.length]); // Hanya dijalankan saat jumlah item berubah
+  }, [visibleItems.length]);
 
   const formatPrice = (amount: number) => {
     return new Intl.NumberFormat(countryCode === "id" ? "id-ID" : "en-US", {
@@ -146,9 +142,7 @@ export default function CartTemplate({ cart: initialCart, customer, isOpen = tru
     setIsLoadingItem(group.id);
     try {
       if (group.isBundle) {
-        for (const i of group.items) {
-          await updateLineItem({ lineId: i.id, quantity: newQuantity });
-        }
+        for (const i of group.items) { await updateLineItem({ lineId: i.id, quantity: newQuantity }); }
       } else {
         await updateLineItem({ lineId: group.item.id, quantity: newQuantity });
       }
@@ -164,9 +158,7 @@ export default function CartTemplate({ cart: initialCart, customer, isOpen = tru
     setIsLoadingItem(group.id);
     try {
       if (group.isBundle) {
-        for (const i of group.items) {
-          await deleteLineItem(i.id);
-        }
+        for (const i of group.items) { await deleteLineItem(i.id); }
       } else {
         await deleteLineItem(group.item.id);
       }
@@ -182,9 +174,8 @@ export default function CartTemplate({ cart: initialCart, customer, isOpen = tru
     const idsToToggle = group.isBundle ? group.items.map((i: any) => i.id) : [group.item.id];
     setSelectedItems((prev) => {
       const isCurrentlySelected = idsToToggle.every((id: string) => prev.includes(id));
-      if (isCurrentlySelected) {
-        return prev.filter((id) => !idsToToggle.includes(id));
-      } else {
+      if (isCurrentlySelected) { return prev.filter((id) => !idsToToggle.includes(id)); } 
+      else {
         const newSelection = [...prev];
         idsToToggle.forEach((id: string) => { if (!newSelection.includes(id)) newSelection.push(id); });
         return newSelection;
@@ -204,11 +195,9 @@ export default function CartTemplate({ cart: initialCart, customer, isOpen = tru
 
   const handleCheckout = async () => {
     if (selectedItems.length === 0) return;
-    
     setIsCheckoutLoading(true);
 
     try {
-      // 🌟 PERBAIKAN: Harus memastikan tidak ada item tersembunyi yang ikut ter-checkout
       const isAllSelected = cart?.items?.length === selectedItems.length && hiddenVariantIds.length === 0;
 
       if (isAllSelected) {
@@ -232,12 +221,24 @@ export default function CartTemplate({ cart: initialCart, customer, isOpen = tru
     }
   };
 
-  // 🌟 TOMBOL DARURAT UNTUK RESET KERANJANG
-  const handleForceClearCart = () => {
-    document.cookie = "_medusa_cart_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-    document.cookie = "cart_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-    localStorage.removeItem("niconico_purchased_variants");
-    window.location.href = "/";
+  // ==============================================================
+  // 🌟 SERVER ACTION TRIGGER UNTUK MENGHANCURKAN KERANJANG NYANGKUT
+  // ==============================================================
+  const handleForceClearCart = async () => {
+    setIsResetting(true);
+    try {
+      // Panggil Server Action untuk menghancurkan HttpOnly Cookie
+      await forceClearCartCookie();
+      
+      // Bersihkan juga sisa localStorage frontend
+      localStorage.removeItem("niconico_purchased_variants");
+      
+      // Refresh halaman secara penuh agar sistem Medusa membuat keranjang baru
+      window.location.href = "/";
+    } catch (error) {
+      console.error("Gagal mereset cart:", error);
+      setIsResetting(false);
+    }
   };
 
   const handleSafeClose = (e?: React.MouseEvent) => {
@@ -246,11 +247,7 @@ export default function CartTemplate({ cart: initialCart, customer, isOpen = tru
       document.activeElement.blur();
     }
     setTimeout(() => {
-      if (onClose) {
-        onClose();
-      } else {
-        router.back(); 
-      }
+      if (onClose) { onClose(); } else { router.back(); }
     }, 100);
   };
 
@@ -345,7 +342,15 @@ export default function CartTemplate({ cart: initialCart, customer, isOpen = tru
           )}
         </div>
 
-        <div className="mt-10 mx-5 mb-10 bg-[#EF7044] rounded-[15px] p-8 shadow-xl">
+        <div className="mt-10 mx-5 mb-10 bg-[#EF7044] rounded-[15px] p-8 shadow-xl relative overflow-hidden">
+          {/* Efek Loading saat Reset */}
+          {isResetting && (
+            <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center">
+              <Loader2 className="w-8 h-8 animate-spin text-[#EF7044] mb-2" />
+              <p className="text-xs font-bold text-gray-800">Resetting Cart...</p>
+            </div>
+          )}
+
           <div className="space-y-4 mb-6 text-white">
             <div className="flex justify-between text-sm border-b border-white/20 pb-3">
               <span>Total Price</span><span>{formatPrice(totals.subtotal)}</span>
@@ -376,9 +381,10 @@ export default function CartTemplate({ cart: initialCart, customer, isOpen = tru
             )}
           </button>
 
-          {/* 🌟 TOMBOL EVAKUASI DARURAT JIKA ADA ERROR */}
+          {/* 🌟 TOMBOL RESET RESMI YANG TERHUBUNG KE SERVER */}
           <button 
             onClick={handleForceClearCart}
+            disabled={isResetting}
             className="w-full mt-4 py-2 text-[11px] font-bold text-white/70 hover:text-white underline transition-colors"
           >
             Having cart issues? Reset cart here
