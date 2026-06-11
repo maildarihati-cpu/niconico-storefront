@@ -555,6 +555,14 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
         const purchasedVariants = cart.items.map((item: any) => item.variant_id);
         localStorage.setItem("niconico_purchased_variants", JSON.stringify(purchasedVariants));
 
+        // ==============================================================
+        // 🌟 OBAT CART NYANGKUT: HAPUS COOKIE KERANJANG DI SINI! 🌟
+        // ==============================================================
+        // Kita paksa browser membuang ingatan tentang keranjang ini
+        document.cookie = "_medusa_cart_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        document.cookie = "cart_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        
+        // Baru setelah itu kustomer kita lempar ke Xendit
         window.location.href = String(invoiceUrl) 
       } else {
         alert("Failed to initiate payment. Please try again.")

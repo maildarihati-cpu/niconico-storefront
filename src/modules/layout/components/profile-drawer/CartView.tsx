@@ -9,7 +9,6 @@ import { updateLineItem, deleteLineItem } from "@lib/data/cart";
 import { StoreCart, StoreCustomer } from "@medusajs/types";
 import { prepareCheckoutCart } from "@lib/util/checkout-util"; 
 
-// 🌟 PERBAIKAN: Tambahkan setView ke dalam Props
 interface CartTemplateProps {
   cart: StoreCart | any;
   customer?: StoreCustomer | null;
@@ -29,13 +28,67 @@ export default function CartTemplate({ cart: initialCart, customer, isOpen = tru
   const [isLoadingItem, setIsLoadingItem] = useState<string | null>(null);
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false); 
   
+  // 🌟 STATE BARU: Untuk menyimpan ID Variant hantu yang harus disembunyikan
+  const [hiddenVariantIds, setHiddenVariantIds] = useState<string[]>([]);
+
+  // ==============================================================
+  // 🌟 OBAT GHOSTBUSTER: Hapus Otomatis Item yang Sudah Dibeli!
+  // ==============================================================
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    
+    const storedStr = localStorage.getItem("niconico_purchased_variants");
+    if (storedStr) {
+      try {
+        const purchasedIds = JSON.parse(storedStr);
+        if (Array.isArray(purchasedIds) && purchasedIds.length > 0) {
+          
+          if (cart?.items?.length > 0) {
+            const itemsToRemove = cart.items.filter((item: any) => purchasedIds.includes(item.variant_id));
+            
+            if (itemsToRemove.length > 0) {
+              setHiddenVariantIds(purchasedIds); // Sembunyikan seketika di layar!
+              
+              // Hapus item dari database secara diam-diam
+              Promise.all(itemsToRemove.map((item: any) => deleteLineItem(item.id)))
+                .then(() => {
+                  localStorage.removeItem("niconico_purchased_variants");
+                  refreshCart(false); 
+                  // Lepaskan status hide setelah 2 detik agar tidak kedip saat refresh data
+                  setTimeout(() => setHiddenVariantIds([]), 2000);
+                })
+                .catch((e) => {
+                  console.error("Gagal menghapus item nyangkut", e);
+                  localStorage.removeItem("niconico_purchased_variants");
+                });
+            } else {
+              // Jika item sudah tidak ada di cart, cukup bersihkan memori
+              localStorage.removeItem("niconico_purchased_variants");
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Gagal membaca memori pembelian", e);
+      }
+    }
+  }, [cart?.items, refreshCart]);
+
+  // 🌟 FILTER VISUAL: Hanya tampilkan item yang belum dibeli
+  const visibleItems = useMemo(() => {
+    if (!cart?.items) return [];
+    return cart.items.filter((item: any) => !hiddenVariantIds.includes(item.variant_id));
+  }, [cart?.items, hiddenVariantIds]);
+
+  // ==========================================
+  // 🌟 LOGIKA GROUPING MENGGUNAKAN VISIBLE ITEMS
+  // ==========================================
   const groupedItems = useMemo(() => {
     const groups: any[] = [];
     const bundles: Record<string, any[]> = {};
 
-    if (!cart?.items) return groups;
+    if (!visibleItems) return groups;
 
-    cart.items.forEach((item: any) => {
+    visibleItems.forEach((item: any) => {
       if (item.metadata?.is_bundle && item.metadata?.bundle_id) {
         const bId = item.metadata.bundle_id;
         if (!bundles[bId]) bundles[bId] = [];
@@ -70,13 +123,15 @@ export default function CartTemplate({ cart: initialCart, customer, isOpen = tru
     });
 
     return groups;
-  }, [cart?.items]);
+  }, [visibleItems]);
 
   useEffect(() => {
-    if (cart?.items) {
-      setSelectedItems(cart.items.map((item: any) => item.id));
+    if (visibleItems.length > 0) {
+      setSelectedItems(visibleItems.map((item: any) => item.id));
+    } else {
+      setSelectedItems([]);
     }
-  }, [cart?.items?.length]);
+  }, [visibleItems.length]); // Hanya dijalankan saat jumlah item berubah
 
   const formatPrice = (amount: number) => {
     return new Intl.NumberFormat(countryCode === "id" ? "id-ID" : "en-US", {
@@ -138,8 +193,8 @@ export default function CartTemplate({ cart: initialCart, customer, isOpen = tru
   };
 
   const calculateTotals = () => {
-    if (!cart?.items) return { subtotal: 0, tax: 0, shipping: 0, total: 0 };
-    const selectedCartItems = cart.items.filter((item: any) => selectedItems.includes(item.id));
+    if (!visibleItems || visibleItems.length === 0) return { subtotal: 0, tax: 0, shipping: 0, total: 0 };
+    const selectedCartItems = visibleItems.filter((item: any) => selectedItems.includes(item.id));
     const subtotal = selectedCartItems.reduce((acc: number, item: any) => acc + ((item.unit_price || 0) * (item.quantity || 1)), 0);
     const tax = subtotal * 0; 
     return { subtotal: getPrice(subtotal), tax: getPrice(tax), total: getPrice(subtotal + tax) };
@@ -147,24 +202,24 @@ export default function CartTemplate({ cart: initialCart, customer, isOpen = tru
 
   const totals = calculateTotals();
 
-  // 🌟 LOGIKA CHECKOUT YANG BARU (BEBAS FILTER LOGIN)
   const handleCheckout = async () => {
     if (selectedItems.length === 0) return;
     
     setIsCheckoutLoading(true);
 
     try {
-      const isAllSelected = cart?.items?.length === selectedItems.length;
+      // 🌟 PERBAIKAN: Harus memastikan tidak ada item tersembunyi yang ikut ter-checkout
+      const isAllSelected = cart?.items?.length === selectedItems.length && hiddenVariantIds.length === 0;
 
       if (isAllSelected) {
-        if (onClose) onClose(); // Tutup laci sebelum pindah ke full page checkout
+        if (onClose) onClose(); 
         router.push(`/${countryCode}/checkout`);
       } else {
-        const itemsToCheckout = cart.items.filter((item: any) => selectedItems.includes(item.id));
+        const itemsToCheckout = visibleItems.filter((item: any) => selectedItems.includes(item.id));
         const checkoutCartId = await prepareCheckoutCart(cart, itemsToCheckout);
 
         if (checkoutCartId) {
-          if (onClose) onClose(); // Tutup laci sebelum pindah ke full page checkout
+          if (onClose) onClose(); 
           router.push(`/${countryCode}/checkout?cart_id=${checkoutCartId}`);
         } else {
           console.error("Error creating checkout cart");
@@ -175,6 +230,14 @@ export default function CartTemplate({ cart: initialCart, customer, isOpen = tru
     } finally {
       setTimeout(() => setIsCheckoutLoading(false), 2000);
     }
+  };
+
+  // 🌟 TOMBOL DARURAT UNTUK RESET KERANJANG
+  const handleForceClearCart = () => {
+    document.cookie = "_medusa_cart_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    document.cookie = "cart_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    localStorage.removeItem("niconico_purchased_variants");
+    window.location.href = "/";
   };
 
   const handleSafeClose = (e?: React.MouseEvent) => {
@@ -311,6 +374,14 @@ export default function CartTemplate({ cart: initialCart, customer, isOpen = tru
             ) : (
               "CHECKOUT NOW.!"
             )}
+          </button>
+
+          {/* 🌟 TOMBOL EVAKUASI DARURAT JIKA ADA ERROR */}
+          <button 
+            onClick={handleForceClearCart}
+            className="w-full mt-4 py-2 text-[11px] font-bold text-white/70 hover:text-white underline transition-colors"
+          >
+            Having cart issues? Reset cart here
           </button>
         </div>
       </div>
