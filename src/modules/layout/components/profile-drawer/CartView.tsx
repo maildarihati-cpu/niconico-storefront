@@ -15,7 +15,7 @@ interface CartTemplateProps {
   customer?: StoreCustomer | null;
   isOpen?: boolean;
   onClose?: () => void;
-  setView?: (view: string) => void; // 👈 Wajib ada untuk memanggil laci Login
+  setView?: (view: string) => void;
 }
 
 export default function CartTemplate({ cart: initialCart, customer, isOpen = true, onClose, setView }: CartTemplateProps) {
@@ -147,26 +147,10 @@ export default function CartTemplate({ cart: initialCart, customer, isOpen = tru
 
   const totals = calculateTotals();
 
+  // 🌟 LOGIKA CHECKOUT YANG BARU (BEBAS FILTER LOGIN)
   const handleCheckout = async () => {
     if (selectedItems.length === 0) return;
     
-    // 🌟 PERBAIKAN LOGIC CHECKOUT:
-    if (!customer || !customer.id) {
-      // 1. Simpan cookie agar setelah login kustomer dilempar kembali ke checkout (atau keranjang)
-      document.cookie = "return_to=/" + countryCode + "/checkout; path=/; max-age=3600";
-      
-      // 2. Transisi mulus: Ganti wujud laci dari Cart menjadi Login
-      if (setView) {
-        setView("login");
-      } else {
-         // Fallback kalau setView tidak ada (misal diakses langsung dari URL lama)
-        if (onClose) onClose();
-        router.push(`/${countryCode}/cart?auth=login`, { scroll: false });
-      }
-      return; 
-    }
-
-    // 🌟 Jika Kustomer Sudah Login, Lanjut Proses Checkout:
     setIsCheckoutLoading(true);
 
     try {

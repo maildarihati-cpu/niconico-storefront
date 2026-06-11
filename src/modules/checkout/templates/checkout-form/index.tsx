@@ -1,8 +1,8 @@
 "use client"
 
 import React, { useState, useEffect, useRef, useMemo } from "react"
-import { useRouter } from "next/navigation"
-import { ChevronLeft, MapPin, Loader2, Tag, Search, Crosshair, Trash2, ShieldCheck, Plus, Mail, Pen } from "lucide-react"
+import { useRouter, useParams } from "next/navigation"
+import { ChevronLeft, MapPin, Loader2, Tag, Search, Crosshair, Trash2, ShieldCheck, Plus, Mail, Pen, Phone } from "lucide-react"
 import Image from "next/image"; 
 import { saveAddressServerAction, deleteAddressServerAction } from "@/lib/address-actions";
 import { 
@@ -20,12 +20,16 @@ interface CheckoutFormProps {
 
 export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFormProps) {
   const router = useRouter()
+  const { countryCode } = useParams() as { countryCode: string };
+  
   const [cart, setCart] = useState(initialCart)
   const [promoCode, setPromoCode] = useState("")
   const [isApplyingPromo, setIsApplyingPromo] = useState(false)
   const [isPaying, setIsPaying] = useState(false)
   
   const [email, setEmail] = useState(initialCart?.email || customer?.email || "")
+  // 🌟 STATE BARU UNTUK PHONE GUEST
+  const [guestPhone, setGuestPhone] = useState(initialCart?.shipping_address?.phone || customer?.phone || "")
   
   const [shippingMethods, setShippingMethods] = useState<any[]>([])
   const [isLoadingShipping, setIsLoadingShipping] = useState(true)
@@ -35,7 +39,6 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   const [editingAddressId, setEditingAddressId] = useState<string | null>(null)
   
   const [deletingAddressId, setDeletingAddressId] = useState<string | null>(null);
-  
   const [deletedAddressIds, setDeletedAddressIds] = useState<string[]>([]);
 
   const [newAddress, setNewAddress] = useState({
@@ -50,7 +53,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   })
 
   // ==========================================
-  // 🌟 LOGIKA GROUPING (SAMA SEPERTI CART)
+  // 🌟 LOGIKA GROUPING
   // ==========================================
   const groupedItems = useMemo(() => {
     const groups: any[] = [];
@@ -299,16 +302,18 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
     try {
       setIsLoadingShipping(true) 
       const targetEmail = email || customer?.email || "";
+      const targetPhone = customer ? address.phone : guestPhone || address.phone;
       
       const safeCartAddress = {
         first_name: address.first_name || "",
         last_name: address.last_name || "",
-        phone: address.phone || "",
+        phone: targetPhone || "",
         address_1: address.address_1 || "",
         city: address.city || "",
         province: address.province || "",
         country_code: address.country_code || "id",
         postal_code: address.postal_code || "",
+        metadata: { is_guest: !customer } // 🌟 INJEKSI STEMPEL GUEST UNTUK BACKEND
       };
       
       const updatedCart = await updateCartAddressAction(cart.id, safeCartAddress, targetEmail)
@@ -357,8 +362,10 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   };
 
   const handleSaveNewAddress = async () => {
-    if (!newAddress.first_name || !newAddress.address_1 || !newAddress.city) {
-      return alert("Please complete your Name, Address, and City.")
+    const finalPhone = customer ? newAddress.phone : guestPhone;
+
+    if (!newAddress.first_name || !newAddress.address_1 || !newAddress.city || (!customer && !guestPhone) || !email) {
+      return alert("Please complete your Contact Details, Name, Address, and City.")
     }
     
     try {
@@ -368,21 +375,26 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
         address_name: "Checkout Address",
         first_name: newAddress.first_name,
         last_name: newAddress.last_name,
-        phone: newAddress.phone,
+        phone: finalPhone,
         address_1: newAddress.address_1,
         city: newAddress.city,
         province: newAddress.province,
         country_code: newAddress.country_code,
         postal_code: newAddress.postal_code,
+        metadata: { is_guest: !customer }
       }
 
-      await saveAddressServerAction(payload, editingAddressId) 
+      // 🌟 HANYA SIMPAN KE PROFILE JIKA CUSTOMER LOGIN
+      if (customer) {
+        await saveAddressServerAction(payload, editingAddressId) 
+      }
+      
       await handleUpdateAddress(payload)
       setEditingAddressId(null)
       
     } catch (error) {
       console.error("Failed to save address:", error)
-      alert("Failed to save address to profile. Please make sure your information is correct.")
+      alert("Failed to save address. Please make sure your information is correct.")
       setIsLoadingShipping(false)
     }
   }
@@ -434,6 +446,12 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
     try {
       if (!cart.shipping_methods || cart.shipping_methods.length === 0) {
         alert("Please select a delivery method first!")
+        setIsPaying(false)
+        return
+      }
+
+      if (!email) {
+        alert("Please provide an email address for order tracking!")
         setIsPaying(false)
         return
       }
@@ -510,21 +528,50 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
             
             {/* 🌟 CARD: SHIPPING ADDRESS */}
             <div className="bg-white md:rounded-2xl md:shadow-sm md:border border-gray-200 p-5 md:p-6 lg:p-7">
-              <div className="flex items-center justify-between mb-4 md:mb-6">
-                <h3 className="text-[13px] md:text-[16px] font-extrabold text-gray-900 tracking-wide">Shipping Address</h3>
-                {showAddressList ? (
-                   <button onClick={handleCancelAddressForm} className="text-[11px] md:text-[13px] font-bold text-gray-500 hover:text-[#EF7044]">
-                     Cancel
-                   </button>
-                ) : (
-                  <button onClick={() => { setShowAddressList(true); setIsAddingAddress(false); }} className="text-[11px] md:text-[13px] font-bold text-[#EF7044] hover:text-[#EF7044]/80">
-                     Choose Another Address
-                  </button>
-                )}
-              </div>
-
-              <div className="space-y-4">
-                {/* 🌟 EMAIL INPUT */}
+              
+              {/* 🌟 DUA TAMPILAN: CONTACT INFORMATION (GUEST VS LOGGED IN) */}
+              {!customer ? (
+                <div className="mb-6 pb-6 border-b border-gray-100">
+                  <div className="flex justify-between items-center mb-4">
+                    <label className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest block">Contact Information</label>
+                    <button onClick={() => router.push(`/${countryCode || 'id'}/cart?auth=login`)} className="text-[10px] md:text-xs font-bold text-[#EF7044] hover:underline">
+                      Already have an account? Login here
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <div className="flex items-center gap-3 bg-gray-50 rounded-xl p-3 border border-gray-200 focus-within:border-[#EF7044] transition-colors">
+                        <Mail className="w-4 h-4 text-gray-400 shrink-0" />
+                        <input 
+                          type="email" 
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="Email for tracking updates..."
+                          className="bg-transparent w-full outline-none text-xs md:text-sm font-medium text-gray-800"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-3 bg-gray-50 rounded-xl p-3 border border-gray-200 focus-within:border-[#EF7044] transition-colors">
+                        <Phone className="w-4 h-4 text-gray-400 shrink-0" />
+                        <input 
+                          type="tel" 
+                          value={guestPhone}
+                          onChange={(e) => {
+                            setGuestPhone(e.target.value);
+                            setNewAddress(prev => ({...prev, phone: e.target.value}));
+                          }}
+                          placeholder="Phone Number"
+                          className="bg-transparent w-full outline-none text-xs md:text-sm font-medium text-gray-800"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-gray-400 mt-2 italic">* Order confirmation and tracking links will be sent to this email.</p>
+                </div>
+              ) : (
                 <div className="mb-4 pb-4 border-b border-gray-100">
                    <label className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block">Buyer Contact Email</label>
                    <div className="flex items-center gap-3 bg-gray-50 rounded-xl p-3 border border-gray-200 focus-within:border-[#EF7044] transition-colors">
@@ -538,17 +585,34 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                      />
                    </div>
                 </div>
+              )}
 
-                {/* 🌟 ADDRESS RENDERER */}
+              <div className="flex items-center justify-between mb-4 md:mb-6">
+                <h3 className="text-[13px] md:text-[16px] font-extrabold text-gray-900 tracking-wide">Shipping Address</h3>
                 {showAddressList ? (
+                   <button onClick={handleCancelAddressForm} className="text-[11px] md:text-[13px] font-bold text-gray-500 hover:text-[#EF7044]">
+                     Cancel
+                   </button>
+                ) : (
+                  <button onClick={() => { setShowAddressList(true); setIsAddingAddress(false); }} className="text-[11px] md:text-[13px] font-bold text-[#EF7044] hover:text-[#EF7044]/80">
+                     {customer ? "Choose Another Address" : "Edit Address"}
+                  </button>
+                )}
+              </div>
+
+              <div className="space-y-4">
+                {/* 🌟 ADDRESS RENDERER */}
+                {showAddressList || !customer ? (
                   <div className="grid gap-3 animate-in fade-in duration-300">
-                    {isAddingAddress ? (
+                    {isAddingAddress || !customer ? (
                       <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-inner flex flex-col gap-4">
                         <div className="flex justify-between items-center mb-2 border-b border-gray-100 pb-3">
                           <h4 className="text-sm font-bold text-gray-900">
                             {editingAddressId ? "Edit Address Details" : "Address Details"}
                           </h4>
-                          <button onClick={handleCancelAddressForm} className="p-1 hover:bg-gray-100 rounded-full transition-colors"><ChevronLeft className="w-4 h-4" /></button>
+                          {customer && (
+                            <button onClick={handleCancelAddressForm} className="p-1 hover:bg-gray-100 rounded-full transition-colors"><ChevronLeft className="w-4 h-4" /></button>
+                          )}
                         </div>
                         
                         <div className="relative w-full h-[200px] md:h-[300px] rounded-xl overflow-hidden mb-2 border border-gray-300">
@@ -617,16 +681,22 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                              <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Last Name</label>
                              <input type="text" required value={newAddress.last_name} onChange={(e) => setNewAddress({...newAddress, last_name: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:border-[#ef7044] outline-none" />
                            </div>
-                           <div className="md:col-span-2">
-                             <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Phone Number</label>
-                             <input type="tel" required value={newAddress.phone} onChange={(e) => setNewAddress({...newAddress, phone: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:border-[#ef7044] outline-none" placeholder="081234567890" />
-                           </div>
+                           
+                           {/* HANYA TAMPILKAN DI SINI JIKA MEMBER, GUEST SUDAH DI ATAS */}
+                           {customer && (
+                             <div className="md:col-span-2">
+                               <label className="text-[10px] font-bold uppercase text-gray-500 mb-1 block">Phone Number</label>
+                               <input type="tel" required value={newAddress.phone} onChange={(e) => setNewAddress({...newAddress, phone: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium focus:border-[#ef7044] outline-none" placeholder="081234567890" />
+                             </div>
+                           )}
                         </div>
 
                         <div className="flex gap-3 mt-4 pt-4 border-t border-gray-100">
-                          <button onClick={handleCancelAddressForm} className="px-6 py-2.5 rounded-lg border border-gray-300 text-gray-600 text-xs font-bold hover:bg-gray-50">Cancel</button>
+                          {customer && (
+                            <button onClick={handleCancelAddressForm} className="px-6 py-2.5 rounded-lg border border-gray-300 text-gray-600 text-xs font-bold hover:bg-gray-50">Cancel</button>
+                          )}
                           <button onClick={handleSaveNewAddress} disabled={isLoadingShipping} className="flex-1 bg-[#ef7044] text-white py-2.5 rounded-lg font-bold hover:bg-[#d65f36] text-xs flex justify-center items-center gap-2 disabled:opacity-50">
-                            {isLoadingShipping ? <Loader2 className="w-4 h-4 animate-spin" /> : editingAddressId ? "Update Address" : "Save Address"}
+                            {isLoadingShipping ? <Loader2 className="w-4 h-4 animate-spin" /> : (customer ? (editingAddressId ? "Update Address" : "Save Address") : "Use This Address")}
                           </button>
                         </div>
                       </div>
@@ -706,8 +776,8 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                         </>
                       ) : (
                         <div className="flex flex-col gap-1 cursor-pointer group" onClick={() => { setShowAddressList(true); setIsAddingAddress(true); setEditingAddressId(null); }}>
-                           <p className="text-sm font-bold text-[#EF7044] group-hover:text-[#d65f36] transition-colors">No Address Found...</p>
-                           <p className="text-[11px] md:text-xs text-gray-500 font-medium">Click here to add a shipping address.</p>
+                           <p className="text-sm font-bold text-[#EF7044] group-hover:text-[#d65f36] transition-colors">Address Incomplete...</p>
+                           <p className="text-[11px] md:text-xs text-gray-500 font-medium">Click here to fill your shipping address.</p>
                         </div>
                       )}
                     </div>
@@ -765,7 +835,6 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
             <div className="bg-white md:rounded-2xl md:shadow-sm md:border border-gray-200 p-5 md:p-6 lg:p-7">
                <h3 className="text-[13px] md:text-[16px] font-extrabold text-gray-900 tracking-wide mb-4 md:mb-6">Your Order</h3>
                <div className="flex flex-col gap-4">
-                {/* 🌟 PERBAIKAN: Gunakan groupedItems yang sudah diracik seperti di Cart */}
                 {groupedItems.length > 0 ? groupedItems.map((group: any, idx: number) => {
                   const displayTitle = group.isBundle ? group.title : (group.item.title || "Product");
                   const displayPrice = group.isBundle ? group.unit_price : (group.item.unit_price || 0);
