@@ -100,7 +100,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   }, [cart?.items]);
 
   // ==========================================
-  // 🌟 FETCH REGION
+  // 🌟 FETCH REGION (NEGARA)
   // ==========================================
   useEffect(() => {
     const fetchCountries = async () => {
@@ -137,10 +137,10 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   }, [cart?.region_id]);
 
   // ==========================================
-  // 🌟 MAP ENGINE (SUDAH DISEMBUHKAN DARI GLITCH)
+  // 🌟 MAP ENGINE LEAFLET (DISEMBUHKAN DENGAN RESIZEOBSERVER)
   // ==========================================
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<any>(null); // 👈 PERBAIKAN: Gunakan useRef, BUKAN useState!
+  const mapInstanceRef = useRef<any>(null);
   const [searchQueryMap, setSearchQueryMap] = useState("");
   const [isSearchingMap, setIsSearchingMap] = useState(false);
   const [isMapLoading, setIsMapLoading] = useState(false);
@@ -148,38 +148,66 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
 
   const showAddressForm = isAddingAddress || !customer;
 
+  // 1. INJEKSI SCRIPT & CSS LEAFLET SECARA AMAN
   useEffect(() => {
-    if (typeof window === "undefined" || leafletLoaded) return;
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-    document.head.appendChild(link);
-    const script = document.createElement("script");
-    script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-    script.async = true;
-    script.onload = () => setLeafletLoaded(true);
-    document.body.appendChild(script);
-  }, [leafletLoaded]);
-
-  useEffect(() => {
-    // Cek apakah Leaflet sudah load, wadah ref siap, form tampil, dan map BELUM terbuat.
-    if (!leafletLoaded || !mapRef.current || !showAddressForm || mapInstanceRef.current) return;
+    if (typeof window === "undefined") return;
     
+    // Cegah injeksi ganda jika sudah ada
+    if ((window as any).L) {
+      setLeafletLoaded(true);
+      return;
+    }
+
+    const cssId = "leaflet-css-checkout";
+    if (!document.getElementById(cssId)) {
+      const link = document.createElement("link");
+      link.id = cssId;
+      link.rel = "stylesheet";
+      link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+      document.head.appendChild(link);
+    }
+
+    const scriptId = "leaflet-js-checkout";
+    if (!document.getElementById(scriptId)) {
+      const script = document.createElement("script");
+      script.id = scriptId;
+      script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+      script.async = true;
+      script.onload = () => setLeafletLoaded(true);
+      document.body.appendChild(script);
+    } else {
+      setLeafletLoaded(true);
+    }
+  }, []);
+
+  // 2. INISIALISASI PETA DENGAN RESIZE OBSERVER
+  useEffect(() => {
+    if (!leafletLoaded || !mapRef.current || !showAddressForm) return;
+    if (mapInstanceRef.current) return; // Jangan buat ulang jika peta sudah ada
+
     const L = (window as any).L;
     const defaultLat = -8.6500;
     const defaultLng = 115.2167;
-    const map = L.map(mapRef.current, { center: [defaultLat, defaultLng], zoom: 15, zoomControl: false });
+
+    const map = L.map(mapRef.current, { 
+      center: [defaultLat, defaultLng], 
+      zoom: 15, 
+      zoomControl: false 
+    });
+
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
-    
-    // Simpan instance ke useRef agar aman dari re-render
+
     mapInstanceRef.current = map;
 
-    // 🌟 PERBAIKAN: Beri waktu agar komponen stabil sebelum render tile (Mencegah gray map)
-    setTimeout(() => {
-      map.invalidateSize();
-    }, 200);
+    // 🌟 OBAT PAMUNGKAS: Paksa peta refresh saat animasi wadah/container berubah!
+    const resizeObserver = new ResizeObserver(() => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.invalidateSize();
+      }
+    });
+    resizeObserver.observe(mapRef.current);
 
     map.on("moveend", async () => {
       const center = map.getCenter();
@@ -209,10 +237,13 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
     });
 
     return () => { 
-      map.remove(); 
-      mapInstanceRef.current = null; 
+      resizeObserver.disconnect();
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove(); 
+        mapInstanceRef.current = null; 
+      }
     };
-  }, [leafletLoaded, showAddressForm]); // 👈 Kuncinya di sini, state dihapus dari dependency
+  }, [leafletLoaded, showAddressForm]); 
 
   const handleSearchLocation = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -666,7 +697,8 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                         )}
                       </div>
                       
-                      <div className="relative w-full h-[200px] md:h-[300px] rounded-xl overflow-hidden mb-2 border border-gray-300">
+                      {/* WADAH PETA LEAFLET */}
+                      <div className="relative w-full h-[200px] md:h-[300px] rounded-xl overflow-hidden mb-2 border border-gray-300 bg-gray-100">
                         <form onSubmit={handleSearchLocation} className="absolute top-3 left-3 right-3 z-[400]">
                           <div className="bg-white rounded-lg shadow-md flex items-center px-3 py-2 border border-gray-200">
                             <Search className="w-4 h-4 text-gray-400 mr-2" />
@@ -674,7 +706,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                             <button type="submit" disabled={isSearchingMap} className="text-[10px] bg-[#EF7044] text-white px-3 py-1.5 rounded-md font-bold ml-2">SEARCH</button>
                           </div>
                         </form>
-                        <div ref={mapRef} className="w-full h-full z-[100]" />
+                        <div ref={mapRef} className="w-full h-full relative z-[100]" />
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-[400]">
                           <div className="relative bottom-4 flex flex-col items-center">
                             <MapPin className="w-8 h-8 text-[#ef7044] fill-white drop-shadow-md" />
