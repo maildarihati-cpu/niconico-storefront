@@ -19,10 +19,11 @@ export default async function CheckoutPage({
   const { countryCode } = await params
   const { cart_id } = await searchParams
   
+  // 🌟 Ambil data customer (jika ada), biarkan null jika guest.
   const customer = await retrieveCustomer().catch(() => null)
-  if (!customer) {
-    redirect(`/${countryCode}/account/login?next=checkout`)
-  }
+  
+  // 🚫 SATPAM REDIRECT LOGIN SUDAH DIHAPUS DI SINI! 🚫
+  // Jadi sekarang Guest bisa lolos masuk ke halaman ini.
 
   // 🌟 LOGIKA PINTAR: Pilih Cart yang benar
   let cart;
@@ -39,6 +40,7 @@ export default async function CheckoutPage({
     cart = await retrieveCart()
   }
 
+  // Cek jika keranjang kosong, baru kembalikan ke halaman cart
   if (!cart || !cart.items?.length) {
     redirect(`/${countryCode}/cart`)
   }
