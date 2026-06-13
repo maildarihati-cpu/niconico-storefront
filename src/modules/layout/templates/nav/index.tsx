@@ -146,7 +146,7 @@ const Navbar = () => {
     router.push(`/${countryCode}/store?q=${encodeURIComponent(term)}`);
   };
 
-  const isOrangeNav = pathname?.includes("/store") || pathname?.includes("/products") || pathname?.includes("/collections");
+  const isOrangeNav = pathname?.includes("/store") || pathname?.includes("/products") || pathname?.includes("/collections") || pathname?.includes("/track-order");
   const navBgClass = isOrangeNav ? "bg-[#EF7044]/95 backdrop-blur-sm border-[#EF7044]/10" : "bg-white/95 backdrop-blur-sm border-gray-100/50";     
   const iconColorClass = isOrangeNav ? "text-white" : "text-gray-800";
   const logoSrc = isOrangeNav ? "/logo-niconico-white.png" : "/logo-niconico-black.png";

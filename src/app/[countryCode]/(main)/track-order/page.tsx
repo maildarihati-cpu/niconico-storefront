@@ -1,10 +1,10 @@
 "use client"
 
 import React, { useState } from "react"
-import { Search, Truck, Package, MapPin, CheckCircle2, Loader2, ArrowRight } from "lucide-react"
+import { Search, Truck, Package, MapPin, Loader2 } from "lucide-react"
 
 export default function TrackOrderPage() {
-  const [courier, setCourier] = useState("lion") // Default Lion Parcel
+  const [courier, setCourier] = useState("lion") 
   const [resi, setResi] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [trackingData, setTrackingData] = useState<any | null>(null)
@@ -17,7 +17,6 @@ export default function TrackOrderPage() {
     setTrackingData(null)
 
     try {
-      // 🌟 Tembak ke API Route Next.js internal kita (Biar API Key pihak ke-3 aman di server)
       const res = await fetch("/api/track-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -39,13 +38,18 @@ export default function TrackOrderPage() {
   }
 
   return (
-    <div className="w-full min-h-screen bg-gray-50/50 py-12 px-4 md:px-8 font-sans">
-      <div className="max-w-[700px] mx-auto">
+    // 🌟 PERBAIKAN: Ditambahkan pt-32 agar konten tidak tertutup Navbar Global
+    <div className="w-full min-h-screen bg-gray-50/50 font-sans pb-12 pt-32">
+      
+      {/* ==================================================== */}
+      {/* 🌟 MAIN CONTENT CONTAINER */}
+      {/* ==================================================== */}
+      <div className="max-w-[700px] mx-auto px-4 md:px-8">
         
-        {/* HEADER */}
-        <div className="text-center mb-10">
-          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight uppercase">Track Your Order</h1>
-          <p className="text-sm text-gray-500 mt-2">Enter your tracking number to check your shipment real-time status.</p>
+        {/* HEADER TEXT */}
+        <div className="text-center mb-8">
+          <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight uppercase">Where is my package?</h2>
+          <p className="text-xs md:text-sm text-gray-500 mt-2">Enter your tracking number to check real-time shipment status.</p>
         </div>
 
         {/* FORM PENCARIAN */}
@@ -59,7 +63,7 @@ export default function TrackOrderPage() {
                 <select 
                   value={courier} 
                   onChange={(e) => setCourier(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-3 text-sm font-semibold text-gray-700 outline-none focus:border-[#E60000] appearance-none cursor-pointer"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-3 text-sm font-semibold text-gray-700 outline-none focus:border-[#EF7044] appearance-none cursor-pointer transition-colors"
                 >
                   <option value="lion">Lion Parcel</option>
                   <option value="gosend">GoSend</option>
@@ -76,12 +80,12 @@ export default function TrackOrderPage() {
                     placeholder="e.g. LP123456789ID" 
                     value={resi}
                     onChange={(e) => setResi(e.target.value.trim())}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-4 pr-12 py-3 text-sm font-bold text-gray-800 outline-none focus:border-[#E60000]"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-4 pr-12 py-3 text-sm font-bold text-gray-800 outline-none focus:border-[#EF7044] transition-colors"
                   />
                   <button 
                     type="submit" 
                     disabled={isLoading}
-                    className="absolute right-2 p-2 bg-[#E60000] text-white rounded-lg hover:bg-[#b80000] transition-colors disabled:opacity-50"
+                    className="absolute right-2 p-2 bg-[#EF7044] text-white rounded-lg hover:bg-[#d65f36] transition-colors disabled:opacity-50"
                   >
                     {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
                   </button>
@@ -100,7 +104,7 @@ export default function TrackOrderPage() {
             <div className="flex flex-wrap justify-between items-center border-b border-gray-100 pb-4 mb-6 gap-4">
               <div>
                 <p className="text-[11px] font-bold text-gray-400 uppercase">Status</p>
-                <span className="inline-block bg-orange-50 text-[#E60000] font-extrabold text-xs px-3 py-1 rounded-full uppercase mt-1">
+                <span className="inline-block bg-orange-50 text-[#EF7044] font-extrabold text-xs px-3 py-1 rounded-full uppercase mt-1">
                   {trackingData.status || "ON THE WAY"}
                 </span>
               </div>
@@ -121,7 +125,7 @@ export default function TrackOrderPage() {
                 <div key={index} className="flex gap-4 relative items-start">
                   
                   {/* Icon Bulatan Status */}
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 z-10 ${index === 0 ? 'bg-orange-50 border-2 border-[#E60000] text-[#E60000]' : 'bg-gray-100 text-gray-400'}`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 z-10 ${index === 0 ? 'bg-orange-50 border-2 border-[#EF7044] text-[#EF7044]' : 'bg-gray-100 text-gray-400'}`}>
                     {index === 0 ? <Truck className="w-4 h-4" /> : <Package className="w-4 h-4" />}
                   </div>
 
@@ -141,11 +145,11 @@ export default function TrackOrderPage() {
                 </div>
               ))}
 
-              {/* Dummy data fallback kalau API belum dicolok biar Bos bisa liat visualnya */}
+              {/* Dummy fallback jika properti history kosong */}
               {!trackingData.history && (
                 <>
                   <div className="flex gap-4 relative items-start">
-                    <div className="w-8 h-8 rounded-full bg-orange-50 border-2 border-[#E60000] text-[#E60000] flex items-center justify-center shrink-0 z-10"><Truck className="w-4 h-4" /></div>
+                    <div className="w-8 h-8 rounded-full bg-orange-50 border-2 border-[#EF7044] text-[#EF7044] flex items-center justify-center shrink-0 z-10"><Truck className="w-4 h-4" /></div>
                     <div className="flex-1 bg-gray-50/50 rounded-xl p-3 border border-gray-100">
                       <div className="flex justify-between items-center mb-1"><p className="text-xs font-extrabold text-gray-900">Courier is delivering your package</p><span className="text-[10px] text-gray-400 font-medium">14:20 WITA</span></div>
                       <p className="text-[11px] text-gray-500 font-medium leading-relaxed"><MapPin className="w-3 h-3 inline text-gray-400" /> Out for Delivery - Denpasar Gateway</p>

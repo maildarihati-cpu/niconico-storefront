@@ -65,23 +65,25 @@ export default function MakeYourOwnBrandPage() {
       </section>
 
       {/* ================= CONTENT SECTION (SINKRON DARI MEDUSA) ================= */}
-      <section className="w-full max-w-4xl mx-auto px-6 pt-10 md:pt-16 pb-6">
+      <section className="w-full max-w-6xl mx-auto px-6 pt-10 md:pt-20 pb-6 md:pb-16">
         
         {isLoading ? (
           // SKELETON LOADING (Biar tetep terlihat Luxury pas loading)
-          <>
-            <div className="w-full aspect-[16/10] md:aspect-video bg-gray-200 animate-pulse rounded-[24px] md:rounded-[32px] mb-8 shadow-sm"></div>
-            <div className="max-w-3xl mx-auto space-y-3 mb-12">
-              <div className="h-5 bg-gray-200 animate-pulse rounded w-3/4 mx-auto"></div>
-              <div className="h-5 bg-gray-200 animate-pulse rounded w-full mx-auto"></div>
-              <div className="h-5 bg-gray-200 animate-pulse rounded w-5/6 mx-auto"></div>
-            </div>
-          </>
+          <div className="flex flex-col md:flex-row gap-8 md:gap-16 items-center">
+             <div className="w-full md:w-1/2 aspect-[16/10] bg-gray-200 animate-pulse rounded-[24px] shadow-sm shrink-0"></div>
+             <div className="w-full md:w-1/2 space-y-4">
+                <div className="h-5 bg-gray-200 animate-pulse rounded w-full"></div>
+                <div className="h-5 bg-gray-200 animate-pulse rounded w-full"></div>
+                <div className="h-5 bg-gray-200 animate-pulse rounded w-5/6"></div>
+             </div>
+          </div>
         ) : (
           content?.mediaUrl && (
-            <>
-              {/* MEDIA CARD (Otomatis menyesuaikan Gambar/Video tanpa ikon Play) */}
-              <div className="relative w-full aspect-[16/10] md:aspect-video bg-black rounded-[24px] md:rounded-[32px] overflow-hidden mb-8 shadow-lg group">
+            // 🌟 LAYOUT KIRI-KANAN UNTUK DESKTOP
+            <div className="flex flex-col md:flex-row gap-8 md:gap-16 items-center justify-between">
+              
+              {/* KIRI: MEDIA CARD (Video / Gambar) */}
+              <div className="relative w-full md:w-1/2 aspect-[16/10] bg-black rounded-[24px] overflow-hidden shadow-xl group shrink-0">
                 {isVideo(content.mediaUrl) ? (
                   <video 
                     src={content.mediaUrl}
@@ -98,19 +100,20 @@ export default function MakeYourOwnBrandPage() {
                     fill
                     unoptimized 
                     priority
-                    sizes="(max-width: 768px) 100vw, 900px"
+                    sizes="(max-width: 768px) 100vw, 50vw"
                     className="absolute inset-0 w-full h-full object-cover transform group-hover:scale-[1.02] transition-transform duration-700 ease-in-out"
                   />
                 )}
               </div>
 
-              {/* QUOTE TEXT DARI BACKEND */}
-              <div className="text-center max-w-3xl mx-auto mb-12 md:mb-16">
-                <p className="text-sm md:text-base text-gray-800 font-bold leading-relaxed px-4 md:px-0">
+              {/* KANAN: QUOTE TEXT DARI BACKEND */}
+              <div className="w-full md:w-1/2 text-center md:text-left px-4 md:px-0">
+                <p className="text-sm md:text-lg text-gray-800 font-bold leading-relaxed italic border-l-0 md:border-l-4 md:border-[#EF7044] md:pl-6 py-2">
                   "{content.quoteVerbatim}"
                 </p>
               </div>
-            </>
+
+            </div>
           )
         )}
       </section>

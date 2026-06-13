@@ -22,7 +22,6 @@ export default function AboutUsPage() {
     { src: "/about/niconico-resort-partnesrhip-luna-beach-mandapa-bali-9.webp", alt: "Luna Beach Mandapa Bali" },
     { src: "/about/niconico-resort-partnesrhip-luna-beach-raffles-bali-10.webp", alt: "Luna Beach Raffles Bali" },
     { src: "/about/niconico-resort-partnesrhip-luna-beach-st-regis-bali-11.webp", alt: "Luna Beach St Regis Bali" },
-    { src: "/about/niconico-resort-partnesrhip-luna-beach-the-jungle-club-ubud-bali-12.webp", alt: "Luna Beach The Jungle Club Ubud Bali" },
     { src: "/about/niconico-resort-partnesrhip-luna-beach-the-jungle-surfer-girl-bali-13.webp", alt: "Luna Beach The Jungle Surfer Girl Bali" },
     { src: "/about/niconico-resort-partnesrhip-the-laguna-resort-spa-bali-14.webp", alt: "The Laguna Resort Spa Bali" },
     { src: "/about/niconico-resort-partnesrhip-the-mulia-bali-15.webp", alt: "The Mulia Bali" },

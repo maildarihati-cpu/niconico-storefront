@@ -513,10 +513,9 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   }
 
   const handlePayNow = async () => {
-    // 🌟 PERBAIKAN: CEGAH CHECKOUT JIKA ALAMAT ATAU PENGIRIMAN KOSONG
     if (!cart.shipping_address || !cart.shipping_address.address_1) {
       alert("🚨 Please fill in your Shipping Address first before proceeding to payment!");
-      return; // Stop eksekusi di sini!
+      return; 
     }
     
     if (!cart.shipping_methods || cart.shipping_methods.length === 0) {
@@ -552,6 +551,9 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
         const purchasedVariants = cart.items.map((item: any) => item.variant_id);
         localStorage.setItem("niconico_purchased_variants", JSON.stringify(purchasedVariants));
 
+        document.cookie = "_medusa_cart_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        document.cookie = "cart_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        
         window.location.href = String(invoiceUrl) 
       } else {
         alert("Failed to initiate payment. Please try again.")
@@ -608,8 +610,12 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
               {/* 🌟 DUA TAMPILAN: CONTACT INFORMATION (GUEST VS LOGGED IN) */}
               {!customer ? (
                 <div className="mb-6 pb-6 border-b border-gray-100">
+                  {/* 🌟 PERBAIKAN: Tombol Login dikembalikan posisinya ke sebelah kanan tulisan Contact Information */}
                   <div className="flex justify-between items-center mb-4">
                     <label className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest block">Contact Information</label>
+                    <button onClick={() => router.push(`/${countryCode || 'id'}/cart?auth=login`)} className="text-[10px] md:text-xs font-bold text-[#EF7044] hover:underline">
+                      Already have an account? Login here
+                    </button>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -642,14 +648,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                       </div>
                     </div>
                   </div>
-                  <div className="flex justify-between items-start mt-2">
-                    <p className="text-[10px] text-gray-400 italic">* Order confirmation and tracking links will be sent to this email.</p>
-                    
-                    {/* 🌟 PERBAIKAN: Posisi link Login dipindah ke bawah */}
-                    <button onClick={() => router.push(`/${countryCode || 'id'}/cart?auth=login`)} className="text-[10px] font-bold text-[#EF7044] hover:underline text-right w-max ml-auto pl-4">
-                      Already have an account?<br/>Login here
-                    </button>
-                  </div>
+                  <p className="text-[10px] text-gray-400 mt-2 italic">* Order confirmation and tracking links will be sent to this email.</p>
                 </div>
               ) : (
                 <div className="mb-4 pb-4 border-b border-gray-100">

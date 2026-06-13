@@ -93,7 +93,8 @@ export default function MakeYourOwnBrandSection() {
         <div className="order-4 lg:order-none flex justify-center w-full">
           <Link 
             href={content.buttonLink || "#"}
-            className="pl-2 pr-2 py-2 w-full max-w-[280px] bg-[#EF7044] text-white font-heavy tracking-wide rounded-full uppercase italic flex items-center justify-between shadow-md hover:shadow-lg border-2 border-transparent hover:bg-white hover:text-[#EF7044] hover:border-[#EF7044] transition-all duration-300 group active:scale-[0.98]"
+            // PERBAIKAN: w-full max-w-[280px] diganti jadi w-max, padding kanan (pr) disesuaikan dan pakai gap-4
+            className="pl-2 pr-6 py-2 w-max bg-[#EF7044] text-white font-heavy tracking-wide rounded-full uppercase italic flex items-center justify-center gap-4 shadow-md hover:shadow-lg border-2 border-transparent hover:bg-white hover:text-[#EF7044] hover:border-[#EF7044] transition-all duration-300 group active:scale-[0.98]"
           >
             {/* PANAH DI KIRI PINGGIR */}
             <div className="w-10 h-10 rounded-full bg-white text-[#EF7044] flex items-center justify-center group-hover:bg-[#EF7044] group-hover:text-white transition-colors shrink-0 shadow-sm">
@@ -103,8 +104,8 @@ export default function MakeYourOwnBrandSection() {
             </div>
             
             {/* TEKS CENTER DI TENGAH */}
-            {/* pr-10 digunakan untuk mengimbangi ruang yang dimakan ikon w-10 di kiri agar teks tetap center */}
-            <span className="flex-1 text-center pr-10">{content.buttonText}</span>
+            {/* PERBAIKAN: Tambah whitespace-nowrap agar teks tidak turun ke baris baru */}
+            <span className="text-center whitespace-nowrap">{content.buttonText}</span>
           </Link>
         </div>
 

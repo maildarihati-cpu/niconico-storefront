@@ -5,7 +5,6 @@ import { createPortal } from "react-dom"
 import { useParams } from "next/navigation"
 import { listProducts } from "@lib/data/products"
 import { listCollections } from "@lib/data/collections"
-// 👈 IMPORT listCategories SUDAH DIHAPUS AGAR TIDAK ERROR SERVER-ONLY
 import { useCart } from "@/context/cart-context/cart-context"
 import { addToCart as medusaAddToCart } from "@lib/data/cart"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
@@ -728,9 +727,9 @@ export default function CollectionDetailPage() {
         </div>
       </section>
 
-      {/* SECTION 2: LOOKBOOK */}
+      {/* 🌟 SECTION 2: LOOKBOOK (DISEMBUNYIKAN DI DESKTOP MENGGUNAKAN lg:hidden) */}
       {config?.lookbookUrl && (
-        <section className="relative z-20 px-4 -mt-[80px] mb-8">
+        <section className="relative z-20 px-4 -mt-[80px] mb-8 lg:hidden">
           <div className="rounded-xl overflow-hidden shadow-2xl bg-white">
             <div style={{ position: "relative", paddingTop: "max(60%, 324px)", width: "100%", height: 0 }}>
               <iframe 
@@ -748,32 +747,32 @@ export default function CollectionDetailPage() {
         </section>
       )}
 
-      {/* 🌟 SECTION 3: PRODUCT GRID */}
-      <section className="px-4 mb-16 mt-4">
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-3 gap-y-6">
+      {/* 🌟 SECTION 3: PRODUCT GRID (5 KOLOM DI DESKTOP) */}
+      <section className="px-4 lg:px-10 max-w-[1600px] mx-auto mb-16 mt-4 lg:mt-12">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-x-3 lg:gap-x-6 gap-y-6 lg:gap-y-10">
           {products.map((product) => (
             <LocalizedClientLink key={product.id} href={`/products/${product.handle}`} className="flex flex-col group block animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="relative aspect-[3/4] bg-gray-50 rounded-[20px] overflow-hidden mb-3 border border-gray-100 shadow-sm">
                 <img src={product.thumbnail || "/placeholder.png"} alt={product.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 
                 {/* WISHLIST BUTTON */}
-                <button onClick={(e) => toggleWishlist(e, product.id)} className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-all ${wishlist.includes(product.id) ? "bg-[#EF7044] text-white" : "bg-white/80 backdrop-blur-sm text-gray-300 hover:text-[#EF7044]"}`}>
-                  <Heart className={`w-4 h-4 ${wishlist.includes(product.id) ? "fill-current" : ""}`} />
+                <button onClick={(e) => toggleWishlist(e, product.id)} className={`absolute top-3 right-3 w-8 h-8 lg:w-10 lg:h-10 rounded-full flex items-center justify-center shadow-md transition-all ${wishlist.includes(product.id) ? "bg-[#EF7044] text-white" : "bg-white/80 backdrop-blur-sm text-gray-300 hover:text-[#EF7044]"}`}>
+                  <Heart className={`w-4 h-4 lg:w-5 lg:h-5 ${wishlist.includes(product.id) ? "fill-current" : ""}`} />
                 </button>
 
                 {/* ADD TO CART BUTTON (+) MEMBUKA QUICK SHOP MODAL */}
                 <button 
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedProduct(product); }} 
-                  className="absolute bottom-3 right-3 w-9 h-9 bg-[#EF7044] text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white active:scale-90 transition-transform z-10"
+                  className="absolute bottom-3 right-3 w-9 h-9 lg:w-11 lg:h-11 bg-[#EF7044] text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white active:scale-90 transition-transform z-10 text-lg lg:text-xl"
                 >
                   +
                 </button>
               </div>
               
-              <div className="border border-[#EF7044] rounded-full text-center py-1.5 px-2 mx-1 mb-1.5 flex items-center justify-center h-8">
-                <h3 className="text-[11px] font-bold text-[#EF7044] truncate w-full px-1">{product.title}</h3>
+              <div className="border border-[#EF7044] rounded-full text-center py-1.5 px-2 mx-1 mb-1.5 flex items-center justify-center h-8 lg:h-10 lg:px-4">
+                <h3 className="text-[11px] lg:text-[13px] font-bold text-[#EF7044] truncate w-full px-1">{product.title}</h3>
               </div>
-              <p className="text-[#EF7044] text-xs font-black text-center">
+              <p className="text-[#EF7044] text-xs lg:text-sm font-black text-center">
                 {formatPrice(getProductPrice(product))}
               </p>
             </LocalizedClientLink>
@@ -787,7 +786,7 @@ export default function CollectionDetailPage() {
           Other Collections
         </h3>
         
-        <div className="flex overflow-x-auto gap-4 px-4 no-scrollbar">
+        <div className="flex overflow-x-auto gap-4 px-4 no-scrollbar lg:justify-center">
           {otherCollections.map((col) => {
             const thumbConfig = COLLECTION_MAP[col.handle]
             const imagePath = thumbConfig?.heroImage || `/banners/hero-collection-${col.handle}.png`
@@ -798,7 +797,7 @@ export default function CollectionDetailPage() {
                 href={`/${countryCode}/collections/${col.handle}`}
                 className="flex-shrink-0 block"
               >
-                <div className="relative w-[280px] h-[155px] rounded-2xl overflow-hidden shadow-md group">
+                <div className="relative w-[280px] h-[155px] lg:w-[320px] lg:h-[180px] rounded-2xl overflow-hidden shadow-md group">
                   <img 
                     src={imagePath} 
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"

@@ -155,7 +155,7 @@ export default function NavDrawer({ isOpen, onClose, view, setView }: Props) {
 
               {/* Tanda Panah Dihapus */}
               <LocalizedClientLink href="/store?category=new-arrivals" onClick={onClose} className="block text-[#ef7044] font-medium text-[13px] uppercase tracking-wide group">
-                NEW RELEASE.!
+                NEW ARRIVALS.!
               </LocalizedClientLink>
 
               {/* ACCORDION: SHOPS */}

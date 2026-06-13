@@ -804,6 +804,11 @@ export default function StoreTemplate({ initialProducts = [] }: { initialProduct
       // Jika Server sudah memberikan data awal (Cache), batalkan tarikan data client ini!
       // Halaman akan langsung tampil tanpa perlu loading muter-muter.
       if (initialProducts.length > 0) return; 
+      
+      // Jika tidak ada data dari server, langsung tarik tanpa delay 300ms!
+      fetchStoreProducts(1, true);
+      setPage(1);
+      return;
     }
 
     const timer = setTimeout(() => {
@@ -1048,7 +1053,7 @@ export default function StoreTemplate({ initialProducts = [] }: { initialProduct
         {/* 🌟 EFEK BLUR HALUS SAAT LOADING (OPTIMISTIC UI) */}
         <div className={`px-4 lg:px-0 pt-8 lg:pt-10 grid grid-cols-2 lg:grid-cols-5 gap-x-3 lg:gap-x-5 gap-y-6 lg:gap-y-8 mb-10 transition-all duration-300 ${isLoading && page === 1 ? "opacity-50 blur-[2px] grayscale-[20%]" : "opacity-100 blur-0 grayscale-0"}`}>
           {products.length > 0 ? (
-            products.map((product) => (
+            products.map((product, index) => (
               <LocalizedClientLink key={product.id} href={`/products/${product.handle}`} className="flex flex-col group block animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="relative aspect-[3/4] bg-gray-50 rounded-[20px] overflow-hidden mb-3 border border-gray-100 shadow-sm">
                   <NextImage 
@@ -1056,6 +1061,8 @@ export default function StoreTemplate({ initialProducts = [] }: { initialProduct
                         alt={product.title} 
                         fill
                         sizes="(max-width: 768px) 50vw, 20vw"
+                        priority={index < 6}
+                        quality={60}
                         className="object-cover group-hover:scale-105 transition-transform duration-500" 
                         />
                   

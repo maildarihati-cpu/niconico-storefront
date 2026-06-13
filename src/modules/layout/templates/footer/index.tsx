@@ -23,12 +23,13 @@ const Footer = () => {
   }
 
   return (
-    <footer className="relative bg-black text-white pt-16 flex flex-col items-center overflow-hidden">
+    // 🌟 PERBAIKAN: pt-16 dibesarkan menjadi pt-28 (Biar background hitam atasnya lebih lega)
+    <footer className="relative bg-black text-white pt-28 flex flex-col items-center overflow-hidden">
       
-      {/* Tombol Back to Top (🌟 PERUBAHAN: Diubah menjadi top-3 agar posisinya naik sedikit) */}
+      {/* Tombol Back to Top (🌟 PERBAIKAN: top-3 diubah ke top-8 biar proporsional dan tidak nabrak teks bawah) */}
       <button 
         onClick={scrollToTop}
-        className="absolute top-3 right-6 md:right-12 lg:right-16 w-14 h-14 bg-[#E5E7EB] rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-colors z-20"
+        className="absolute top-8 right-6 md:right-12 lg:right-16 w-14 h-14 bg-[#E5E7EB] rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-colors z-20"
         aria-label="Back to top"
       >
         <ChevronUp className="text-[#EF7044] w-8 h-8" strokeWidth={2.5} />
@@ -161,9 +162,8 @@ const Footer = () => {
             rel="noopener noreferrer" 
             className="hover:text-[#EF7044] transition-all hover:scale-110"
           >
-            {/* 🌟 PERUBAHAN: Tanda tanya (?) pada path sudah dibersihkan menjadi standar koordinat yang benar */}
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+              <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93-.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
             </svg>
           </Link>
         </div>
