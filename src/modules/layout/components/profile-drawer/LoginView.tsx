@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import Image from "next/image"; 
 import { X, Loader2, ChevronLeft } from "lucide-react";
 import { login } from "@lib/data/customer";
+// 🌟 PERBAIKAN: Import router untuk navigasi Track Order
+import { useRouter, useParams } from "next/navigation"; 
 
 interface Props {
   onClose: () => void;
@@ -12,6 +14,10 @@ interface Props {
 }
 
 export default function LoginView({ onClose, setView, onSuccess }: Props) {
+  const router = useRouter();
+  const params = useParams();
+  const countryCode = (params?.countryCode as string) || "id";
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -209,6 +215,21 @@ export default function LoginView({ onClose, setView, onSuccess }: Props) {
             className="w-4 h-4" 
           />
           GOOGLE
+        </button>
+      </div>
+
+      {/* 🌟 NAVIGASI KE TRACK ORDER */}
+      <div className="w-full mt-6 pt-6 border-t border-gray-100 text-center">
+        <p className="text-xs text-gray-500 font-medium mb-3">Want to check your order?</p>
+        <button 
+          type="button"
+          onClick={() => {
+            onClose(); // Tutup Laci
+            router.push(`/${countryCode}/track-order`); // Lompat ke Track Order
+          }}
+          className="w-full bg-white border border-gray-200 text-gray-700 py-3 rounded-xl font-bold text-[11px] uppercase tracking-widest hover:border-[#EF7044] hover:text-[#EF7044] transition-all shadow-sm active:scale-95"
+        >
+          Check Your Order Here!
         </button>
       </div>
 
