@@ -349,9 +349,6 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
     }
   }
 
-  // ==========================================
-  // 🌟 PERBAIKAN: FORCE PUSH API AGAR EMAIL & ALAMAT PASTI MASUK
-  // ==========================================
   const handleUpdateAddress = async (address: any) => {
     try {
       setIsLoadingShipping(true);
@@ -375,8 +372,6 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
         postal_code: address.postal_code || "",
       };
 
-      // 🌟 LAKUKAN PENYERANGAN API LANGSUNG KE MEDUSA 
-      // Memaksa email, shipping, dan billing masuk ke cart!
       const backendUrl = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000";
       const apiKey = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "";
       
@@ -389,12 +384,11 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
         body: JSON.stringify({
           email: targetEmail,
           shipping_address: safeCartAddress,
-          billing_address: safeCartAddress, // Wajib disamakan agar order valid!
-          metadata: { is_guest: !customer } // Stempel rahasia untuk Backend
+          billing_address: safeCartAddress,
+          metadata: { is_guest: !customer } 
         })
       });
       
-      // Update state via Next.js Action bawaan agar cookies tersinkronisasi
       const updatedCart = await updateCartAddressAction(cart.id, safeCartAddress, targetEmail);
       
       setCart(updatedCart);
@@ -467,7 +461,6 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
         await saveAddressServerAction(payload, editingAddressId) 
       }
       
-      // handleUpdateAddress akan mengurus force-push API
       await handleUpdateAddress(payload)
       setEditingAddressId(null)
       
@@ -520,21 +513,25 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
   }
 
   const handlePayNow = async () => {
-    setIsPaying(true)
+    // 🌟 PERBAIKAN: CEGAH CHECKOUT JIKA ALAMAT ATAU PENGIRIMAN KOSONG
+    if (!cart.shipping_address || !cart.shipping_address.address_1) {
+      alert("🚨 Please fill in your Shipping Address first before proceeding to payment!");
+      return; // Stop eksekusi di sini!
+    }
+    
+    if (!cart.shipping_methods || cart.shipping_methods.length === 0) {
+      alert("🚨 Please select a delivery method first!");
+      return;
+    }
+
+    if (!email) {
+      alert("🚨 Please provide an email address for order tracking!");
+      return;
+    }
+
+    setIsPaying(true);
     
     try {
-      if (!cart.shipping_methods || cart.shipping_methods.length === 0) {
-        alert("Please select a delivery method first!")
-        setIsPaying(false)
-        return
-      }
-
-      if (!email) {
-        alert("Please provide an email address for order tracking!")
-        setIsPaying(false)
-        return
-      }
-
       const updatedCart = await initiatePaymentAction(cart.id, "pp_xendit_xendit")
 
       const xenditSession = updatedCart?.payment_collection?.payment_sessions?.find(
@@ -555,14 +552,6 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
         const purchasedVariants = cart.items.map((item: any) => item.variant_id);
         localStorage.setItem("niconico_purchased_variants", JSON.stringify(purchasedVariants));
 
-        // ==============================================================
-        // 🌟 OBAT CART NYANGKUT: HAPUS COOKIE KERANJANG DI SINI! 🌟
-        // ==============================================================
-        // Kita paksa browser membuang ingatan tentang keranjang ini
-        document.cookie = "_medusa_cart_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-        document.cookie = "cart_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-        
-        // Baru setelah itu kustomer kita lempar ke Xendit
         window.location.href = String(invoiceUrl) 
       } else {
         alert("Failed to initiate payment. Please try again.")
@@ -621,9 +610,6 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                 <div className="mb-6 pb-6 border-b border-gray-100">
                   <div className="flex justify-between items-center mb-4">
                     <label className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest block">Contact Information</label>
-                    <button onClick={() => router.push(`/${countryCode || 'id'}/cart?auth=login`)} className="text-[10px] md:text-xs font-bold text-[#EF7044] hover:underline">
-                      Already have an account? Login here
-                    </button>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -656,7 +642,14 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                       </div>
                     </div>
                   </div>
-                  <p className="text-[10px] text-gray-400 mt-2 italic">* Order confirmation and tracking links will be sent to this email.</p>
+                  <div className="flex justify-between items-start mt-2">
+                    <p className="text-[10px] text-gray-400 italic">* Order confirmation and tracking links will be sent to this email.</p>
+                    
+                    {/* 🌟 PERBAIKAN: Posisi link Login dipindah ke bawah */}
+                    <button onClick={() => router.push(`/${countryCode || 'id'}/cart?auth=login`)} className="text-[10px] font-bold text-[#EF7044] hover:underline text-right w-max ml-auto pl-4">
+                      Already have an account?<br/>Login here
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div className="mb-4 pb-4 border-b border-gray-100">
@@ -791,7 +784,7 @@ export default function CheckoutForm({ cart: initialCart, customer }: CheckoutFo
                           <button onClick={handleCancelAddressForm} className="px-6 py-2.5 rounded-lg border border-gray-300 text-gray-600 text-xs font-bold hover:bg-gray-50">Cancel</button>
                         )}
                         <button onClick={handleSaveNewAddress} disabled={isLoadingShipping} className="flex-1 bg-[#ef7044] text-white py-2.5 rounded-lg font-bold hover:bg-[#d65f36] text-xs flex justify-center items-center gap-2 disabled:opacity-50">
-                          {isLoadingShipping ? <Loader2 className="w-4 h-4 animate-spin" /> : (customer ? (editingAddressId ? "Update Address" : "Save Address") : "Use This Address")}
+                          {isLoadingShipping ? <Loader2 className="w-4 h-4 animate-spin" /> : (customer ? (editingAddressId ? "Update Address" : "Save Address") : "Save This Address")}
                         </button>
                       </div>
                     </div>
