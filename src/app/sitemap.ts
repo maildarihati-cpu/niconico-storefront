@@ -3,8 +3,9 @@ import { listProducts } from "@lib/data/products"
 import { listCollections } from "@lib/data/collections"
 import { listCategories } from "@lib/data/categories"
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://www.niconicoresort.com"
-const DEFAULT_REGION = process.env.NEXT_PUBLIC_DEFAULT_REGION || "us"
+// 🌟 PERBAIKAN: Langsung digembok ke domain asli, tutup jalur dari .env dev!
+const BASE_URL = "https://www.niconicoresort.com"
+const DEFAULT_REGION = process.env.NEXT_PUBLIC_DEFAULT_REGION || "id"
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const routes: MetadataRoute.Sitemap = []
